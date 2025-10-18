@@ -179,10 +179,20 @@ export function FilmRollGallery({
           const previewElement = previewRef.current;
           const elementRect = previewElement.getBoundingClientRect();
           const absoluteElementTop = elementRect.top + window.pageYOffset;
-          const middle = absoluteElementTop - (window.innerHeight / 2) + (elementRect.height / 2);
+          
+          // Adaptive positioning based on screen size
+          const viewportHeight = window.innerHeight;
+          const elementHeight = elementRect.height;
+          
+          // For smaller screens, position higher up; for larger screens, more centered
+          const adaptiveOffset = viewportHeight < 768 
+            ? viewportHeight * 0.15  // 15% from top on mobile
+            : viewportHeight * 0.25; // 25% from top on desktop
+          
+          const targetPosition = absoluteElementTop - adaptiveOffset;
           
           window.scrollTo({
-            top: middle + previewScrollOffset,
+            top: targetPosition + previewScrollOffset,
             behavior: 'smooth'
           });
         }

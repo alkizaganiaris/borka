@@ -74,7 +74,26 @@ export default function App() {
           isOpen={openGalleryId === "enrico"}
           onToggle={handleGalleryToggle("enrico")}
         />
+        
+        <FilmRollGallery 
+          images={natureImages} 
+          title="Alki"
+          subtitle="/ ˈenɪ ʃəə kə'w /"
+          filmUsed="Ilford HP5 Plus"
+          year="2022"
+          isOpen={openGalleryId === "alki"}
+          onToggle={handleGalleryToggle("alki")}
+        />        
 
+        <FilmRollGallery 
+          images={natureImages} 
+          title="Silvia"
+          subtitle="/ ˈenɪ ʃəə kə'w /"
+          filmUsed="Ilford HP5 Plus"
+          year="2022"
+          isOpen={openGalleryId === "silvia"}
+          onToggle={handleGalleryToggle("silvia")}
+        />
         {/* Uncomment to add more instances:
         <FilmRollGallery 
           images={galleryImages} 
