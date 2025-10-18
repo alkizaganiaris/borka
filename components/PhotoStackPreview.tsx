@@ -77,7 +77,7 @@ export function PhotoStackPreview({
             
             // Calculate scale to fit the full preview when hovering
             const stackSize = 0.74; // 74% of preview (current container size)
-            const hoverScale = 1.4; // Adjust this value to control hover zoom (1.5 = 150% of original size)
+            const hoverScale = 1.35; // Adjust this value to control hover zoom (1.5 = 150% of original size)
             const scaleToFit = hoverActive ? hoverScale : (isTop ? 1.02 : 1);
             
             return (
