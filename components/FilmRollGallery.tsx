@@ -14,6 +14,7 @@ interface FilmRollGalleryProps {
   onToggle?: (isOpen: boolean) => void;
   scrollToPreview?: boolean;
   previewScrollOffset?: number; // Vertical offset in pixels when centering (negative = higher, positive = lower)
+  showBubbleVideo?: boolean; // Show bubble video on canister when preview is visible
 }
 
 
@@ -92,6 +93,7 @@ export function FilmRollGallery({
   onToggle,
   scrollToPreview = true,
   previewScrollOffset = 120,
+  showBubbleVideo = false,
 }: FilmRollGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [stack, setStack] = useState<StackItem[]>([]);
@@ -205,7 +207,7 @@ export function FilmRollGallery({
     <div className={`w-full ${className}`}>
       {/* Preview box (stack of chosen photos) */}
       <div ref={previewRef}>
-        <PhotoStackPreview stack={stack} rolledOut={rolledOut} />
+        <PhotoStackPreview stack={stack} rolledOut={rolledOut} showBubbleVideo={showBubbleVideo} />
       </div>
 
       {/* Reel section */}

@@ -14,32 +14,36 @@ interface PhotoStackPreviewProps {
   stack: StackItem[];
   rolledOut: boolean;
   className?: string;
+  showBubbleVideo?: boolean;
 }
 
 export function PhotoStackPreview({
   stack,
   rolledOut,
   className = "",
+  showBubbleVideo = false,
 }: PhotoStackPreviewProps) {
   const [isTopHovered, setIsTopHovered] = useState(false);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, height: 0 }}
-      animate={{
-        opacity: rolledOut ? 1 : 0,
-        scale: rolledOut ? 1 : 0.95,
-        height: rolledOut ? "auto" : 0,
-      }}
-      transition={{ duration: 0.5 }}
-      className={`max-w-4xl mx-auto px-4 ${className}`}
-      style={{ 
-        marginBottom: rolledOut ? "2rem" : "0",
-        overflow: rolledOut ? "visible" : "hidden"
-      }}
-    >
+    <div className="relative">
+      
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, height: 0 }}
+        animate={{
+          opacity: rolledOut ? 1 : 0,
+          scale: rolledOut ? 1 : 0.95,
+          height: rolledOut ? "auto" : 0,
+        }}
+        transition={{ duration: 0.5 }}
+        className={`max-w-4xl mx-auto px-4 ${className}`}
+        style={{ 
+          marginBottom: rolledOut ? "2rem" : "0",
+          overflow: rolledOut ? "visible" : "hidden"
+        }}
+      >
       <motion.div 
-        className="relative aspect-video overflow-visible flex items-center justify-center border-2 border-black p-8"
+        className="relative aspect-video overflow-visible flex items-center justify-center p-8"
         animate={{
           borderRadius: isTopHovered ? "8px" : "16px"
         }}
@@ -64,6 +68,8 @@ export function PhotoStackPreview({
           <div className="absolute inset-0 bg-blue-300/80" style={{ clipPath: 'polygon(100% 0, 100% 100%, 75% 100%)' }}></div>
           <div className="absolute inset-0 bg-pink-300/80" style={{ clipPath: 'polygon(0 100%, 25% 100%, 0 50%)' }}></div>
         </motion.div>
+        
+        
         {/* STACK: newest on top */}
         <div
           className="relative flex items-center justify-center"
@@ -143,7 +149,8 @@ export function PhotoStackPreview({
           })}
         </div>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 

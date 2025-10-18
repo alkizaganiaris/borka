@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import { FilmRollGallery } from "./components";
 
 // ---------- Demo images ----------
@@ -26,6 +27,17 @@ const natureImages = [
 
 export default function App() {
   const [openGalleryId, setOpenGalleryId] = useState<string | null>(null);
+  const [mouseY, setMouseY] = useState(0);
+
+  // Mouse tracking effect - always active
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMouseY(e.clientY);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   const handleGalleryToggle = (id: string) => (isOpen: boolean) => {
     if (isOpen) {
@@ -41,6 +53,33 @@ export default function App() {
     <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Subtle neutral vignette */}
       <div className="fixed inset-0 bg-gradient-radial from-transparent via-white/60 to-white pointer-events-none" />
+
+      {/* Single global bubble video tracking mouse */}
+      <motion.video
+        className="fixed w-32 h-32 object-contain pointer-events-none z-50"
+        style={{
+          left: 'calc(100vw - 180px)', // Position on the right side of screen
+          top: mouseY - 64 // Center video center on mouse Y position
+        }}
+        autoPlay
+        loop
+        muted
+        playsInline
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ 
+          opacity: 1, 
+          scale: 1,
+        }}
+        transition={{ 
+          duration: 0.5, 
+          ease: "easeOut",
+          opacity: { duration: 0.5 },
+          scale: { duration: 0.5 },
+          // No transition for position to make it follow mouse smoothly
+        }}
+      >
+        <source src="/pop_bubbles.mp4" type="video/mp4" />
+      </motion.video>
 
       <div className="relative z-10">
         {/* Gallery Instances */}
