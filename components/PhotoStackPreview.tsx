@@ -38,18 +38,38 @@ export function PhotoStackPreview({
         overflow: rolledOut ? "visible" : "hidden"
       }}
     >
-      <div className="relative aspect-video overflow-visible flex items-center justify-center rounded-2xl border-2 border-black p-8">
+      <motion.div 
+        className="relative aspect-video overflow-visible flex items-center justify-center border-2 border-black p-8"
+        animate={{
+          borderRadius: isTopHovered ? "8px" : "16px"
+        }}
+        transition={{
+          duration: 0.2,
+          ease: "easeInOut"
+        }}
+      >
         {/* Diagonal color blocks */}
-        <div className="absolute inset-0 rounded-2xl overflow-hidden">
+        <motion.div 
+          className="absolute inset-0 overflow-hidden"
+          animate={{
+            borderRadius: isTopHovered ? "8px" : "16px"
+          }}
+          transition={{
+            duration: 0.2,
+            ease: "easeInOut"
+          }}
+        >
           <div className="absolute inset-0 bg-yellow-300/80" style={{ clipPath: 'polygon(0 0, 50% 0, 25% 100%, 0 100%)' }}></div>
           <div className="absolute inset-0 bg-purple-300/80" style={{ clipPath: 'polygon(50% 0, 100% 0, 75% 100%, 25% 100%)' }}></div>
           <div className="absolute inset-0 bg-blue-300/80" style={{ clipPath: 'polygon(100% 0, 100% 100%, 75% 100%)' }}></div>
           <div className="absolute inset-0 bg-pink-300/80" style={{ clipPath: 'polygon(0 100%, 25% 100%, 0 50%)' }}></div>
-        </div>
+        </motion.div>
         {/* STACK: newest on top */}
         <div
           className="relative flex items-center justify-center"
           style={{ width: "74%", height: "74%" }}
+          onMouseEnter={() => setIsTopHovered(true)}
+          onMouseLeave={() => setIsTopHovered(false)}
         >
           {stack.map((item, i) => {
             const isTop = i === stack.length - 1;
@@ -122,7 +142,7 @@ export function PhotoStackPreview({
             );
           })}
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
