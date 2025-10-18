@@ -1,0 +1,394 @@
+import { useState, useRef, useEffect } from "react";
+import { motion, useScroll } from "motion/react";
+import { FilmFrame } from "./FilmFrame";
+import { PhotoStackPreview, type StackItem } from "./PhotoStackPreview";
+
+interface FilmRollGalleryProps {
+  images: string[];
+  title?: string;
+  subtitle?: string;
+  filmUsed?: string;
+  year?: string;
+  className?: string;
+  isOpen?: boolean;
+  onToggle?: (isOpen: boolean) => void;
+  scrollToPreview?: boolean;
+  previewScrollOffset?: number; // Vertical offset in pixels when centering (negative = higher, positive = lower)
+}
+
+
+function NotesContent({ 
+  compact = false, 
+  title = "inspiration", 
+  subtitle = "/ ˌɪn spəˈreɪ ʃən /",
+  filmUsed,
+  year,
+}: { 
+  compact?: boolean;
+  title?: string;
+  subtitle?: string;
+  filmUsed?: string;
+  year?: string;
+}) {
+  const monoFont =
+    "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
+
+  return (
+    <div
+      style={{ fontFamily: monoFont }}
+      className={
+        compact
+          ? "text-zinc-900 text-sm leading-tight tracking-tight"
+          : "text-zinc-900 text-base leading-tight tracking-tight"
+      }
+    >
+      <h2
+        className={
+          compact
+            ? "font-semibold uppercase"
+            : "text-lg font-semibold uppercase"
+        }
+      >
+        {title}
+      </h2>
+      <p className="text-zinc-600 mb-2">{subtitle}</p>
+
+      {/* Film metadata */}
+      {(filmUsed || year) && (
+        <div className="mt-2 space-y-0.5 text-zinc-600 text-xs">
+          {filmUsed && <p>Film: {filmUsed}</p>}
+          {year && <p>Year: {year}</p>}
+        </div>
+      )}
+
+      {/* Lane-only extras */}
+      {!compact && (
+        <div className="mt-1 space-y-1 text-zinc-700">
+          <p className="text-sm">
+            the spark that kicks off ideas, frames, and little happy accidents.
+          </p>
+          <ul className="list-disc pl-5 text-sm space-y-1">
+            <li>hover a frame to light it up</li>
+            <li>click to add to the preview stack</li>
+            <li>press the canister to roll in/out</li>
+          </ul>
+          <p className="text-xs text-zinc-500 mt-2">
+            tip: scroll the reel to browse more.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function FilmRollGallery({
+  images,
+  title = "Inspiration",
+  subtitle,
+  filmUsed,
+  year,
+  className = "",
+  isOpen,
+  onToggle,
+  scrollToPreview = true,
+  previewScrollOffset = 120,
+}: FilmRollGalleryProps) {
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [stack, setStack] = useState<StackItem[]>([]);
+  const [internalRolledOut, setInternalRolledOut] = useState(false);
+  
+  // Use controlled state if provided, otherwise use internal state
+  const rolledOut = isOpen !== undefined ? isOpen : internalRolledOut;
+
+  const REEL_DUR = 1; // seconds — keep this in sync with the reel animation
+
+  const rand = (min: number, max: number) =>
+    Math.random() * (max - min) + min;
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const { scrollXProgress } = useScroll({
+    container: scrollRef,
+  });
+
+  // Helper function to toggle the rolled out state
+  const toggleRolledOut = (newState: boolean) => {
+    if (onToggle) {
+      onToggle(newState);
+    } else {
+      setInternalRolledOut(newState);
+    }
+  };
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && rolledOut) {
+        // Reset horizontal scroll
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo({
+            left: 0,
+            behavior: "smooth",
+          });
+        }
+
+        // clear preview stack (same behavior as clicking canister)
+        setStack([]);
+        
+        // Close the gallery
+        toggleRolledOut(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [rolledOut, onToggle]);
+
+  function addToStack(index: number) {
+    const src = images[index];
+    setStack((prev) => {
+      if (prev.length && prev[prev.length - 1].id === index) return prev;
+      const item: StackItem = {
+        id: index,
+        src,
+        rot: rand(-10, 10),
+        dx: rand(-18, 18),
+        dy: rand(-12, 12),
+        key: `${index}-${crypto.randomUUID?.() ?? Date.now()}`,
+      };
+      return [...prev, item].slice(-6);
+    });
+  }
+
+  // Add first photo to stack when rolled out
+  useEffect(() => {
+    if (rolledOut && stack.length === 0 && images.length > 0) {
+      // Small delay to let the animation start
+      const timeout = setTimeout(() => {
+        addToStack(0);
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [rolledOut, images.length]);
+
+  // Scroll to preview when rolled out
+  useEffect(() => {
+    if (rolledOut && scrollToPreview && previewRef.current) {
+      // Wait for the rollout animation to complete
+      const timeout = setTimeout(() => {
+        if (previewRef.current) {
+          const previewElement = previewRef.current;
+          const elementRect = previewElement.getBoundingClientRect();
+          const absoluteElementTop = elementRect.top + window.pageYOffset;
+          const middle = absoluteElementTop - (window.innerHeight / 2) + (elementRect.height / 2);
+          
+          window.scrollTo({
+            top: middle + previewScrollOffset,
+            behavior: 'smooth'
+          });
+        }
+      }, 600); // Wait for rollout animation (500ms) + buffer
+      return () => clearTimeout(timeout);
+    }
+  }, [rolledOut, scrollToPreview, previewScrollOffset]);
+
+  return (
+    <div className={`w-full ${className}`}>
+      {/* Preview box (stack of chosen photos) */}
+      <div ref={previewRef}>
+        <PhotoStackPreview stack={stack} rolledOut={rolledOut} />
+      </div>
+
+      {/* Reel section */}
+      <div className="relative w-full px-4 pb-10">
+        <div className="max-w-7xl mx-auto relative">
+          {/* Canister (toggle rollout) */}
+          <motion.button
+            aria-label="Toggle film"
+            onClick={() => {
+              const next = !rolledOut;
+
+              if (!next) {
+                setStack([]); // clear preview stack when closing
+
+                // Reset horizontal scroll when reel retracts
+                if (scrollRef.current) {
+                  scrollRef.current.scrollTo({
+                    left: 0,
+                    behavior: "smooth",
+                  });
+                }
+              }
+
+              toggleRolledOut(next);
+            }}
+            initial={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.04 }}
+            className="absolute left-0 top-[7.5%] z-30 w-40 h-48 flex items-center justify-center"
+          >
+            <div className="relative w-40 h-70">
+              <img
+                src="/film-canister.png"
+                alt="Film Roll"
+                className="w-full h-full object-contain drop-shadow-2xl"
+              />
+              {/* Leader grows/shrinks with rollout, but waits on close */}
+              <motion.div
+                className="absolute top-1/2 -translate-y-1/2 left-full h-[75%] rounded-r-sm pointer-events-none z-20"
+                animate={{ width: rolledOut ? 20 : 0 }}
+                transition={{
+                  duration: 0.2,
+                  ease: "easeInOut",
+                  delay: rolledOut ? 0 : REEL_DUR,
+                }}
+                style={{
+                  background:
+                    "linear-gradient(to right, rgba(209,213,219,1) 0%, rgba(26,26,26,1) 25%, rgba(0,0,0,1) 100%)",
+                  boxShadow: "inset -3px 0 6px rgba(0,0,0,0.7)",
+                }}
+              />
+            </div>
+            {/* Optional glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-transparent blur-xl pointer-events-none" />
+          </motion.button>
+
+          {/* Scroll container (reel lane) */}
+          <div
+            ref={scrollRef}
+            className="relative overflow-x-auto overflow-y-hidden scrollbar-hide pl-44 pr-8 flex items-center mt-8"
+            style={{
+              scrollbarWidth: "none",
+              msOverflowStyle: "none",
+              minHeight: "48px", // Match canister height
+            }}
+          >
+            {/* Reel reveal / rollback (clip-path) */}
+            <motion.div
+              className="relative inline-flex items-center py-8 bg-transparent opacity-100"
+              style={{ 
+                alignItems: 'center',
+                minHeight: '48px', // Match canister height
+                willChange: "clip-path"
+              }}
+              initial={false}
+              animate={{
+                clipPath: rolledOut
+                  ? "inset(0 0% 0 0)"
+                  : "inset(0 100% 0 0)",
+              }}
+              transition={{
+                duration: REEL_DUR,
+                ease: "easeInOut",
+              }}
+            >
+              {/* Frames */}
+              <div className="relative flex gap-0 px-0 bg-transparent">
+                {images.map((image, index) => (
+                  <FilmFrame
+                    key={index}
+                    id={index + 1}
+                    imageUrl={image}
+                    isSelected={selectedImage === index}
+                    onClick={() => {
+                      setSelectedImage(index);
+                      addToStack(index);
+                    }}
+                    delay={index * 0.05}
+                  />
+                ))}
+              </div>
+            </motion.div>
+
+            {/* LANE NOTES (pinned overlay: Y fixed, X animates) */}
+            <div
+              className="absolute z-20 pointer-events-none"
+              style={{
+                left: "11rem",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "calc(100% - 11rem - 2rem)",
+              }}
+            >
+              <motion.div
+                initial={false}
+                animate={rolledOut ? "off" : "on"}
+                variants={{
+                  on: { x: 0, opacity: 1 },
+                  off: { x: "40vw", opacity: 0 },
+                }}
+                transition={{
+                  duration: 0.25,
+                  ease: "easeInOut",
+                  delay: rolledOut ? 0 : REEL_DUR,
+                }}
+                style={{ willChange: "transform, opacity" }}
+              >
+                <NotesContent 
+                  compact 
+                  title={title.toLowerCase()} 
+                  subtitle={subtitle}
+                  filmUsed={filmUsed}
+                  year={year}
+                />
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Progress indicator only when rolled out */}
+          {rolledOut && (
+            <div className="absolute bottom-0 left-44 right-8 h-1 flex items-center mt-4">
+              <div className="relative w-full h-full">
+                {/* Track */}
+                <div className="absolute left-0 right-0 top-0 h-0.5 bg-zinc-800/50 rounded-full" />
+                {/* Progress bar */}
+                <motion.div
+                  className="absolute left-0 top-0 h-0.5 bg-gradient-to-r from-amber-500 to-[#E11D48] rounded-full origin-left"
+                  style={{ scaleX: scrollXProgress }}
+                />
+                {/* Dots + tiny red labels */}
+                <div className="absolute left-0 right-0 top-0 flex justify-between items-center -translate-y-[1px]">
+                  {images.map((_, index) => {
+                    const isCurrent = selectedImage === index;
+                    const isLast = index === images.length - 1;
+                    return (
+                      <div
+                        key={index}
+                        className="relative flex items-center justify-center"
+                      >
+                        {(isCurrent || isLast) && (
+                          <span
+                            className={`absolute -top-4 left-1/2 -translate-x-1/2 text-[10px] leading-none font-medium ${
+                              isCurrent
+                                ? "text-[#E11D48]"
+                                : "text-[#E11D48]/80"
+                            } pointer-events-none select-none`}
+                          >
+                            {isLast ? images.length : index + 1}
+                          </span>
+                        )}
+                        <motion.div
+                          className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                            isCurrent
+                              ? "bg-[#E11D48] scale-150 shadow-[0_0_8px_rgba(225,29,72,0.6)]"
+                              : "bg-zinc-600"
+                          }`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Hide scrollbar */}
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </div>
+  );
+}
+
