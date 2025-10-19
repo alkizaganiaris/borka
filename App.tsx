@@ -49,7 +49,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
-
+      {/* <SplashCursor /> - Disabled for performance */}
       {/* Subtle neutral vignette */}
       <div className="fixed inset-0 z-[1] bg-gradient-radial from-transparent via-white/60 to-white pointer-events-none" />
 

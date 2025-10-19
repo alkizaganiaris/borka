@@ -60,13 +60,18 @@ export function PhotoStackPreview({
   return (
     <div className="relative">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, height: 0 }}
+        initial={{ opacity: 0, scale: 0.8, height: 0 }}
         animate={{
           opacity: rolledOut ? 1 : 0,
           scale: rolledOut ? 1 : 0.95,
           height: rolledOut ? "auto" : 0,
         }}
-        transition={{ duration: 0.5 }}
+        transition={{ 
+          duration: 0.8,
+          ease: [0.34, 1.56, 0.64, 1], // Bounce easing for swell effect
+          opacity: { duration: 0.5, ease: "easeOut" },
+          scale: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }, // Extra bounce for scale
+        }}
         className={`max-w-4xl px-4 ${className}`}
         style={{ 
           marginBottom: rolledOut ? "2rem" : "0",

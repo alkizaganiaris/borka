@@ -105,23 +105,19 @@ export function FilmRollGallery({
   // Use controlled state if provided, otherwise use internal state
   const rolledOut = isOpen !== undefined ? isOpen : internalRolledOut;
   
-  // Track if this specific gallery has ever been opened to prevent glitchy first animation
-  const [hasEverOpened, setHasEverOpened] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  // Track if animations should be enabled (prevents glitchy first render)
+  const [animationsEnabled, setAnimationsEnabled] = useState(false);
 
-  const REEL_DUR = 1; // seconds — faster, smoother animation
+  const REEL_DUR = 1.2; // seconds — faster, smoother animation
 
-  // Set ready state synchronously before paint to prevent animation glitches
-  useLayoutEffect(() => {
-    setIsReady(true);
-  }, []);
-
-  // Track when this gallery opens for the first time
+  // Enable animations after first render to prevent glitches
   useEffect(() => {
-    if (rolledOut && !hasEverOpened) {
-      setHasEverOpened(true);
-    }
-  }, [rolledOut, hasEverOpened]);
+    // Small delay to ensure DOM is fully ready
+    const timer = setTimeout(() => {
+      setAnimationsEnabled(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const rand = (min: number, max: number) =>
     Math.random() * (max - min) + min;
@@ -332,14 +328,15 @@ export function FilmRollGallery({
                 willChange: "clip-path"
               }}
               initial={{ clipPath: "inset(0 100% 0 0)" }}
-              animate={{
-                clipPath: rolledOut && isReady
+              animate={animationsEnabled ? {
+                clipPath: rolledOut
                   ? "inset(0 0% 0 0)"
                   : "inset(0 100% 0 0)",
-              }}
+              } : false}
               transition={{
                 duration: REEL_DUR,
                 ease: [0.4, 0, 0.2, 1], // Custom bezier curve for smoother animation
+                delay: rolledOut ? 0.8 : 0, // Wait 1s for scroll to complete before unraveling
               }}
             >
               {/* Frames */}
@@ -372,7 +369,7 @@ export function FilmRollGallery({
             >
               <motion.div
                 initial={{ x: 0, opacity: 1 }}
-                animate={rolledOut && isReady ? "off" : "on"}
+                animate={animationsEnabled ? (rolledOut ? "off" : "on") : false}
                 variants={{
                   on: { x: 0, opacity: 1 },
                   off: { x: "40vw", opacity: 0 },
@@ -380,7 +377,7 @@ export function FilmRollGallery({
                 transition={{
                   duration: 0.3,
                   ease: [0.4, 0, 0.2, 1],
-                  delay: rolledOut && isReady ? 0.05 : REEL_DUR,
+                  delay: rolledOut ? 0.05 : REEL_DUR,
                 }}
                 style={{ willChange: "transform, opacity" }}
               >
@@ -406,7 +403,7 @@ export function FilmRollGallery({
             >
               <motion.div
                 initial={{ x: 0, opacity: 1 }}
-                animate={rolledOut && isReady ? "off" : "on"}
+                animate={animationsEnabled ? (rolledOut ? "off" : "on") : false}
                 variants={{
                   on: { x: 0, opacity: 1 },
                   off: { x: "40vw", opacity: 0 },
@@ -414,7 +411,7 @@ export function FilmRollGallery({
                 transition={{
                   duration: 0.3,
                   ease: [0.4, 0, 0.2, 1],
-                  delay: rolledOut && isReady ? 0.05 : REEL_DUR,
+                  delay: rolledOut ? 0.05 : REEL_DUR,
                 }}
                 style={{ willChange: "transform, opacity" }}
               >
