@@ -272,97 +272,120 @@ function AppContent() {
       {isHomePage && (
         <>
           {/* Cobalt Blue Circle */}
-          <motion.div
-            className="fixed group"
-            initial={{ x: '-200%', opacity: 0 }}
-            animate={{
-              x: isMenuOpen ? '0%' : '-200%',
-              opacity: isMenuOpen ? 1 : 0,
-              rotate: circleRotation
-            }}
-            transition={{ 
-              duration: 0.5, 
-              ease: [0.4, 0, 0.2, 1],
-              delay: 0
-            }}
+          <div 
+            className="fixed"
             style={{
               left: `${circleX}%`,
               top: `${circleY}%`,
-              transform: 'translate(-50%, -50%)',
-              width: `${circleSize}vw`,
-              height: `${circleSize}vw`,
-              borderRadius: '50%',
-              backgroundColor: '#3E4BAA',
-              border: '1px solid #1C1C1C',
-              pointerEvents: 'auto',
-              cursor: 'pointer',
               zIndex: circleZ
             }}
-            whileHover={{
-              borderColor: 'transparent'
-            }}
-          />
+          >
+            <Magnet magnetStrength={-10} padding={100}>
+              <motion.div
+                className="group"
+                initial={{ x: '-200%', opacity: 0 }}
+                animate={{
+                  x: isMenuOpen ? '0%' : '-200%',
+                  opacity: isMenuOpen ? 1 : 0,
+                  rotate: circleRotation
+                }}
+                transition={{ 
+                  duration: isMenuOpen ? 0.5 : 0.25,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: isMenuOpen ? 0 : 0
+                }}
+                style={{
+                  transform: 'translate(-50%, -50%)',
+                  width: `${circleSize}vw`,
+                  height: `${circleSize}vw`,
+                  borderRadius: '50%',
+                  backgroundColor: '#3E4BAA',
+                  border: '1px solid #1C1C1C',
+                  pointerEvents: 'auto',
+                  cursor: 'pointer'
+                }}
+                whileHover={{
+                  borderColor: 'transparent'
+                }}
+              />
+            </Magnet>
+          </div>
 
           {/* Bubblegum Pink Rectangle */}
-          <motion.div
-            className="fixed group"
-            initial={{ x: '-200%', opacity: 0 }}
-            animate={{
-              x: isMenuOpen ? '0%' : '-200%',
-              opacity: isMenuOpen ? 1 : 0,
-              rotate: rectRotation
-            }}
-            transition={{ 
-              duration: 0.5, 
-              ease: [0.4, 0, 0.2, 1],
-              delay: 0.15
-            }}
+          <div 
+            className="fixed"
             style={{
               left: `${rectX}%`,
               top: `${rectY}%`,
-              transform: 'translate(-50%, -50%)',
-              width: `${rectWidth}vw`,
-              height: `${rectHeight}vw`,
-              borderRadius: '1rem',
-              backgroundColor: '#E875A8',
-              border: '1px solid #1C1C1C',
-              pointerEvents: 'auto',
-              cursor: 'pointer',
               zIndex: rectZ
             }}
-            whileHover={{
-              borderColor: 'transparent'
-            }}
-          />
+          >
+            <Magnet magnetStrength={10} padding={100}>
+              <motion.div
+                className="group"
+                initial={{ x: '-200%', opacity: 0 }}
+                animate={{
+                  x: isMenuOpen ? '0%' : '-200%',
+                  opacity: isMenuOpen ? 1 : 0,
+                  rotate: rectRotation
+                }}
+                transition={{ 
+                  duration: isMenuOpen ? 0.5 : 0.25,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: isMenuOpen ? 0.15 : 0
+                }}
+                style={{
+                  transform: 'translate(-50%, -50%)',
+                  width: `${rectWidth}vw`,
+                  height: `${rectHeight}vw`,
+                  borderRadius: '1rem',
+                  backgroundColor: '#E875A8',
+                  border: '1px solid #1C1C1C',
+                  pointerEvents: 'auto',
+                  cursor: 'pointer'
+                }}
+                whileHover={{
+                  borderColor: 'transparent'
+                }}
+              />
+            </Magnet>
+          </div>
 
           {/* Black Triangle */}
-          <motion.div
+          <div 
             className="fixed"
-            initial={{ x: '-200%', opacity: 0 }}
-            animate={{
-              x: isMenuOpen ? '0%' : '-200%',
-              opacity: isMenuOpen ? 1 : 0,
-              rotate: triangleRotation
-            }}
-            transition={{ 
-              duration: 0.5, 
-              ease: [0.4, 0, 0.2, 1],
-              delay: 0.3
-            }}
             style={{
               left: `${triangleX}%`,
               top: `${triangleY}%`,
-              transform: 'translate(-50%, 0)',
-              width: '0',
-              height: '0',
-              borderLeft: `${triangleWidth / 2}vw solid transparent`,
-              borderRight: `${triangleWidth / 2}vw solid transparent`,
-              borderBottom: `${triangleHeight}vw solid #1C1C1C`,
-              pointerEvents: 'auto',
-              cursor: 'pointer',
               zIndex: triangleZ
             }}
-          />
+          >
+            <Magnet magnetStrength={-10} padding={100}>
+              <motion.div
+                initial={{ x: '-200%', opacity: 0 }}
+                animate={{
+                  x: isMenuOpen ? '0%' : '-200%',
+                  opacity: isMenuOpen ? 1 : 0,
+                  rotate: triangleRotation
+                }}
+                transition={{ 
+                  duration: isMenuOpen ? 0.5 : 0.25,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: isMenuOpen ? 0.3 : 0
+                }}
+                style={{
+                  transform: 'translate(-50%, 0)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: `${triangleWidth / 2}vw solid transparent`,
+                  borderRight: `${triangleWidth / 2}vw solid transparent`,
+                  borderBottom: `${triangleHeight}vw solid #1C1C1C`,
+                  pointerEvents: 'auto',
+                  cursor: 'pointer'
+                }}
+              />
+            </Magnet>
+          </div>
         </>
       )}
 
