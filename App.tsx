@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { FilmRollGallery } from "./components";
+import { useState, useEffect, useCallback } from "react";
+import { FilmRollGallery } from "./components/FilmRollGallery";
+import { BubbleVideo } from "./components/BubbleVideo";
+import MagnetLines from "./components/magnets";
 
 // ---------- Demo images ----------
 const galleryImages = [
@@ -27,61 +28,37 @@ const natureImages = [
 
 export default function App() {
   const [openGalleryId, setOpenGalleryId] = useState<string | null>(null);
-  const [mouseY, setMouseY] = useState(0);
+  const [previewPosition, setPreviewPosition] = useState({ top: 0, height: 0 });
+  const [showBubbleVideoForGallery, setShowBubbleVideoForGallery] = useState(false);
 
-  // Mouse tracking effect - always active
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMouseY(e.clientY);
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  const handleGalleryToggle = (id: string) => (isOpen: boolean) => {
+  const handleGalleryToggle = (id: string, showBubbleVideo: boolean = true) => (isOpen: boolean) => {
     if (isOpen) {
       // Close any other open gallery and open this one
       setOpenGalleryId(id);
+      setShowBubbleVideoForGallery(showBubbleVideo);
     } else {
       // Close this gallery
       setOpenGalleryId(null);
+      setShowBubbleVideoForGallery(false);
     }
   };
 
+  const handlePreviewPositionChange = useCallback((top: number, height: number) => {
+    setPreviewPosition({ top, height });
+  }, []);
+
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Subtle neutral vignette */}
-      <div className="fixed inset-0 bg-gradient-radial from-transparent via-white/60 to-white pointer-events-none" />
 
-      {/* Single global bubble video tracking mouse */}
-      <motion.video
-        className="fixed w-32 h-32 object-contain pointer-events-none z-50"
-        style={{
-          left: 'calc(100vw - 180px)', // Position on the right side of screen
-          top: mouseY - 64 // Center video center on mouse Y position
-        }}
-        autoPlay
-        loop
-        muted
-        playsInline
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ 
-          opacity: 1, 
-          scale: 1,
-        }}
-        transition={{ 
-          duration: 0.5, 
-          ease: "easeOut",
-          opacity: { duration: 0.5 },
-          scale: { duration: 0.5 },
-          // No transition for position to make it follow mouse smoothly
-        }}
-      >
-        <source src="/pop_bubbles.mp4" type="video/mp4" />
-      </motion.video>
+      {/* Subtle neutral vignette */}
+      <div className="fixed inset-0 z-[1] bg-gradient-radial from-transparent via-white/60 to-white pointer-events-none" />
 
       <div className="relative z-10">
+        {/* Bubble video component */}
+        <BubbleVideo 
+          isVisible={!!openGalleryId && showBubbleVideoForGallery}
+          previewPosition={previewPosition}
+        />
         {/* Gallery Instances */}
         <FilmRollGallery 
           images={galleryImages} 
@@ -91,6 +68,7 @@ export default function App() {
           year="2023"
           isOpen={openGalleryId === "inspiration"}
           onToggle={handleGalleryToggle("inspiration")}
+          onPreviewPositionChange={handlePreviewPositionChange}
         />
         
         <FilmRollGallery 
@@ -101,6 +79,7 @@ export default function App() {
           year="2024"
           isOpen={openGalleryId === "nature"}
           onToggle={handleGalleryToggle("nature")}
+          onPreviewPositionChange={handlePreviewPositionChange}
         />
         
         
@@ -112,6 +91,7 @@ export default function App() {
           year="2022"
           isOpen={openGalleryId === "enrico"}
           onToggle={handleGalleryToggle("enrico")}
+          onPreviewPositionChange={handlePreviewPositionChange}
         />
         
         <FilmRollGallery 
@@ -122,6 +102,7 @@ export default function App() {
           year="2022"
           isOpen={openGalleryId === "alki"}
           onToggle={handleGalleryToggle("alki")}
+          onPreviewPositionChange={handlePreviewPositionChange}
         />        
 
         <FilmRollGallery 
@@ -132,6 +113,7 @@ export default function App() {
           year="2022"
           isOpen={openGalleryId === "silvia"}
           onToggle={handleGalleryToggle("silvia")}
+          onPreviewPositionChange={handlePreviewPositionChange}
         />
         {/* Uncomment to add more instances:
         <FilmRollGallery 

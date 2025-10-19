@@ -14,7 +14,8 @@ interface FilmRollGalleryProps {
   onToggle?: (isOpen: boolean) => void;
   scrollToPreview?: boolean;
   previewScrollOffset?: number; // Vertical offset in pixels when centering (negative = higher, positive = lower)
-  showBubbleVideo?: boolean; // Show bubble video on canister when preview is visible
+  onPreviewPositionChange?: (top: number, height: number) => void; // Callback to report preview position
+  showBubbleVideo?: boolean; // Whether to show the bubble video for this gallery (defaults to true)
 }
 
 
@@ -93,7 +94,7 @@ export function FilmRollGallery({
   onToggle,
   scrollToPreview = true,
   previewScrollOffset = 120,
-  showBubbleVideo = false,
+  onPreviewPositionChange,
 }: FilmRollGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [stack, setStack] = useState<StackItem[]>([]);
@@ -145,6 +146,29 @@ export function FilmRollGallery({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [rolledOut, onToggle]);
 
+  // Report preview position to parent component (only when rolled out)
+  useEffect(() => {
+    if (!previewRef.current || !onPreviewPositionChange || !rolledOut) return;
+
+    const updatePosition = () => {
+      if (previewRef.current) {
+        const rect = previewRef.current.getBoundingClientRect();
+        onPreviewPositionChange(rect.top + window.scrollY, rect.height);
+      }
+    };
+
+    // Update position when rolledOut changes or on scroll/resize
+    updatePosition();
+    
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [rolledOut, onPreviewPositionChange]);
+
   function addToStack(index: number) {
     const src = images[index];
     setStack((prev) => {
@@ -157,7 +181,7 @@ export function FilmRollGallery({
         dy: rand(-12, 12),
         key: `${index}-${crypto.randomUUID?.() ?? Date.now()}`,
       };
-      return [...prev, item].slice(-6);
+      return [...prev, item].slice(-images.length);
     });
   }
 
@@ -207,7 +231,13 @@ export function FilmRollGallery({
     <div className={`w-full ${className}`}>
       {/* Preview box (stack of chosen photos) */}
       <div ref={previewRef}>
-        <PhotoStackPreview stack={stack} rolledOut={rolledOut} showBubbleVideo={showBubbleVideo} />
+        <PhotoStackPreview 
+          stack={stack} 
+          rolledOut={rolledOut} 
+          title={title}
+          subtitle={subtitle}
+          filmUsed={filmUsed}
+        />
       </div>
 
       {/* Reel section */}

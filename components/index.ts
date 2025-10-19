@@ -4,4 +4,5 @@ export { FilmFrame } from './FilmFrame';
 export { PhotoStackPreview } from './PhotoStackPreview';
 export type { StackItem } from './PhotoStackPreview';
 export { ImageWithFallback } from './figma/ImageWithFallback';
+export { BubbleVideo } from './BubbleVideo';
 

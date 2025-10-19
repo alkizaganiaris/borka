@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 
 export type StackItem = {
@@ -14,16 +14,47 @@ interface PhotoStackPreviewProps {
   stack: StackItem[];
   rolledOut: boolean;
   className?: string;
-  showBubbleVideo?: boolean;
+  title?: string;
+  subtitle?: string;
+  filmUsed?: string;
 }
 
 export function PhotoStackPreview({
   stack,
   rolledOut,
   className = "",
-  showBubbleVideo = false,
+  title,
+  subtitle,
+  filmUsed,
 }: PhotoStackPreviewProps) {
   const [isTopHovered, setIsTopHovered] = useState(false);
+  const [lastStackLength, setLastStackLength] = useState(0);
+  const [newlyAddedItem, setNewlyAddedItem] = useState<string | null>(null);
+  const [mouseMoved, setMouseMoved] = useState(false);
+
+  // Track when new items are added to the stack
+  useEffect(() => {
+    if (stack.length > lastStackLength && stack.length > 0) {
+      // A new item was added
+      const newestItem = stack[stack.length - 1];
+      setNewlyAddedItem(newestItem.key);
+      setMouseMoved(false); // Reset mouse movement flag
+    }
+    setLastStackLength(stack.length);
+  }, [stack.length, stack, lastStackLength]);
+
+  // Track mouse movement to drop zoomed photo
+  useEffect(() => {
+    if (!newlyAddedItem) return;
+
+    const handleMouseMove = () => {
+      setMouseMoved(true);
+      setNewlyAddedItem(null); // Drop the zoomed photo when mouse moves
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [newlyAddedItem]);
 
   return (
     <div className="relative">
@@ -36,14 +67,17 @@ export function PhotoStackPreview({
           height: rolledOut ? "auto" : 0,
         }}
         transition={{ duration: 0.5 }}
-        className={`max-w-4xl mx-auto px-4 ${className}`}
+        className={`max-w-4xl px-4 ${className}`}
         style={{ 
           marginBottom: rolledOut ? "2rem" : "0",
-          overflow: rolledOut ? "visible" : "hidden"
+          overflow: rolledOut ? "visible" : "hidden",
+          marginLeft: "auto",
+          marginRight: "200px"
         }}
       >
       <motion.div 
-        className="relative aspect-video overflow-visible flex items-center justify-center p-8"
+        className="relative aspect-video overflow-visible flex items-center justify-center p-8 border border-black"
+        style={{ borderWidth: '0.5px' }}
         animate={{
           borderRadius: isTopHovered ? "8px" : "16px"
         }}
@@ -63,10 +97,34 @@ export function PhotoStackPreview({
             ease: "easeInOut"
           }}
         >
-          <div className="absolute inset-0 bg-yellow-300/80" style={{ clipPath: 'polygon(0 0, 50% 0, 25% 100%, 0 100%)' }}></div>
-          <div className="absolute inset-0 bg-purple-300/80" style={{ clipPath: 'polygon(50% 0, 100% 0, 75% 100%, 25% 100%)' }}></div>
-          <div className="absolute inset-0 bg-blue-300/80" style={{ clipPath: 'polygon(100% 0, 100% 100%, 75% 100%)' }}></div>
-          <div className="absolute inset-0 bg-pink-300/80" style={{ clipPath: 'polygon(0 100%, 25% 100%, 0 50%)' }}></div>
+          {/* Wooden table background */}
+          <motion.div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ 
+              backgroundImage: 'url(/wooden_table.jpg)',
+              opacity: isTopHovered ? 0.3 : 1
+            }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          ></motion.div>
+
+          {/* Visual notes overlay */}
+          <motion.div 
+            className="absolute bottom-4 left-4 text-white text-sm"
+            animate={{
+              opacity: isTopHovered ? 0 : 1
+            }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            {title && (
+              <span className="font-bold mr-3">{title}</span>
+            )}
+            {subtitle && (
+              <span className="opacity-90 mr-3">{subtitle}</span>
+            )}
+            {filmUsed && (
+              <span className="opacity-75">Film: {filmUsed}</span>
+            )}
+          </motion.div>
         </motion.div>
         
         
@@ -79,12 +137,13 @@ export function PhotoStackPreview({
         >
           {stack.map((item, i) => {
             const isTop = i === stack.length - 1;
-            const hoverActive = isTop && isTopHovered;
+            const isNewlyAdded = newlyAddedItem === item.key;
+            const hoverActive = isTop && isTopHovered && !isNewlyAdded; // Don't hover if newly added
             
-            // Calculate scale to fit the full preview when hovering
+            // Calculate scale - newly added items are zoomed, hovered items are zoomed, top items are slightly scaled
             const stackSize = 0.74; // 74% of preview (current container size)
-            const hoverScale = 1.35; // Adjust this value to control hover zoom (1.5 = 150% of original size)
-            const scaleToFit = hoverActive ? hoverScale : (isTop ? 1.02 : 1);
+            const hoverScale = 1.35; // Adjust this value to control hover zoom
+            const scaleToFit = isNewlyAdded ? hoverScale : (hoverActive ? hoverScale : (isTop ? 1.02 : 1));
             
             return (
               <motion.div
@@ -105,11 +164,11 @@ export function PhotoStackPreview({
                 }}
                 animate={{
                   opacity: 1,
-                  rotate: hoverActive ? 0 : item.rot,
-                  x: hoverActive ? 0 : item.dx,
-                  y: hoverActive ? 0 : item.dy,
+                  rotate: (hoverActive || isNewlyAdded) ? 0 : item.rot,
+                  x: (hoverActive || isNewlyAdded) ? 0 : item.dx,
+                  y: (hoverActive || isNewlyAdded) ? 0 : item.dy,
                   scale: scaleToFit,
-                  boxShadow: hoverActive
+                  boxShadow: (hoverActive || isNewlyAdded)
                     ? "0 16px 48px rgba(0,0,0,0.55)"
                     : isTop
                       ? "0 12px 36px rgba(0,0,0,0.4)"
