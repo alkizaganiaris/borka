@@ -8,8 +8,9 @@ interface DecryptedTextProps {
   className?: string;
   parentClassName?: string;
   encryptedClassName?: string;
-  animateOn?: 'hover' | 'view';
+  animateOn?: 'hover' | 'view' | 'trigger';
   revealDirection?: 'start' | 'end' | 'center';
+  trigger?: boolean; // External trigger for animation
 }
 
 const DecryptedText: React.FC<DecryptedTextProps> = ({
@@ -22,6 +23,7 @@ const DecryptedText: React.FC<DecryptedTextProps> = ({
   encryptedClassName = '',
   animateOn = 'hover',
   revealDirection = 'start',
+  trigger = false,
 }) => {
   const [displayText, setDisplayText] = useState(text);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -98,6 +100,13 @@ const DecryptedText: React.FC<DecryptedTextProps> = ({
       return () => observer.disconnect();
     }
   }, [animateOn, hasAnimated]);
+
+  // Trigger animation when trigger prop becomes true
+  useEffect(() => {
+    if (animateOn === 'trigger' && trigger) {
+      scrambleText();
+    }
+  }, [trigger, animateOn]);
 
   useEffect(() => {
     return () => {

@@ -18,6 +18,7 @@ interface FilmRollGalleryProps {
   previewScrollOffset?: number; // Vertical offset in pixels when centering (negative = higher, positive = lower)
   onPreviewPositionChange?: (top: number, height: number) => void; // Callback to report preview position
   showBubbleVideo?: boolean; // Whether to show the bubble video for this gallery (defaults to true)
+  isDarkMode?: boolean;
 }
 
 
@@ -28,6 +29,8 @@ function NotesContent({
   filmUsed,
   year,
   photos,
+  isDarkMode = false,
+  isCanisterHovered = false,
 }: { 
   compact?: boolean;
   title?: string;
@@ -35,6 +38,8 @@ function NotesContent({
   filmUsed?: string;
   year?: string;
   photos?: number;
+  isDarkMode?: boolean;
+  isCanisterHovered?: boolean;
 }) {
   const monoFont =
     "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
@@ -44,33 +49,76 @@ function NotesContent({
       style={{ fontFamily: monoFont }}
       className={
         compact
-          ? "text-zinc-900 text-sm leading-tight tracking-tight"
-          : "text-zinc-900 text-base leading-tight tracking-tight"
+          ? `text-sm leading-tight tracking-tight transition-colors duration-500 ${isDarkMode ? 'text-zinc-100' : 'text-zinc-900'}`
+          : `text-base leading-tight tracking-tight transition-colors duration-500 ${isDarkMode ? 'text-zinc-100' : 'text-zinc-900'}`
       }
     >
       <h2
         className={
           compact
-            ? "font-semibold uppercase pointer-events-auto text-2xl"
-            : "text-lg font-semibold uppercase pointer-events-auto"
+            ? "font-semibold uppercase text-2xl"
+            : "text-lg font-semibold uppercase"
         }
       >
         <DecryptedText 
           text={title}
-          speed={35}
-          maxIterations={12}
-          animateOn="hover"
+          speed={30}
+          maxIterations={10}
+          animateOn="trigger"
+          trigger={isCanisterHovered}
           revealDirection="start"
         />
       </h2>
-      <p className="text-zinc-600 mb-0">{subtitle}</p>
+      <p className={`mb-0 transition-colors duration-500 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+        <DecryptedText 
+          text={subtitle}
+          speed={25}
+          maxIterations={8}
+          animateOn="trigger"
+          trigger={isCanisterHovered}
+          revealDirection="start"
+        />
+      </p>
 
       {/* Film metadata */}
       {(filmUsed || year || photos) && (
-        <div className="mt-4 space-y-0.5 text-zinc-600 text-xs">
-          {filmUsed && <p>Film: {filmUsed}</p>}
-          {year && <p>Year: {year}</p>}
-          {photos && <p>Photos: {photos}</p>}
+        <div className={`mt-4 space-y-0.5 text-xs transition-colors duration-500 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+          {filmUsed && (
+            <p>
+              <DecryptedText 
+                text={`Film: ${filmUsed}`}
+                speed={25}
+                maxIterations={8}
+                animateOn="trigger"
+                trigger={isCanisterHovered}
+                revealDirection="start"
+              />
+            </p>
+          )}
+          {year && (
+            <p>
+              <DecryptedText 
+                text={`Year: ${year}`}
+                speed={25}
+                maxIterations={8}
+                animateOn="trigger"
+                trigger={isCanisterHovered}
+                revealDirection="start"
+              />
+            </p>
+          )}
+          {photos && (
+            <p>
+              <DecryptedText 
+                text={`Photos: ${photos}`}
+                speed={25}
+                maxIterations={8}
+                animateOn="trigger"
+                trigger={isCanisterHovered}
+                revealDirection="start"
+              />
+            </p>
+          )}
         </div>
       )}
 
@@ -107,10 +155,12 @@ export function FilmRollGallery({
   scrollToPreview = true,
   previewScrollOffset = 180, // Negative = scroll higher up
   onPreviewPositionChange,
+  isDarkMode = false,
 }: FilmRollGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [stack, setStack] = useState<StackItem[]>([]);
   const [internalRolledOut, setInternalRolledOut] = useState(false);
+  const [isCanisterHovered, setIsCanisterHovered] = useState(false);
   
   // Use controlled state if provided, otherwise use internal state
   const rolledOut = isOpen !== undefined ? isOpen : internalRolledOut;
@@ -289,6 +339,8 @@ export function FilmRollGallery({
 
               toggleRolledOut(next);
             }}
+            onMouseEnter={() => setIsCanisterHovered(true)}
+            onMouseLeave={() => setIsCanisterHovered(false)}
             initial={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.04 }}
             className="absolute left-0 top-[7.5%] z-30 w-40 h-48 flex items-center justify-center"
@@ -297,7 +349,7 @@ export function FilmRollGallery({
               <img
                 src="/film-canister.png"
                 alt="Film Roll"
-                className="w-full h-full object-contain drop-shadow-2xl"
+                className="w-full h-full object-contain"
               />
               {/* Leader grows/shrinks with rollout, but waits on close */}
               <motion.div
@@ -398,6 +450,8 @@ export function FilmRollGallery({
                   filmUsed={filmUsed}
                   year={year}
                   photos={images.length}
+                  isDarkMode={isDarkMode}
+                  isCanisterHovered={isCanisterHovered}
                 />
               </motion.div>
             </div>
@@ -427,7 +481,11 @@ export function FilmRollGallery({
                 style={{ willChange: "transform, opacity" }}
               >
                 {description && (
-                  <div className="text-white text-sm max-w-lg leading-relaxed bg-black/20 px-2 py-1 rounded">
+                  <div className={`text-sm max-w-lg leading-relaxed px-2 py-1 rounded transition-colors duration-500 ${
+                    isDarkMode 
+                      ? 'text-zinc-100 bg-white/10' 
+                      : 'text-white bg-black/20'
+                  }`}>
                     {description}
                   </div>
                 )}

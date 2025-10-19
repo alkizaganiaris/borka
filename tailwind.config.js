@@ -14,48 +14,81 @@ export default {
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
   		},
-  		colors: {
-  			background: 'hsl(var(--background))',
-  			foreground: 'hsl(var(--foreground))',
-  			card: {
-  				DEFAULT: 'hsl(var(--card))',
-  				foreground: 'hsl(var(--card-foreground))'
-  			},
-  			popover: {
-  				DEFAULT: 'hsl(var(--popover))',
-  				foreground: 'hsl(var(--popover-foreground))'
-  			},
-  			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
-  			},
-  			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
-  			},
-  			muted: {
-  				DEFAULT: 'hsl(var(--muted))',
-  				foreground: 'hsl(var(--muted-foreground))'
-  			},
-  			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
-  			},
-  			destructive: {
-  				DEFAULT: 'hsl(var(--destructive))',
-  				foreground: 'hsl(var(--destructive-foreground))'
-  			},
-  			border: 'hsl(var(--border))',
-  			input: 'hsl(var(--input))',
-  			ring: 'hsl(var(--ring))',
-  			chart: {
-  				'1': 'hsl(var(--chart-1))',
-  				'2': 'hsl(var(--chart-2))',
-  				'3': 'hsl(var(--chart-3))',
-  				'4': 'hsl(var(--chart-4))',
-  				'5': 'hsl(var(--chart-5))'
-  			}
-  		}
+		colors: {
+			// BORKA Custom Colors
+			bubblegum: {
+				DEFAULT: '#E875A8',
+				light: '#F2B8D1',
+				lighter: '#F8D1E3',
+				dark: '#D66596',
+				darker: '#C45584'
+			},
+			buttery: {
+				DEFAULT: '#F4DE7C',
+				light: '#F7E8A6',
+				lighter: '#F9F0C0',
+				dark: '#F2D866',
+				darker: '#F0D250'
+			},
+			cobalt: {
+				DEFAULT: '#3E4BAA',
+				light: '#6B7BCB',
+				lighter: '#8A9BD6',
+				dark: '#2E3A9A',
+				darker: '#1F298A'
+			},
+			teal: {
+				DEFAULT: '#3CB4AC',
+				light: '#5EC7C1',
+				lighter: '#80D5D0',
+				dark: '#2FA49C',
+				darker: '#22948C'
+			},
+			black: {
+				accent: '#1C1C1C'
+			},
+			// Existing shadcn colors
+			background: 'hsl(var(--background))',
+			foreground: 'hsl(var(--foreground))',
+			card: {
+				DEFAULT: 'hsl(var(--card))',
+				foreground: 'hsl(var(--card-foreground))'
+			},
+			popover: {
+				DEFAULT: 'hsl(var(--popover))',
+				foreground: 'hsl(var(--popover-foreground))'
+			},
+			primary: {
+				DEFAULT: 'hsl(var(--primary))',
+				foreground: 'hsl(var(--primary-foreground))'
+			},
+			secondary: {
+				DEFAULT: 'hsl(var(--secondary))',
+				foreground: 'hsl(var(--secondary-foreground))'
+			},
+			muted: {
+				DEFAULT: 'hsl(var(--muted))',
+				foreground: 'hsl(var(--muted-foreground))'
+			},
+			accent: {
+				DEFAULT: 'hsl(var(--accent))',
+				foreground: 'hsl(var(--accent-foreground))'
+			},
+			destructive: {
+				DEFAULT: 'hsl(var(--destructive))',
+				foreground: 'hsl(var(--destructive-foreground))'
+			},
+			border: 'hsl(var(--border))',
+			input: 'hsl(var(--input))',
+			ring: 'hsl(var(--ring))',
+			chart: {
+				'1': 'hsl(var(--chart-1))',
+				'2': 'hsl(var(--chart-2))',
+				'3': 'hsl(var(--chart-3))',
+				'4': 'hsl(var(--chart-4))',
+				'5': 'hsl(var(--chart-5))'
+			}
+		}
   	}
   },
   plugins: [require("tailwindcss-animate")],

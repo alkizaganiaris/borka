@@ -21,11 +21,7 @@ export function FilmFrame({
         onClick={onClick}
         className={`
           relative w-[240px] h-[160px] transition-all duration-300
-          ${
-            isSelected
-              ? "drop-shadow-[0_0_25px_rgba(225,29,72,0)]"
-              : "drop-shadow-2xl"
-          }
+
         `}
         // Hover = “lit” only, no movement
         whileHover={{ filter: "brightness(1.4)" }}

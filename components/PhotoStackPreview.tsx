@@ -72,17 +72,21 @@ export function PhotoStackPreview({
           opacity: { duration: 0.5, ease: "easeOut" },
           scale: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }, // Extra bounce for scale
         }}
-        className={`max-w-4xl px-4 ${className}`}
+        className={`px-4 ${className}`}
         style={{ 
           marginBottom: rolledOut ? "2rem" : "0",
           overflow: rolledOut ? "visible" : "hidden",
-          marginLeft: "auto",
-          marginRight: "200px"
+          width: '87vw', // Adjust this value to control width
+          marginLeft: 'auto',
+          marginRight: 'auto'
         }}
       >
       <motion.div 
-        className="relative aspect-video overflow-visible flex items-center justify-center p-8 border border-black"
-        style={{ borderWidth: '0.5px' }}
+        className="relative overflow-visible flex items-center justify-center p-8 border border-black"
+        style={{ 
+          borderWidth: '0.5px',
+          height: '63vh' // Adjust this value to control height
+        }}
         animate={{
           borderRadius: isTopHovered ? "8px" : "16px"
         }}
@@ -114,7 +118,7 @@ export function PhotoStackPreview({
 
           {/* Visual notes overlay */}
           <motion.div 
-            className="absolute bottom-2 left-4 text-white   text-sm"
+            className="absolute bottom-4 right-4 bg-orange-400 border border-black rounded-lg px-3 py-2 text-black text-sm shadow-lg"
             style={{
               fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
             }}
@@ -139,8 +143,15 @@ export function PhotoStackPreview({
         
         {/* STACK: newest on top */}
         <div
-          className="relative flex items-center justify-center"
-          style={{ width: "74%", height: "74%" }}
+          className="absolute"
+          style={{ 
+            width: "500px", 
+            height: "333px",
+            // Position controls - adjust these values:
+            left: '70%',      // Horizontal position: 'left', 'center', 'right', or percentage/px
+            top: '50%',       // Vertical position: 'top', 'center', 'bottom', or percentage/px
+            transform: 'translate(-50%, -50%)', // Centers when using percentages
+          }}
           onMouseEnter={() => setIsTopHovered(true)}
           onMouseLeave={() => setIsTopHovered(false)}
         >
@@ -150,7 +161,6 @@ export function PhotoStackPreview({
             const hoverActive = isTop && isTopHovered && !isNewlyAdded; // Don't hover if newly added
             
             // Calculate scale - newly added items are zoomed, hovered items are zoomed, top items are slightly scaled
-            const stackSize = 0.74; // 74% of preview (current container size)
             const hoverScale = 1.35; // Adjust this value to control hover zoom
             const scaleToFit = isNewlyAdded ? hoverScale : (hoverActive ? hoverScale : (isTop ? 1.02 : 1));
             
