@@ -203,9 +203,9 @@ function AppContent() {
             >
               {wasCaught 
                 ? "'click'" 
-                : isDarkMode 
-                  ? "Lights on?" 
-                  : "Lights off?"}
+                : isButtonHovered && !wasCaught
+                  ? (isDarkMode ? "Lights on?" : "Lights off?")
+                  : ""}
             </motion.div>
           </div>
         </Magnet>
@@ -216,8 +216,8 @@ function AppContent() {
           <DotGrid 
             dotSize={2}
             gap={15}
-            baseColor={isDarkMode ? "#4A4A4A" : "#D3D3D3"}
-            activeColor={isDarkMode ? "#6A6A6A" : "#A0A0A0"}
+            baseColor={isDarkMode ? "#FFFFFF" : "#D3D3D3"}
+            activeColor={isDarkMode ? "#FFFFFF" : "#A0A0A0"}
             proximity={60}
           />
         </div>

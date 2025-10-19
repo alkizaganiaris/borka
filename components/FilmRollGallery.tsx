@@ -49,8 +49,8 @@ function NotesContent({
       style={{ fontFamily: monoFont }}
       className={
         compact
-          ? `text-sm leading-tight tracking-tight transition-colors duration-500 ${isDarkMode ? 'text-zinc-100' : 'text-zinc-900'}`
-          : `text-base leading-tight tracking-tight transition-colors duration-500 ${isDarkMode ? 'text-zinc-100' : 'text-zinc-900'}`
+          ? `text-sm leading-tight tracking-tight transition-colors duration-500 text-zinc-900`
+          : `text-base leading-tight tracking-tight transition-colors duration-500 text-zinc-900`
       }
     >
       <h2
@@ -69,7 +69,7 @@ function NotesContent({
           revealDirection="start"
         />
       </h2>
-      <p className={`mb-0 transition-colors duration-500 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+      <p className="mb-0 transition-colors duration-500 text-zinc-600">
         <DecryptedText 
           text={subtitle}
           speed={25}
@@ -82,7 +82,7 @@ function NotesContent({
 
       {/* Film metadata */}
       {(filmUsed || year || photos) && (
-        <div className={`mt-4 space-y-0.5 text-xs transition-colors duration-500 ${isDarkMode ? 'text-zinc-400' : 'text-zinc-600'}`}>
+        <div className="mt-4 space-y-0.5 text-xs transition-colors duration-500 text-black">
           {filmUsed && (
             <p>
               <DecryptedText 
