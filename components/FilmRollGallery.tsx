@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { motion, useScroll } from "motion/react";
 import { FilmFrame } from "./FilmFrame";
 import { PhotoStackPreview, type StackItem } from "./PhotoStackPreview";
@@ -9,6 +9,7 @@ interface FilmRollGalleryProps {
   subtitle?: string;
   filmUsed?: string;
   year?: string;
+  description?: string;
   className?: string;
   isOpen?: boolean;
   onToggle?: (isOpen: boolean) => void;
@@ -89,11 +90,12 @@ export function FilmRollGallery({
   subtitle,
   filmUsed,
   year,
+  description,
   className = "",
   isOpen,
   onToggle,
   scrollToPreview = true,
-  previewScrollOffset = 120,
+  previewScrollOffset = 180, // Negative = scroll higher up
   onPreviewPositionChange,
 }: FilmRollGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -102,8 +104,24 @@ export function FilmRollGallery({
   
   // Use controlled state if provided, otherwise use internal state
   const rolledOut = isOpen !== undefined ? isOpen : internalRolledOut;
+  
+  // Track if this specific gallery has ever been opened to prevent glitchy first animation
+  const [hasEverOpened, setHasEverOpened] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
-  const REEL_DUR = 1; // seconds — keep this in sync with the reel animation
+  const REEL_DUR = 1; // seconds — faster, smoother animation
+
+  // Set ready state synchronously before paint to prevent animation glitches
+  useLayoutEffect(() => {
+    setIsReady(true);
+  }, []);
+
+  // Track when this gallery opens for the first time
+  useEffect(() => {
+    if (rolledOut && !hasEverOpened) {
+      setHasEverOpened(true);
+    }
+  }, [rolledOut, hasEverOpened]);
 
   const rand = (min: number, max: number) =>
     Math.random() * (max - min) + min;
@@ -146,9 +164,9 @@ export function FilmRollGallery({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [rolledOut, onToggle]);
 
-  // Report preview position to parent component (only when rolled out)
+  // Report preview position to parent component (only when rolled out and this gallery is active)
   useEffect(() => {
-    if (!previewRef.current || !onPreviewPositionChange || !rolledOut) return;
+    if (!previewRef.current || !onPreviewPositionChange || !rolledOut || !isOpen) return;
 
     const updatePosition = () => {
       if (previewRef.current) {
@@ -157,17 +175,18 @@ export function FilmRollGallery({
       }
     };
 
-    // Update position when rolledOut changes or on scroll/resize
+    // Initial position update
     updatePosition();
     
-    window.addEventListener('scroll', updatePosition);
-    window.addEventListener('resize', updatePosition);
+    // Only update on scroll/resize, not on every render
+    window.addEventListener('scroll', updatePosition, { passive: true });
+    window.addEventListener('resize', updatePosition, { passive: true });
     
     return () => {
       window.removeEventListener('scroll', updatePosition);
       window.removeEventListener('resize', updatePosition);
     };
-  }, [rolledOut, onPreviewPositionChange]);
+  }, [rolledOut, isOpen, onPreviewPositionChange]);
 
   function addToStack(index: number) {
     const src = images[index];
@@ -237,6 +256,7 @@ export function FilmRollGallery({
           title={title}
           subtitle={subtitle}
           filmUsed={filmUsed}
+          description={description}
         />
       </div>
 
@@ -311,15 +331,15 @@ export function FilmRollGallery({
                 minHeight: '48px', // Match canister height
                 willChange: "clip-path"
               }}
-              initial={false}
+              initial={{ clipPath: "inset(0 100% 0 0)" }}
               animate={{
-                clipPath: rolledOut
+                clipPath: rolledOut && isReady
                   ? "inset(0 0% 0 0)"
                   : "inset(0 100% 0 0)",
               }}
               transition={{
                 duration: REEL_DUR,
-                ease: "easeInOut",
+                ease: [0.4, 0, 0.2, 1], // Custom bezier curve for smoother animation
               }}
             >
               {/* Frames */}
@@ -340,27 +360,27 @@ export function FilmRollGallery({
               </div>
             </motion.div>
 
-            {/* LANE NOTES (pinned overlay: Y fixed, X animates) */}
+            {/* LANE NOTES (pinned overlay: Y fixed, X animates) - Left half */}
             <div
               className="absolute z-20 pointer-events-none"
               style={{
                 left: "11rem",
                 top: "50%",
                 transform: "translateY(-50%)",
-                width: "calc(100% - 11rem - 2rem)",
+                width: "calc(50% - 11rem - 1rem)",
               }}
             >
               <motion.div
-                initial={false}
-                animate={rolledOut ? "off" : "on"}
+                initial={{ x: 0, opacity: 1 }}
+                animate={rolledOut && isReady ? "off" : "on"}
                 variants={{
                   on: { x: 0, opacity: 1 },
                   off: { x: "40vw", opacity: 0 },
                 }}
                 transition={{
-                  duration: 0.25,
-                  ease: "easeInOut",
-                  delay: rolledOut ? 0 : REEL_DUR,
+                  duration: 0.3,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: rolledOut && isReady ? 0.05 : REEL_DUR,
                 }}
                 style={{ willChange: "transform, opacity" }}
               >
@@ -371,6 +391,38 @@ export function FilmRollGallery({
                   filmUsed={filmUsed}
                   year={year}
                 />
+              </motion.div>
+            </div>
+
+            {/* LANE DESCRIPTION (pinned overlay: Y fixed, X animates) - Right half */}
+            <div
+              className="absolute z-20 pointer-events-none"
+              style={{
+                left: "calc(50% + 1rem)",
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: "calc(50% - 2rem)",
+              }}
+            >
+              <motion.div
+                initial={{ x: 0, opacity: 1 }}
+                animate={rolledOut && isReady ? "off" : "on"}
+                variants={{
+                  on: { x: 0, opacity: 1 },
+                  off: { x: "40vw", opacity: 0 },
+                }}
+                transition={{
+                  duration: 0.3,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: rolledOut && isReady ? 0.05 : REEL_DUR,
+                }}
+                style={{ willChange: "transform, opacity" }}
+              >
+                {description && (
+                  <div className="text-white text-sm max-w-lg leading-relaxed bg-black/20 px-2 py-1 rounded">
+                    {description}
+                  </div>
+                )}
               </motion.div>
             </div>
           </div>

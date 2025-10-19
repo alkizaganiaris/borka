@@ -17,6 +17,7 @@ interface PhotoStackPreviewProps {
   title?: string;
   subtitle?: string;
   filmUsed?: string;
+  description?: string;
 }
 
 export function PhotoStackPreview({
@@ -58,7 +59,6 @@ export function PhotoStackPreview({
 
   return (
     <div className="relative">
-      
       <motion.div
         initial={{ opacity: 0, scale: 0.95, height: 0 }}
         animate={{
@@ -125,6 +125,7 @@ export function PhotoStackPreview({
               <span className="opacity-75">Film: {filmUsed}</span>
             )}
           </motion.div>
+
         </motion.div>
         
         

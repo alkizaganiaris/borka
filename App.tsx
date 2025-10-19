@@ -66,6 +66,7 @@ export default function App() {
           subtitle="/ ˌɪn spəˈreɪ ʃən /"
           filmUsed="Kodak Portra 400"
           year="2023"
+          description="This collection captures the essence of urban exploration through the lens of vintage film photography, showcasing the beauty found in everyday moments and the poetry of city life."
           isOpen={openGalleryId === "inspiration"}
           onToggle={handleGalleryToggle("inspiration")}
           onPreviewPositionChange={handlePreviewPositionChange}
@@ -77,6 +78,7 @@ export default function App() {
           subtitle="/ ˈneɪ tʃər kəˈlek ʃən /"
           filmUsed="Fujifilm Pro 400H"
           year="2024"
+          description="A journey through untouched landscapes and natural wonders, documenting the raw beauty of our planet through analog photography techniques."
           isOpen={openGalleryId === "nature"}
           onToggle={handleGalleryToggle("nature")}
           onPreviewPositionChange={handlePreviewPositionChange}
@@ -89,6 +91,7 @@ export default function App() {
           subtitle="/ ˈenɪ ʃəə kə'w /"
           filmUsed="Ilford HP5 Plus"
           year="2022"
+          description="Personal portraits and intimate moments captured in black and white, exploring the depth of human emotion and connection."
           isOpen={openGalleryId === "enrico"}
           onToggle={handleGalleryToggle("enrico")}
           onPreviewPositionChange={handlePreviewPositionChange}
@@ -100,6 +103,7 @@ export default function App() {
           subtitle="/ ˈenɪ ʃəə kə'w /"
           filmUsed="Ilford HP5 Plus"
           year="2022"
+          description="This collection captures the essence of urban exploration through the lens of vintage film photography, showcasing the beauty found in everyday moments and the poetry of city life."
           isOpen={openGalleryId === "alki"}
           onToggle={handleGalleryToggle("alki")}
           onPreviewPositionChange={handlePreviewPositionChange}
@@ -111,6 +115,7 @@ export default function App() {
           subtitle="/ ˈenɪ ʃəə kə'w /"
           filmUsed="Ilford HP5 Plus"
           year="2022"
+          description="Personal portraits and intimate moments captured in black and white, exploring the depth of human emotion and connection."
           isOpen={openGalleryId === "silvia"}
           onToggle={handleGalleryToggle("silvia")}
           onPreviewPositionChange={handlePreviewPositionChange}
