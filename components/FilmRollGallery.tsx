@@ -29,7 +29,7 @@ function NotesContent({
   filmUsed,
   year,
   photos,
-  isDarkMode = false,
+  //isDarkMode = false,
   isCanisterHovered = false,
 }: { 
   compact?: boolean;
@@ -484,11 +484,7 @@ export function FilmRollGallery({
               >
                 {description && (
                   <div 
-                    className={`text-sm leading-relaxed rounded-l-lg border border-black shadow-lg transition-colors duration-500 relative overflow-hidden font-mono ${
-                      isDarkMode 
-                        ? 'text-zinc-100' 
-                        : 'text-black'
-                    }`}
+                    className="text-sm leading-relaxed rounded-l-lg transition-colors duration-500 relative overflow-hidden font-mono text-black"
                     style={{
                       width: "100%", // Fill the fixed container
                       height: "100%", // Fill the fixed container
@@ -499,20 +495,8 @@ export function FilmRollGallery({
                       justifyContent: "center",
                     }}
                   >
-                    {/* Abstract diagonal shapes pattern */}
-                    <div 
-                      className="absolute inset-0 opacity-20"
-                      style={{
-                        background: `
-                          linear-gradient(60deg, #E875A8 30%, transparent 30%, transparent 70%, #F4DE7C 70%),
-                          linear-gradient(-30deg, #3E4BAA 40%, transparent 40%, transparent 60%, #3CB4AC 60%),
-                          linear-gradient(120deg, transparent 20%, #E875A8 20%, #E875A8 80%, transparent 80%),
-                          linear-gradient(-60deg, #F4DE7C 35%, transparent 35%, transparent 65%, #3E4BAA 65%)
-                        `,
-                        backgroundSize: '300px 500px',
-                        backgroundPosition: '0 0, 48px 48px, 96px 96px, 144px 144px'
-                      }}
-                    />
+                    {/* White background - 50% opacity */}
+                    <div className="absolute inset-0 bg-white opacity-0" />
                     {/* Content - centered in fixed container */}
                     <div className="relative z-10 text-center">
                       {description}

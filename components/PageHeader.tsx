@@ -5,7 +5,7 @@ interface PageHeaderProps {
   isDarkMode?: boolean;
 }
 
-export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
+export function PageHeader({ title}: PageHeaderProps) {
   const monoFont = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
 
   return (

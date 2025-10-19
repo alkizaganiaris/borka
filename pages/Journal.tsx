@@ -1,116 +1,232 @@
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { PageHeader } from "../components/PageHeader";
+import { useState, useRef, useEffect } from "react";
+import TextType from "../components/TextType";
+import "../styles/fonts.css";
 
 interface JournalProps {
   isDarkMode: boolean;
 }
 
+interface JournalEntry {
+  id: number;
+  title: string;
+  date: string;
+  excerpt: string;
+  content: string;
+  timestamp: Date;
+}
+
 export function Journal({ isDarkMode }: JournalProps) {
-  const journalEntries = [
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typeKey, setTypeKey] = useState(0);
+  const [isEntryListHovered, setIsEntryListHovered] = useState(false);
+  const [hoveredEntryId, setHoveredEntryId] = useState<number | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  // Configuration values
+  const containerTranslateY = -10;
+  const textTranslateY = 0;
+  const fontSize = 1.4;
+  const lineHeight = 2.2;
+
+  const journalEntries: JournalEntry[] = [
     {
       id: 1,
       title: "The Art of Film Photography",
       date: "December 15, 2024",
+      timestamp: new Date("2024-12-15"),
       excerpt: "There's something magical about the anticipation of developing film. The uncertainty, the waiting, the moment when images emerge from chemicals...",
-      content: "Film photography teaches us patience and intentionality. Every frame matters when you have only 36 exposures. This constraint becomes liberating rather than limiting."
+      content: "There's something magical about the anticipation of developing film. The uncertainty, the waiting, the moment when images emerge from chemicals...\n\nFilm photography teaches us patience and intentionality. Every frame matters when you have only 36 exposures. This constraint becomes liberating rather than limiting.\n\nIn the darkroom, time slows down. The process forces you to be present, to pay attention to each step. It's a meditation in itself."
     },
     {
       id: 2,
       title: "Finding Light in Unexpected Places",
       date: "December 10, 2024",
+      timestamp: new Date("2024-12-10"),
       excerpt: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...",
-      content: "Light is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently."
+      content: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...\n\nLight is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently.\n\nThe golden hour isn't just a time of day—it's a state of mind. It's about being ready to capture beauty when it appears."
     },
     {
       id: 3,
       title: "The Journey of a Ceramic Artist",
       date: "December 5, 2024",
+      timestamp: new Date("2024-12-05"),
       excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
-      content: "Working with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection."
+      content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
     }
   ];
 
+  // Sort entries by date (newest first)
+  const sortedEntries = [...journalEntries].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+  const playPageTurn = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play();
+    }
+  };
+
+  const handleEntryClick = (entry: JournalEntry) => {
+    if (selectedEntry?.id === entry.id) return; // Don't re-trigger if same entry
+
+    // Stop current typing and clear
+    setIsTyping(false);
+    setSelectedEntry(null);
+
+    // Play page turn animation
+    playPageTurn();
+
+    // Wait for video to finish (adjust timing based on your video length)
+    setTimeout(() => {
+      setSelectedEntry(entry);
+      setTypeKey(prev => prev + 1); // Force TextType to remount
+      setIsTyping(true);
+    }, 800); // Adjust this delay to match your video duration
+  };
+
   return (
-    <div>
+    <div className="fixed inset-0 overflow-hidden" style={{ fontFamily: '"Indie Flower", cursive' }}>
       <PageHeader title="Journal" isDarkMode={isDarkMode} />
       
-      <div className="max-w-4xl mx-auto px-8 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+      <div className="relative w-full h-full">
+        {/* Notebook Background - Fixed in Center, Above Background Layer */}
+        <div 
+          className="fixed inset-0 flex items-center justify-center pointer-events-none" 
+          style={{ zIndex: 1 }}
         >
-          <p className={`text-lg mb-12 transition-colors duration-500 ${
-            isDarkMode ? 'text-zinc-300' : 'text-zinc-600'
-          }`}>
-            Thoughts, stories, and reflections on art, photography, and life.
-          </p>
-
-        <div className="space-y-12">
-          {journalEntries.map((entry, index) => (
-            <motion.article
-              key={entry.id}
-              className={`p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.02] ${
-                isDarkMode 
-                  ? 'bg-zinc-800/30 border-zinc-700 hover:border-zinc-500' 
-                  : 'bg-white/50 border-zinc-200 hover:border-zinc-400'
-              }`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              whileHover={{ y: -5 }}
-            >
-              <div className="mb-4">
-                <h2 className={`text-2xl font-bold mb-2 transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-black'
-                }`}>
-                  {entry.title}
-                </h2>
-                <p className={`text-sm transition-colors duration-500 ${
-                  isDarkMode ? 'text-zinc-400' : 'text-zinc-500'
-                }`}>
-                  {entry.date}
-                </p>
-              </div>
-              
-              <p className={`text-lg leading-relaxed mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-zinc-300' : 'text-zinc-700'
-              }`}>
-                {entry.excerpt}
-              </p>
-              
-              <p className={`text-base leading-relaxed transition-colors duration-500 ${
-                isDarkMode ? 'text-zinc-400' : 'text-zinc-600'
-              }`}>
-                {entry.content}
-              </p>
-            </motion.article>
-          ))}
+          <motion.video
+            ref={videoRef}
+            className="opacity-100"
+            animate={{
+              width: selectedEntry 
+                ? '64vw'
+                : (!selectedEntry && isEntryListHovered ? '48vw' : '40vw'),
+              transform: selectedEntry
+                ? 'translateY(20vh)'
+                : (!selectedEntry && isEntryListHovered 
+                  ? 'translateY(70vh)' 
+                  : 'translateY(80vh)')
+            }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            style={{ 
+              height: 'auto'
+            }}
+            src="/notebook_transparent.webm"
+            muted
+            playsInline
+          />
         </div>
 
-        {/* Coming Soon */}
-        <motion.div
-          className={`mt-16 p-8 rounded-2xl border-2 border-dashed text-center transition-colors duration-500 ${
-            isDarkMode 
-              ? 'border-zinc-600 bg-zinc-800/20' 
-              : 'border-zinc-300 bg-zinc-50/50'
-          }`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
+        {/* Left Sidebar - Entry List (Far Left) */}
+        <div 
+          className="fixed left-0 top-30vh h-screen overflow-y-auto px-8 pt-32 z-10" 
+          style={{ width: '25vw' }}
         >
-          <h3 className={`text-xl font-semibold mb-2 transition-colors duration-500 ${
-            isDarkMode ? 'text-zinc-300' : 'text-zinc-600'
-          }`}>
-            More entries coming soon...
-          </h3>
-          <p className={`transition-colors duration-500 ${
-            isDarkMode ? 'text-zinc-500' : 'text-zinc-400'
-          }`}>
-            Stay tuned for more thoughts and stories.
-          </p>
-        </motion.div>
-        </motion.div>
+          <h3 className="text-2xl font-bold mb-6 text-black">Entries</h3>
+          <div className="space-y-3 pb-12">
+            {sortedEntries.map((entry, index) => (
+              <motion.button
+                key={entry.id}
+                onClick={() => handleEntryClick(entry)}
+                onMouseEnter={() => {
+                  if (!selectedEntry) {
+                    setIsEntryListHovered(true);
+                    setHoveredEntryId(entry.id);
+                  }
+                }}
+                onMouseLeave={() => {
+                  setIsEntryListHovered(false);
+                  setHoveredEntryId(null);
+                }}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                className={`w-full text-left p-4 rounded-xl transition-all duration-300 ${
+                  selectedEntry?.id === entry.id
+                    ? 'bg-black text-white shadow-lg'
+                    : 'text-black shadow-md'
+                }`}
+                style={{
+                  backgroundColor: selectedEntry?.id === entry.id 
+                    ? '#1C1C1C'
+                    : '#F4DE7C',
+                  border: '1px solid #1C1C1C'
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <h4 className="font-bold text-lg mb-1">{entry.title}</h4>
+                <p className={`text-sm ${selectedEntry?.id === entry.id ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                  {entry.date}
+                </p>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content Overlay - Centered over Notebook */}
+        <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2 }}>
+          <motion.div 
+            className="relative pointer-events-auto"
+            animate={{
+              width: selectedEntry ? '64vw' : '40vw',
+              transform: selectedEntry
+                ? `translateY(calc(19vh + ${containerTranslateY}vh))`
+                : (!selectedEntry && isEntryListHovered 
+                  ? `translateY(calc(70vh + ${containerTranslateY}vh))` 
+                  : `translateY(calc(80vh + ${containerTranslateY}vh))`)
+            }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <div 
+              className="overflow-auto" 
+              style={{ 
+                height: `calc(73vh + ${lineHeight * 2}rem)`,
+                paddingTop: '3rem',
+                paddingBottom: '3rem',
+                paddingLeft: '13%', 
+                paddingRight: '7%',
+                transform: `translateY(${textTranslateY}vh)`,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start'
+              }}
+            >
+              <AnimatePresence mode="wait">
+                {selectedEntry ? (
+                  <motion.div
+                    key={selectedEntry.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-black"
+                  >
+                    {/* Typed Content */}
+                    {isTyping && (
+                      <TextType
+                        key={typeKey}
+                        text={selectedEntry.content}
+                        typingSpeed={50}
+                        className="text-black"
+                        style={{
+                          fontSize: `${fontSize}rem`,
+                          lineHeight: `${lineHeight}`
+                        }}
+                        showCursor={true}
+                        cursorCharacter="|"
+                        loop={false}
+                        variableSpeed={{ min: 30, max: 80 }}
+                      />
+                    )}
+                  </motion.div>
+              ) : null}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

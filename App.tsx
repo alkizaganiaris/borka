@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import StaggeredMenu from "./components/StaggeredMenu";
 import { PageTransition } from "./components/PageTransition";
@@ -6,6 +6,7 @@ import { Homepage } from "./pages/Homepage";
 import { Photography } from "./pages/Photography";
 import { Journal } from "./pages/Journal";
 import { Ceramics } from "./pages/Ceramics";
+import { Typography } from "./pages/Typography";
 import DotGrid from "./components/BlastBackground";
 import { motion, AnimatePresence } from "motion/react";
 import Magnet from "./components/MagnetButton";
@@ -19,6 +20,11 @@ function AppContent() {
   const navigate = useNavigate();
 
   const isHomePage = location.pathname === '/';
+
+  // Close menu when navigating to a different page
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   const handleDarkModeClick = () => {
     setIsDarkMode(!isDarkMode);
@@ -35,7 +41,8 @@ function AppContent() {
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
     { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
     { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
-    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' }
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
+    { label: 'Typography', ariaLabel: 'View typography showcase', link: '/typography' }
   ];
 
   const socialItems = [
@@ -95,7 +102,7 @@ function AppContent() {
           menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
           openMenuButtonColor="#1C1C1C"
           changeMenuColorOnOpen={true}
-          colors={['#E875A8', '#3E4BAA', '#F4DE7C']}
+          colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
           logoUrl=""
           accentColor="#1e5a55"
           isFixed={true}
@@ -204,7 +211,9 @@ function AppContent() {
               {wasCaught 
                 ? "'click'" 
                 : isButtonHovered && !wasCaught
-                  ? (isDarkMode ? "Lights on?" : "Lights off?")
+                  ? location.pathname === '/journal'
+                    ? (isDarkMode ? "Grab a coffee while you're at it" : "Stop doomscrolling!")
+                    : (isDarkMode ? "Lights on?" : "Lights off?")
                   : ""}
             </motion.div>
           </div>
@@ -267,6 +276,11 @@ function AppContent() {
               <Route path="/ceramics" element={
                 <PageTransition>
                   <Ceramics isDarkMode={isDarkMode} />
+                </PageTransition>
+              } />
+              <Route path="/typography" element={
+                <PageTransition>
+                  <Typography isDarkMode={isDarkMode} />
                 </PageTransition>
               } />
             </Routes>
