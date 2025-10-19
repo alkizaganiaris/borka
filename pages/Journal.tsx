@@ -23,6 +23,7 @@ export function Journal({ isDarkMode }: JournalProps) {
   const [typeKey, setTypeKey] = useState(0);
   const [isEntryListHovered, setIsEntryListHovered] = useState(false);
   const [hoveredEntryId, setHoveredEntryId] = useState<number | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   
   // Configuration values
@@ -30,6 +31,14 @@ export function Journal({ isDarkMode }: JournalProps) {
   const textTranslateY = 0;
   const fontSize = 1.4;
   const lineHeight = 2.2;
+
+  // Add initial loading delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 300); // 300ms delay before showing content
+    return () => clearTimeout(timer);
+  }, []);
 
   const journalEntries: JournalEntry[] = [
     {
@@ -69,7 +78,12 @@ export function Journal({ isDarkMode }: JournalProps) {
   };
 
   const handleEntryClick = (entry: JournalEntry) => {
-    if (selectedEntry?.id === entry.id) return; // Don't re-trigger if same entry
+    // If clicking the same entry, deselect it
+    if (selectedEntry?.id === entry.id) {
+      setIsTyping(false);
+      setSelectedEntry(null);
+      return;
+    }
 
     // Stop current typing and clear
     setIsTyping(false);
@@ -109,7 +123,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                   ? 'translateY(70vh)' 
                   : 'translateY(80vh)')
             }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             style={{ 
               height: 'auto'
             }}
@@ -120,14 +134,15 @@ export function Journal({ isDarkMode }: JournalProps) {
         </div>
 
         {/* Left Sidebar - Entry List (Far Left) */}
-        <div 
-          className="fixed left-0 top-30vh h-screen overflow-y-auto px-8 pt-32 z-10" 
-          style={{ width: '25vw' }}
-        >
-          <h3 className="text-2xl font-bold mb-6 text-black">Entries</h3>
-          <div className="space-y-3 pb-12">
-            {sortedEntries.map((entry, index) => (
-              <motion.button
+        {isLoaded && (
+          <div 
+            className="fixed left-0 h-screen overflow-y-auto px-8 z-10" 
+            style={{ width: '24.5vw', top: '0', paddingTop: '8rem' }}
+          >
+            <h3 className="text-2xl font-bold mb-6 text-black">Entries</h3>
+            <div className="space-y-3 pb-12">
+            {sortedEntries.map((entry) => (
+              <button
                 key={entry.id}
                 onClick={() => handleEntryClick(entry)}
                 onMouseEnter={() => {
@@ -140,10 +155,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                   setIsEntryListHovered(false);
                   setHoveredEntryId(null);
                 }}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                className={`w-full text-left p-4 rounded-xl transition-all duration-300 ${
+                className={`w-full text-left p-4 rounded-xl ${
                   selectedEntry?.id === entry.id
                     ? 'bg-black text-white shadow-lg'
                     : 'text-black shadow-md'
@@ -152,19 +164,20 @@ export function Journal({ isDarkMode }: JournalProps) {
                   backgroundColor: selectedEntry?.id === entry.id 
                     ? '#1C1C1C'
                     : '#F4DE7C',
-                  border: '1px solid #1C1C1C'
+                  border: '1px solid #1C1C1C',
+                  transition: 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
+                  transform: hoveredEntryId === entry.id ? 'scale(1.02)' : 'scale(1)'
                 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
               >
                 <h4 className="font-bold text-lg mb-1">{entry.title}</h4>
                 <p className={`text-sm ${selectedEntry?.id === entry.id ? 'text-zinc-300' : 'text-zinc-600'}`}>
                   {entry.date}
                 </p>
-              </motion.button>
+              </button>
             ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Content Overlay - Centered over Notebook */}
         <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2 }}>
@@ -178,7 +191,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                   ? `translateY(calc(70vh + ${containerTranslateY}vh))` 
                   : `translateY(calc(80vh + ${containerTranslateY}vh))`)
             }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             <div 
               className="overflow-auto" 
@@ -209,16 +222,16 @@ export function Journal({ isDarkMode }: JournalProps) {
                       <TextType
                         key={typeKey}
                         text={selectedEntry.content}
-                        typingSpeed={50}
+                        typingSpeed={5}
                         className="text-black"
                         style={{
                           fontSize: `${fontSize}rem`,
                           lineHeight: `${lineHeight}`
                         }}
-                        showCursor={true}
+                        showCursor={false}
                         cursorCharacter="|"
                         loop={false}
-                        variableSpeed={{ min: 30, max: 80 }}
+                        variableSpeed={{ min: 5, max: 50 }}
                       />
                     )}
                   </motion.div>
