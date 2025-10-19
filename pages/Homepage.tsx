@@ -1,5 +1,6 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
+import { PageHeader } from "../components/PageHeader";
 
 interface HomepageProps {
   isDarkMode: boolean;
@@ -7,7 +8,10 @@ interface HomepageProps {
 
 export function Homepage({ isDarkMode }: HomepageProps) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-8">
+    <div className="min-h-screen">
+      <PageHeader title="Home" isDarkMode={isDarkMode} />
+      
+      <div className="flex flex-col items-center justify-center px-8 py-16">
       {/* Hero Section */}
       <motion.div 
         className="text-center max-w-4xl"
@@ -102,6 +106,7 @@ export function Homepage({ isDarkMode }: HomepageProps) {
           </Link>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 }

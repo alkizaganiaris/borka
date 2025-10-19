@@ -118,7 +118,7 @@ export function PhotoStackPreview({
 
           {/* Visual notes overlay */}
           <motion.div 
-            className="absolute bottom-4 right-4 bg-orange-400 border border-black rounded-lg px-3 py-2 text-black text-sm shadow-lg"
+            className="absolute bottom-4 right-4 bg-buttery/100 border border-black rounded-lg px-3 py-2 text-black text-sm shadow-lg"
             style={{
               fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
             }}
@@ -178,8 +178,8 @@ export function PhotoStackPreview({
                   opacity: 0,
                   scale: 0.9,
                   rotate: 0,
-                  x: 0,
-                  y: 0,
+                  x: isNewlyAdded ? (Math.random() - 0.5) * 100 : 0,  // Random horizontal slide (-50 to +50px)
+                  y: isNewlyAdded ? (Math.random() - 0.5) * 80 : 0,   // Random vertical slide (-40 to +40px)
                 }}
                 animate={{
                   opacity: 1,

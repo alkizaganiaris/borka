@@ -460,33 +460,63 @@ export function FilmRollGallery({
             <div
               className="absolute z-20 pointer-events-none"
               style={{
-                left: "calc(50% + 1rem)",
-                top: "50%",
-                transform: "translateY(-50%)",
-                width: "calc(50% - 2rem)",
+                right: "0", // Align with right edge of container
+                top: "0", // Align with top of container
+                width: "80vh", // Fixed width - FULL CONTROL
+                height: "100%", // Match container height
               }}
             >
               <motion.div
-                initial={{ x: 0, opacity: 1 }}
-                animate={animationsEnabled ? (rolledOut ? "off" : "on") : false}
-                variants={{
-                  on: { x: 0, opacity: 1 },
-                  off: { x: "40vw", opacity: 0 },
+                initial={{ x: "100%", opacity: 0 }}
+                animate={{
+                  x: (isCanisterHovered && !rolledOut) ? "0%" : "100%",
+                  opacity: (isCanisterHovered && !rolledOut) ? 1 : 0,
                 }}
                 transition={{
-                  duration: 0.3,
+                  duration: 0.8,
                   ease: [0.4, 0, 0.2, 1],
-                  delay: rolledOut ? 0.05 : REEL_DUR,
                 }}
-                style={{ willChange: "transform, opacity" }}
+                style={{ 
+                  willChange: "transform, opacity",
+                  width: "100%",
+                  height: "100%",
+                }}
               >
                 {description && (
-                  <div className={`text-sm max-w-lg leading-relaxed px-2 py-1 rounded transition-colors duration-500 ${
-                    isDarkMode 
-                      ? 'text-zinc-100 bg-white/10' 
-                      : 'text-white bg-black/20'
-                  }`}>
-                    {description}
+                  <div 
+                    className={`text-sm leading-relaxed rounded-l-lg border border-black shadow-lg transition-colors duration-500 relative overflow-hidden font-mono ${
+                      isDarkMode 
+                        ? 'text-zinc-100' 
+                        : 'text-black'
+                    }`}
+                    style={{
+                      width: "100%", // Fill the fixed container
+                      height: "100%", // Fill the fixed container
+                      padding: "16px 20px", // Fixed padding
+                      boxSizing: "border-box", // Include padding in height calculation
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {/* Abstract diagonal shapes pattern */}
+                    <div 
+                      className="absolute inset-0 opacity-20"
+                      style={{
+                        background: `
+                          linear-gradient(60deg, #E875A8 30%, transparent 30%, transparent 70%, #F4DE7C 70%),
+                          linear-gradient(-30deg, #3E4BAA 40%, transparent 40%, transparent 60%, #3CB4AC 60%),
+                          linear-gradient(120deg, transparent 20%, #E875A8 20%, #E875A8 80%, transparent 80%),
+                          linear-gradient(-60deg, #F4DE7C 35%, transparent 35%, transparent 65%, #3E4BAA 65%)
+                        `,
+                        backgroundSize: '300px 500px',
+                        backgroundPosition: '0 0, 48px 48px, 96px 96px, 144px 144px'
+                      }}
+                    />
+                    {/* Content - centered in fixed container */}
+                    <div className="relative z-10 text-center">
+                      {description}
+                    </div>
                   </div>
                 )}
               </motion.div>

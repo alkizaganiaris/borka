@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { PageHeader } from "../components/PageHeader";
 
 interface JournalProps {
   isDarkMode: boolean;
@@ -30,23 +31,20 @@ export function Journal({ isDarkMode }: JournalProps) {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-8 py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <h1 className={`text-5xl md:text-6xl font-bold mb-8 transition-colors duration-500 ${
-          isDarkMode ? 'text-white' : 'text-black'
-        }`}>
-          Journal
-        </h1>
-        
-        <p className={`text-lg mb-12 transition-colors duration-500 ${
-          isDarkMode ? 'text-zinc-300' : 'text-zinc-600'
-        }`}>
-          Thoughts, stories, and reflections on art, photography, and life.
-        </p>
+    <div>
+      <PageHeader title="Journal" isDarkMode={isDarkMode} />
+      
+      <div className="max-w-4xl mx-auto px-8 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <p className={`text-lg mb-12 transition-colors duration-500 ${
+            isDarkMode ? 'text-zinc-300' : 'text-zinc-600'
+          }`}>
+            Thoughts, stories, and reflections on art, photography, and life.
+          </p>
 
         <div className="space-y-12">
           {journalEntries.map((entry, index) => (
@@ -112,7 +110,8 @@ export function Journal({ isDarkMode }: JournalProps) {
             Stay tuned for more thoughts and stories.
           </p>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

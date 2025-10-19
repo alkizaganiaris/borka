@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { PageHeader } from "../components/PageHeader";
 
 interface CeramicsProps {
   isDarkMode: boolean;
@@ -62,24 +63,21 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-8 py-16">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="text-center mb-16">
-          <h1 className={`text-5xl md:text-6xl font-bold mb-8 transition-colors duration-500 ${
-            isDarkMode ? 'text-white' : 'text-black'
-          }`}>
-            Ceramics
-          </h1>
-          
-          <p className={`text-lg mb-8 transition-colors duration-500 ${
-            isDarkMode ? 'text-zinc-300' : 'text-zinc-600'
-          }`}>
-            Handcrafted pottery and ceramic art, each piece unique and made with care.
-          </p>
+    <div>
+      <PageHeader title="Ceramics" isDarkMode={isDarkMode} />
+      
+      <div className="max-w-6xl mx-auto px-8 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <div className="text-center mb-16">
+            <p className={`text-lg mb-8 transition-colors duration-500 ${
+              isDarkMode ? 'text-zinc-300' : 'text-zinc-600'
+            }`}>
+              Handcrafted pottery and ceramic art, each piece unique and made with care.
+            </p>
 
           <motion.button
             onClick={handleContact}
@@ -202,7 +200,8 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
             Inquire About Custom Work
           </motion.button>
         </motion.div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

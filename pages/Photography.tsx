@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FilmRollGallery } from "../components/FilmRollGallery";
+import { PageHeader } from "../components/PageHeader";
 
 // ---------- Demo images ----------
 const galleryImages = [
@@ -51,6 +52,8 @@ export function Photography({ isDarkMode }: PhotographyProps) {
 
   return (
     <div className="relative">
+      <PageHeader title="Photography" isDarkMode={isDarkMode} />
+      
       {/* Gallery Instances */}
       <FilmRollGallery 
         images={galleryImages} 
@@ -58,6 +61,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         subtitle="/ ˌɪn spəˈreɪ ʃən /"
         filmUsed="Kodak Portra 400"
         year="2023"
+        description="A collection of inspiration images from the internet. Silvia is a friend of mine from college. We met in a photography class and became friends. She is a very talented photographer and I am always inspired by her work."
         isOpen={openGalleryId === "inspiration"}
         onToggle={handleGalleryToggle("inspiration")}
         isDarkMode={isDarkMode}
@@ -69,6 +73,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         subtitle="/ ˈneɪ tʃər kəˈlek ʃən /"
         filmUsed="Fujifilm Pro 400H"
         year="2024"
+        description="A collection of inspiration images from the internet."
         isOpen={openGalleryId === "nature"}
         onToggle={handleGalleryToggle("nature")}
         isDarkMode={isDarkMode}
@@ -80,6 +85,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         subtitle="/ ˈenɪ ʃəə kə'w /"
         filmUsed="Ilford HP5 Plus"
         year="2022"
+        description="A collection of inspiration images from the internet."
         isOpen={openGalleryId === "enrico"}
         onToggle={handleGalleryToggle("enrico")}
         isDarkMode={isDarkMode}
@@ -91,6 +97,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         subtitle="/ ˈenɪ ʃəə kə'w /"
         filmUsed="Ilford HP5 Plus"
         year="2022"
+        description="A collection of inspiration images from the internet."
         isOpen={openGalleryId === "alki"}
         onToggle={handleGalleryToggle("alki")}
         isDarkMode={isDarkMode}
@@ -102,6 +109,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         subtitle="/ ˈenɪ ʃəə kə'w /"
         filmUsed="Ilford HP5 Plus"
         year="2022"
+        description="A collection of inspiration images from the internet. Silvia is a friend of mine from college. We met in a photography class and became friends. She is a very talented photographer and I am always inspired by her work."
         isOpen={openGalleryId === "silvia"}
         onToggle={handleGalleryToggle("silvia")}
         isDarkMode={isDarkMode}
