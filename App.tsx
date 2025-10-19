@@ -247,6 +247,7 @@ function AppContent() {
           animate={{
             marginLeft: isHomePage && isMenuOpen ? "35vw" : "0vw", // Move content to start after menu
             width: isHomePage && isMenuOpen ? "65vw" : "100vw", // Constrain width to remaining viewport
+            borderLeft: isHomePage && isMenuOpen ? "4px solid #1C1C1C" : "0px solid transparent"
           }}
           transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
           style={{

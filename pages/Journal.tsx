@@ -139,7 +139,7 @@ export function Journal({ isDarkMode }: JournalProps) {
             className="fixed left-0 h-screen overflow-y-auto px-8 z-10" 
             style={{ width: '24.5vw', top: '0', paddingTop: '8rem' }}
           >
-            <h3 className="text-2xl font-bold mb-6 text-black">Entries</h3>
+            <h3 className="text-2xl font-bold mb-6 text-black">Random Thoughts ... </h3>
             <div className="space-y-3 pb-12">
             {sortedEntries.map((entry) => (
               <button
