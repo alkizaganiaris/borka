@@ -28,7 +28,7 @@ export function FilmFrame({
           }
         `}
         // Hover = “lit” only, no movement
-        whileHover={{ filter: "brightness(1.8)" }}
+        whileHover={{ filter: "brightness(1.4)" }}
         whileTap={{ scale: 0.995 }}
       >
         {/* Film frame background with perforations */}
@@ -50,7 +50,7 @@ export function FilmFrame({
               className="w-[92%] h-full object-cover opacity-100 translate-x-[10px]"
               style={{
                 filter:
-                  "sepia(0.8) saturate(2.5) brightness(0.8) contrast(1)",
+                  "sepia(0.8) saturate(2) brightness(0.8) contrast(1)",
               }}
             />
 

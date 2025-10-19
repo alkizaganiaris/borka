@@ -114,7 +114,10 @@ export function PhotoStackPreview({
 
           {/* Visual notes overlay */}
           <motion.div 
-            className="absolute bottom-4 left-4 text-white text-sm"
+            className="absolute bottom-2 left-4 text-white   text-sm"
+            style={{
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+            }}
             animate={{
               opacity: isTopHovered ? 0 : 1
             }}

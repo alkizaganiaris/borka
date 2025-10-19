@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { motion, useScroll } from "motion/react";
 import { FilmFrame } from "./FilmFrame";
 import { PhotoStackPreview, type StackItem } from "./PhotoStackPreview";
+import DecryptedText from "./DecryptedText";
 
 interface FilmRollGalleryProps {
   images: string[];
@@ -26,12 +27,14 @@ function NotesContent({
   subtitle = "/ ˌɪn spəˈreɪ ʃən /",
   filmUsed,
   year,
+  photos,
 }: { 
   compact?: boolean;
   title?: string;
   subtitle?: string;
   filmUsed?: string;
   year?: string;
+  photos?: number;
 }) {
   const monoFont =
     "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
@@ -48,19 +51,26 @@ function NotesContent({
       <h2
         className={
           compact
-            ? "font-semibold uppercase"
-            : "text-lg font-semibold uppercase"
+            ? "font-semibold uppercase pointer-events-auto text-2xl"
+            : "text-lg font-semibold uppercase pointer-events-auto"
         }
       >
-        {title}
+        <DecryptedText 
+          text={title}
+          speed={35}
+          maxIterations={12}
+          animateOn="hover"
+          revealDirection="start"
+        />
       </h2>
-      <p className="text-zinc-600 mb-2">{subtitle}</p>
+      <p className="text-zinc-600 mb-0">{subtitle}</p>
 
       {/* Film metadata */}
-      {(filmUsed || year) && (
-        <div className="mt-2 space-y-0.5 text-zinc-600 text-xs">
+      {(filmUsed || year || photos) && (
+        <div className="mt-4 space-y-0.5 text-zinc-600 text-xs">
           {filmUsed && <p>Film: {filmUsed}</p>}
           {year && <p>Year: {year}</p>}
+          {photos && <p>Photos: {photos}</p>}
         </div>
       )}
 
@@ -387,6 +397,7 @@ export function FilmRollGallery({
                   subtitle={subtitle}
                   filmUsed={filmUsed}
                   year={year}
+                  photos={images.length}
                 />
               </motion.div>
             </div>
