@@ -4,13 +4,14 @@ import { useState, useRef, useEffect } from "react";
 import TextType from "../components/TextType";
 import "../styles/fonts.css";
 import StaggeredMenu from "../components/StaggeredMenu";
+import { getJournalEntries } from "../src/lib/sanityQueries";
 
 interface JournalProps {
   isDarkMode: boolean;
 }
 
 interface JournalEntry {
-  id: number;
+  id: string;
   title: string;
   date: string;
   excerpt: string;
@@ -23,10 +24,11 @@ export function Journal({ isDarkMode }: JournalProps) {
   const [isTyping, setIsTyping] = useState(false);
   const [typeKey, setTypeKey] = useState(0);
   const [isEntryListHovered, setIsEntryListHovered] = useState(false);
-  const [hoveredEntryId, setHoveredEntryId] = useState<number | null>(null);
+  const [hoveredEntryId, setHoveredEntryId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [readEntries, setReadEntries] = useState<Set<number>>(new Set());
+  const [readEntries, setReadEntries] = useState<Set<string>>(new Set());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const videoRef = useRef<HTMLVideoElement>(null);
   
   // Configuration values
@@ -34,6 +36,32 @@ export function Journal({ isDarkMode }: JournalProps) {
   const textTranslateY = 0;
   const fontSize = 1.4;
   const lineHeight = 2.2;
+
+  // Fetch journal entries from Sanity
+  useEffect(() => {
+    async function fetchEntries() {
+      try {
+        const entries = await getJournalEntries();
+        // Transform Sanity data to match your existing format
+        const formatted = entries.map((entry: any) => ({
+          id: entry._id,
+          title: entry.title,
+          date: new Date(entry.date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          }),
+          excerpt: '', // No excerpt in schema
+          content: entry.content,
+          timestamp: new Date(entry.date)
+        }));
+        setJournalEntries(formatted);
+      } catch (error) {
+        console.error('Error fetching journal entries:', error);
+      }
+    }
+    fetchEntries();
+  }, []);
 
   // Add initial loading delay
   useEffect(() => {
@@ -63,88 +91,7 @@ export function Journal({ isDarkMode }: JournalProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedEntry]);
 
-  const journalEntries: JournalEntry[] = [
-    {
-      id: 1,
-      title: "The Art of Film Photography",
-      date: "December 15, 2024",
-      timestamp: new Date("2024-12-15"),
-      excerpt: "There's something magical about the anticipation of developing film. The uncertainty, the waiting, the moment when images emerge from chemicals...",
-      content: "There's something magical about the anticipation of developing film. The uncertainty, the waiting, the moment when images emerge from chemicals...\n\nFilm photography teaches us patience and intentionality. Every frame matters when you have only 36 exposures. This constraint becomes liberating rather than limiting.\n\nIn the darkroom, time slows down. The process forces you to be present, to pay attention to each step. It's a meditation in itself."
-    },
-    {
-      id: 2,
-      title: "Finding Light in Unexpected Places",
-      date: "December 10, 2024",
-      timestamp: new Date("2024-12-10"),
-      excerpt: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...",
-      content: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...\n\nLight is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently.\n\nThe golden hour isn't just a time of day—it's a state of mind. It's about being ready to capture beauty when it appears."
-    },
-    {
-      id: 3,
-      title: "The Journey of a Ceramic Artist",
-      date: "December 5, 2024",
-      timestamp: new Date("2024-12-05"),
-      excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
-      content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
-    },
-    {
-    id: 4,
-    title: "The Art of Film Photography",
-    date: "December 15, 2024",
-    timestamp: new Date("2024-12-15"),
-    excerpt: "There's something magical about the anticipation of developing film. The uncertainty, the waiting, the moment when images emerge from chemicals...",
-    content: "There's something magical about the anticipation of developing film. The uncertainty, the waiting, the moment when images emerge from chemicals...\n\nFilm photography teaches us patience and intentionality. Every frame matters when you have only 36 exposures. This constraint becomes liberating rather than limiting.\n\nIn the darkroom, time slows down. The process forces you to be present, to pay attention to each step. It's a meditation in itself."
-  },
-  {
-    id: 5,
-    title: "Finding Light in Unexpected Places",
-    date: "December 10, 2024",
-    timestamp: new Date("2024-12-10"),
-    excerpt: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...",
-    content: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...\n\nLight is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently.\n\nThe golden hour isn't just a time of day—it's a state of mind. It's about being ready to capture beauty when it appears."
-  },
-  {
-    id: 6,
-    title: "The Journey of a Ceramic Artist",
-    date: "December 5, 2024",
-    timestamp: new Date("2024-12-05"),
-    excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
-    content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
-  },
-  {
-    id: 7,
-    title: "Finding Light in Unexpected Places",
-    date: "December 10, 2024",
-    timestamp: new Date("2024-12-10"),
-    excerpt: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...",
-    content: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...\n\nLight is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently.\n\nThe golden hour isn't just a time of day—it's a state of mind. It's about being ready to capture beauty when it appears."
-  },
-  {
-    id: 8,
-    title: "The Journey of a Ceramic Artist",
-    date: "December 5, 2024",
-    timestamp: new Date("2024-12-05"),
-    excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
-    content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
-  },
-  {
-    id: 9,
-    title: "Finding Light in Unexpected Places",
-    date: "December 10, 2024",
-    timestamp: new Date("2024-12-10"),
-    excerpt: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...",
-    content: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...\n\nLight is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently.\n\nThe golden hour isn't just a time of day—it's a state of mind. It's about being ready to capture beauty when it appears."
-  },
-  {
-    id: 10,
-    title: "The Journey of a Ceramic Artist",
-    date: "December 5, 2024",
-    timestamp: new Date("2024-12-05"),
-    excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
-    content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
-  }
-  ];
+  // Journal entries are now fetched from Sanity in the useEffect above
 
   // Sort entries by date (newest first)
   const sortedEntries = [...journalEntries].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
