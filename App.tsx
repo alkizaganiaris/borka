@@ -16,53 +16,24 @@ function AppContent() {
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [wasCaught, setWasCaught] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showHoverIcon, setShowHoverIcon] = useState(false);
+  const [hoverDisabled, setHoverDisabled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   const isHomePage = location.pathname === '/';
 
-  // Debug controls
-  const [showShapeDebug, setShowShapeDebug] = useState(false);
-  
-  // Shape configuration values
-  const [circleX, setCircleX] = useState(21);
-  const [circleY, setCircleY] = useState(30);
-  const [circleZ, setCircleZ] = useState(5);
-  const [circleSize, setCircleSize] = useState(28);
-  const [circleRotation, setCircleRotation] = useState(0);
-  
-  const [rectX, setRectX] = useState(10);
-  const [rectY, setRectY] = useState(85);
-  const [rectZ, setRectZ] = useState(5);
-  const [rectWidth, setRectWidth] = useState(30);
-  const [rectHeight, setRectHeight] = useState(7);
-  const [rectRotation, setRectRotation] = useState(360);
-  
-  const [triangleX, setTriangleX] = useState(29);
-  const [triangleY, setTriangleY] = useState(9);
-  const [triangleZ, setTriangleZ] = useState(6);
-  const [triangleWidth, setTriangleWidth] = useState(12);
-  const [triangleHeight, setTriangleHeight] = useState(10);
-  const [triangleRotation, setTriangleRotation] = useState(90);
 
   // Close menu when navigating to a different page
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
-  // Keyboard shortcut to toggle debug panel (Escape key)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isHomePage && isMenuOpen) {
-        setShowShapeDebug(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isHomePage, isMenuOpen]);
 
   const handleDarkModeClick = () => {
     setIsDarkMode(!isDarkMode);
+    setHoverDisabled(true);
+    setShowHoverIcon(false);
     if (isButtonHovered) {
       setWasCaught(true);
       // Hide "You got me!" after 1.5 seconds
@@ -70,6 +41,19 @@ function AppContent() {
         setWasCaught(false);
       }, 1500);
     }
+  };
+
+  const handleMouseEnter = () => {
+    if (!hoverDisabled) {
+      setIsButtonHovered(true);
+      setShowHoverIcon(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsButtonHovered(false);
+    setShowHoverIcon(false);
+    setHoverDisabled(false);
   };
 
   const menuItems = [
@@ -93,147 +77,6 @@ function AppContent() {
         backgroundColor: isDarkMode ? '#a8b4d9' : '#fffef0'
       }}
     >
-      {/* Shape Debug Control Panel */}
-      {showShapeDebug && isHomePage && isMenuOpen && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-8 z-[9999] bg-white/95 p-6 rounded-xl shadow-2xl border-2 border-black overflow-y-auto" style={{ width: '800px', maxHeight: '80vh' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-bold text-lg text-black font-mono">Shape Position Debug</h3>
-              <p className="text-xs text-zinc-500 mt-1">Press ESC or click Hide to close</p>
-            </div>
-            <button 
-              onClick={() => setShowShapeDebug(false)}
-              className="text-sm bg-black text-white px-3 py-2 rounded hover:bg-zinc-700"
-            >
-              Hide
-            </button>
-          </div>
-
-          <div className="grid grid-cols-3 gap-6">
-            {/* Circle Controls */}
-            <div className="border-2 border-blue-500 rounded-lg p-4">
-              <h4 className="font-bold mb-3 text-blue-600">🔵 Circle</h4>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">X: <span className="text-blue-600">{circleX}%</span></label>
-                <input type="range" min="0" max="100" step="1" value={circleX} onChange={(e) => setCircleX(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Y: <span className="text-blue-600">{circleY}%</span></label>
-                <input type="range" min="0" max="100" step="1" value={circleY} onChange={(e) => setCircleY(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Z: <span className="text-blue-600">{circleZ}</span></label>
-                <input type="range" min="0" max="20" step="1" value={circleZ} onChange={(e) => setCircleZ(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Size: <span className="text-blue-600">{circleSize}vw</span></label>
-                <input type="range" min="10" max="60" step="1" value={circleSize} onChange={(e) => setCircleSize(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Rotation: <span className="text-blue-600">{circleRotation}°</span></label>
-                <input type="range" min="0" max="360" step="5" value={circleRotation} onChange={(e) => setCircleRotation(Number(e.target.value))} className="w-full" />
-              </div>
-            </div>
-
-            {/* Rectangle Controls */}
-            <div className="border-2 border-pink-500 rounded-lg p-4">
-              <h4 className="font-bold mb-3 text-pink-600">🟪 Rectangle</h4>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">X: <span className="text-pink-600">{rectX}%</span></label>
-                <input type="range" min="0" max="100" step="1" value={rectX} onChange={(e) => setRectX(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Y: <span className="text-pink-600">{rectY}%</span></label>
-                <input type="range" min="0" max="100" step="1" value={rectY} onChange={(e) => setRectY(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Z: <span className="text-pink-600">{rectZ}</span></label>
-                <input type="range" min="0" max="20" step="1" value={rectZ} onChange={(e) => setRectZ(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Width: <span className="text-pink-600">{rectWidth}vw</span></label>
-                <input type="range" min="5" max="50" step="1" value={rectWidth} onChange={(e) => setRectWidth(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Height: <span className="text-pink-600">{rectHeight}vw</span></label>
-                <input type="range" min="5" max="40" step="1" value={rectHeight} onChange={(e) => setRectHeight(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Rotation: <span className="text-pink-600">{rectRotation}°</span></label>
-                <input type="range" min="0" max="360" step="5" value={rectRotation} onChange={(e) => setRectRotation(Number(e.target.value))} className="w-full" />
-              </div>
-            </div>
-
-            {/* Triangle Controls */}
-            <div className="border-2 border-zinc-700 rounded-lg p-4">
-              <h4 className="font-bold mb-3">▲ Triangle</h4>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">X: <span className="text-zinc-700">{triangleX}%</span></label>
-                <input type="range" min="0" max="100" step="1" value={triangleX} onChange={(e) => setTriangleX(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Y: <span className="text-zinc-700">{triangleY}%</span></label>
-                <input type="range" min="0" max="100" step="1" value={triangleY} onChange={(e) => setTriangleY(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Z: <span className="text-zinc-700">{triangleZ}</span></label>
-                <input type="range" min="0" max="20" step="1" value={triangleZ} onChange={(e) => setTriangleZ(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Width: <span className="text-zinc-700">{triangleWidth}vw</span></label>
-                <input type="range" min="5" max="50" step="1" value={triangleWidth} onChange={(e) => setTriangleWidth(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Height: <span className="text-zinc-700">{triangleHeight}vw</span></label>
-                <input type="range" min="5" max="40" step="1" value={triangleHeight} onChange={(e) => setTriangleHeight(Number(e.target.value))} className="w-full" />
-              </div>
-              
-              <div className="mb-3">
-                <label className="block text-xs font-semibold mb-1">Rotation: <span className="text-zinc-700">{triangleRotation}°</span></label>
-                <input type="range" min="0" max="360" step="5" value={triangleRotation} onChange={(e) => setTriangleRotation(Number(e.target.value))} className="w-full" />
-              </div>
-            </div>
-          </div>
-
-          {/* Copy Values Button */}
-          <button
-            onClick={() => {
-              const values = `Circle: X=${circleX}%, Y=${circleY}%, Z=${circleZ}, Size=${circleSize}vw, Rotation=${circleRotation}°\nRectangle: X=${rectX}%, Y=${rectY}%, Z=${rectZ}, W=${rectWidth}vw, H=${rectHeight}vw, Rotation=${rectRotation}°\nTriangle: X=${triangleX}%, Y=${triangleY}%, Z=${triangleZ}, W=${triangleWidth}vw, H=${triangleHeight}vw, Rotation=${triangleRotation}°`;
-              navigator.clipboard.writeText(values);
-              alert('Values copied to clipboard!');
-            }}
-            className="w-full mt-4 bg-green-600 text-white py-2 rounded font-semibold hover:bg-green-700 transition-colors"
-          >
-            Copy All Values
-          </button>
-        </div>
-      )}
-
-      {/* Toggle Debug Button - Only visible when menu is open */}
-      {!showShapeDebug && isHomePage && isMenuOpen && (
-        <button
-          onClick={() => setShowShapeDebug(true)}
-          className="fixed left-1/2 -translate-x-1/2 bottom-8 z-[9999] bg-black text-white px-4 py-2 rounded-lg hover:bg-zinc-700 shadow-2xl font-mono text-sm"
-        >
-          Shape Debug 🎨
-        </button>
-      )}
 
       {/* Back to Home arrow - shown on non-home pages */}
       {!isHomePage && (
@@ -275,9 +118,9 @@ function AppContent() {
           <div 
             className="fixed"
             style={{
-              left: `${circleX}%`,
-              top: `${circleY}%`,
-              zIndex: circleZ
+              left: '21%',
+              top: '30%',
+              zIndex: 5
             }}
           >
             <Magnet magnetStrength={-10} padding={100}>
@@ -287,7 +130,7 @@ function AppContent() {
                 animate={{
                   x: isMenuOpen ? '0%' : '-200%',
                   opacity: isMenuOpen ? 1 : 0,
-                  rotate: circleRotation
+                  rotate: 0
                 }}
                 transition={{ 
                   duration: isMenuOpen ? 0.5 : 0.25,
@@ -296,8 +139,8 @@ function AppContent() {
                 }}
                 style={{
                   transform: 'translate(-50%, -50%)',
-                  width: `${circleSize}vw`,
-                  height: `${circleSize}vw`,
+                  width: '28vw',
+                  height: '28vw',
                   borderRadius: '50%',
                   backgroundColor: '#3E4BAA',
                   border: '1px solid #1C1C1C',
@@ -315,9 +158,9 @@ function AppContent() {
           <div 
             className="fixed"
             style={{
-              left: `${rectX}%`,
-              top: `${rectY}%`,
-              zIndex: rectZ
+              left: '10%',
+              top: '85%',
+              zIndex: 5
             }}
           >
             <Magnet magnetStrength={10} padding={100}>
@@ -327,7 +170,7 @@ function AppContent() {
                 animate={{
                   x: isMenuOpen ? '0%' : '-200%',
                   opacity: isMenuOpen ? 1 : 0,
-                  rotate: rectRotation
+                  rotate: 360
                 }}
                 transition={{ 
                   duration: isMenuOpen ? 0.5 : 0.25,
@@ -336,8 +179,8 @@ function AppContent() {
                 }}
                 style={{
                   transform: 'translate(-50%, -50%)',
-                  width: `${rectWidth}vw`,
-                  height: `${rectHeight}vw`,
+                  width: '30vw',
+                  height: '7vw',
                   borderRadius: '1rem',
                   backgroundColor: '#E875A8',
                   border: '1px solid #1C1C1C',
@@ -355,9 +198,9 @@ function AppContent() {
           <div 
             className="fixed"
             style={{
-              left: `${triangleX}%`,
-              top: `${triangleY}%`,
-              zIndex: triangleZ
+              left: '29%',
+              top: '9%',
+              zIndex: 6
             }}
           >
             <Magnet magnetStrength={-10} padding={100}>
@@ -366,7 +209,7 @@ function AppContent() {
                 animate={{
                   x: isMenuOpen ? '0%' : '-200%',
                   opacity: isMenuOpen ? 1 : 0,
-                  rotate: triangleRotation
+                  rotate: 90
                 }}
                 transition={{ 
                   duration: isMenuOpen ? 0.5 : 0.25,
@@ -377,9 +220,9 @@ function AppContent() {
                   transform: 'translate(-50%, 0)',
                   width: '0',
                   height: '0',
-                  borderLeft: `${triangleWidth / 2}vw solid transparent`,
-                  borderRight: `${triangleWidth / 2}vw solid transparent`,
-                  borderBottom: `${triangleHeight}vw solid #1C1C1C`,
+                  borderLeft: '6vw solid transparent',
+                  borderRight: '6vw solid transparent',
+                  borderBottom: '10vw solid #1C1C1C',
                   pointerEvents: 'auto',
                   cursor: 'pointer'
                 }}
@@ -425,16 +268,25 @@ function AppContent() {
           <div className="relative">
             <motion.button
               onClick={handleDarkModeClick}
-              onMouseEnter={() => setIsButtonHovered(true)}
-              onMouseLeave={() => setIsButtonHovered(false)}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
               className="relative w-16 h-16 rounded-full transition-all duration-500 overflow-hidden"
-              style={{
-                background: isDarkMode 
-                  ? 'radial-gradient(circle, #3E4BAA 0%, #2a3577 70%, #1f2656 100%)'
-                  : 'radial-gradient(circle, #F4DE7C 0%, #e8cc5c 70%, #d4b84a 100%)'
-              }}
               initial={{ opacity: 0.5 }}
-              animate={{ opacity: isButtonHovered ? 1 : 0.5 }}
+              animate={{ 
+                opacity: isButtonHovered ? 1 : 0.5,
+                background: showHoverIcon
+                  ? (isDarkMode 
+                      ? 'radial-gradient(circle, #F4DE7C 0%, #e8cc5c 70%, #d4b84a 100%)'
+                      : 'radial-gradient(circle, #3E4BAA 0%, #2a3577 70%, #1f2656 100%)')
+                  : (isDarkMode 
+                      ? 'radial-gradient(circle, #3E4BAA 0%, #2a3577 70%, #1f2656 100%)'
+                      : 'radial-gradient(circle, #F4DE7C 0%, #e8cc5c 70%, #d4b84a 100%)')
+              }}
+              transition={{ 
+                duration: 0.3, 
+                ease: "easeInOut",
+                background: { duration: 0.3 }
+              }}
               whileHover={{ 
                 scale: 1.05,
                 rotate: isDarkMode ? -5 : 5
@@ -454,28 +306,73 @@ function AppContent() {
                   ease: "linear"
                 }}
               >
-                {isDarkMode ? (
-                  // Stars for dark mode
-                  <>
-                    <div className="absolute top-2 left-2 w-1 h-1 bg-white rounded-full opacity-60" />
-                    <div className="absolute top-4 right-3 w-1 h-1 bg-white rounded-full opacity-80" />
-                    <div className="absolute bottom-3 left-4 w-0.5 h-0.5 bg-white rounded-full opacity-70" />
-                    <div className="absolute bottom-4 right-2 w-1 h-1 bg-white rounded-full opacity-50" />
-                  </>
-                ) : (
-                  // Sun rays for light mode
-                  <div className="absolute inset-0">
-                    {[...Array(8)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="absolute top-1/2 left-1/2 w-0.5 h-3 bg-yellow-200/40 origin-top"
-                        style={{
-                          transform: `rotate(${i * 45}deg) translateX(-50%)`
-                        }}
-                      />
-                    ))}
-                  </div>
-                )}
+                <AnimatePresence mode="wait">
+                  {showHoverIcon ? (
+                    // Show opposite background effect on hover
+                    <motion.div
+                      key="hover-effect"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      {isDarkMode ? (
+                        // Sun rays for dark mode hover
+                        <div className="absolute inset-0">
+                          {[...Array(8)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="absolute top-1/2 left-1/2 w-0.5 h-3 bg-yellow-200/40 origin-top"
+                              style={{
+                                transform: `rotate(${i * 45}deg) translateX(-50%)`
+                              }}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        // Stars for light mode hover
+                        <>
+                          <div className="absolute top-2 left-2 w-1 h-1 bg-white rounded-full opacity-60" />
+                          <div className="absolute top-4 right-3 w-1 h-1 bg-white rounded-full opacity-80" />
+                          <div className="absolute bottom-3 left-4 w-0.5 h-0.5 bg-white rounded-full opacity-70" />
+                          <div className="absolute bottom-4 right-2 w-1 h-1 bg-white rounded-full opacity-50" />
+                        </>
+                      )}
+                    </motion.div>
+                  ) : (
+                    // Normal background effect
+                    <motion.div
+                      key="normal-effect"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      {isDarkMode ? (
+                        // Stars for dark mode
+                        <>
+                          <div className="absolute top-2 left-2 w-1 h-1 bg-white rounded-full opacity-60" />
+                          <div className="absolute top-4 right-3 w-1 h-1 bg-white rounded-full opacity-80" />
+                          <div className="absolute bottom-3 left-4 w-0.5 h-0.5 bg-white rounded-full opacity-70" />
+                          <div className="absolute bottom-4 right-2 w-1 h-1 bg-white rounded-full opacity-50" />
+                        </>
+                      ) : (
+                        // Sun rays for light mode
+                        <div className="absolute inset-0">
+                          {[...Array(8)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="absolute top-1/2 left-1/2 w-0.5 h-3 bg-yellow-200/40 origin-top"
+                              style={{
+                                transform: `rotate(${i * 45}deg) translateX(-50%)`
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
 
               {/* Icon */}
@@ -490,7 +387,29 @@ function AppContent() {
                   scale: { duration: 0.5 }
                 }}
               >
-                {isDarkMode ? '🌙' : '☀️'}
+                <AnimatePresence mode="wait">
+                  {showHoverIcon ? (
+                    <motion.span
+                      key="hover"
+                      initial={{ opacity: 0, scale: 0.5, rotate: 180 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      exit={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      {isDarkMode ? '☀️' : '🌙'}
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="normal"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      {isDarkMode ? '🌙' : '☀️'}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </motion.div>
             </motion.button>
             
@@ -510,7 +429,7 @@ function AppContent() {
                 ? "'click'" 
                 : isButtonHovered && !wasCaught
                   ? location.pathname === '/journal'
-                    ? (isDarkMode ? "Grab a coffee while you're at it" : "Stop doomscrolling!")
+                    ? (isDarkMode ? "Grab a coffee while you're at it" : "Stop doomscrolling! Read a journal entry instead")
                     : (isDarkMode ? "Lights on?" : "Lights off?")
                   : ""}
             </motion.div>
@@ -568,9 +487,7 @@ function AppContent() {
                 </PageTransition>
               } />
               <Route path="/journal" element={
-                <PageTransition>
-                  <Journal isDarkMode={isDarkMode} />
-                </PageTransition>
+                <Journal isDarkMode={isDarkMode} />
               } />
               <Route path="/ceramics" element={
                 <PageTransition>

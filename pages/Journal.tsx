@@ -24,6 +24,7 @@ export function Journal({ isDarkMode }: JournalProps) {
   const [isEntryListHovered, setIsEntryListHovered] = useState(false);
   const [hoveredEntryId, setHoveredEntryId] = useState<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [readEntries, setReadEntries] = useState<Set<number>>(new Set());
   const videoRef = useRef<HTMLVideoElement>(null);
   
   // Configuration values
@@ -39,6 +40,26 @@ export function Journal({ isDarkMode }: JournalProps) {
     }, 300); // 300ms delay before showing content
     return () => clearTimeout(timer);
   }, []);
+
+  // Reset read entries when user comes to this page
+  useEffect(() => {
+    setReadEntries(new Set());
+  }, []);
+
+  // Handle escape key to close selected entry
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedEntry) {
+        // Mark entry as read when closing with escape
+        setReadEntries(prev => new Set([...prev, selectedEntry.id]));
+        setIsTyping(false);
+        setSelectedEntry(null);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedEntry]);
 
   const journalEntries: JournalEntry[] = [
     {
@@ -64,7 +85,63 @@ export function Journal({ isDarkMode }: JournalProps) {
       timestamp: new Date("2024-12-05"),
       excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
       content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
-    }
+    },
+    {
+    id: 4,
+    title: "The Art of Film Photography",
+    date: "December 15, 2024",
+    timestamp: new Date("2024-12-15"),
+    excerpt: "There's something magical about the anticipation of developing film. The uncertainty, the waiting, the moment when images emerge from chemicals...",
+    content: "There's something magical about the anticipation of developing film. The uncertainty, the waiting, the moment when images emerge from chemicals...\n\nFilm photography teaches us patience and intentionality. Every frame matters when you have only 36 exposures. This constraint becomes liberating rather than limiting.\n\nIn the darkroom, time slows down. The process forces you to be present, to pay attention to each step. It's a meditation in itself."
+  },
+  {
+    id: 5,
+    title: "Finding Light in Unexpected Places",
+    date: "December 10, 2024",
+    timestamp: new Date("2024-12-10"),
+    excerpt: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...",
+    content: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...\n\nLight is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently.\n\nThe golden hour isn't just a time of day—it's a state of mind. It's about being ready to capture beauty when it appears."
+  },
+  {
+    id: 6,
+    title: "The Journey of a Ceramic Artist",
+    date: "December 5, 2024",
+    timestamp: new Date("2024-12-05"),
+    excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
+    content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
+  },
+  {
+    id: 7,
+    title: "Finding Light in Unexpected Places",
+    date: "December 10, 2024",
+    timestamp: new Date("2024-12-10"),
+    excerpt: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...",
+    content: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...\n\nLight is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently.\n\nThe golden hour isn't just a time of day—it's a state of mind. It's about being ready to capture beauty when it appears."
+  },
+  {
+    id: 8,
+    title: "The Journey of a Ceramic Artist",
+    date: "December 5, 2024",
+    timestamp: new Date("2024-12-05"),
+    excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
+    content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
+  },
+  {
+    id: 9,
+    title: "Finding Light in Unexpected Places",
+    date: "December 10, 2024",
+    timestamp: new Date("2024-12-10"),
+    excerpt: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...",
+    content: "Sometimes the most beautiful photographs come from the most ordinary moments. A ray of light through a window, a reflection on water...\n\nLight is the essence of photography. It shapes our subjects, creates mood, and tells stories. Learning to see light is learning to see the world differently.\n\nThe golden hour isn't just a time of day—it's a state of mind. It's about being ready to capture beauty when it appears."
+  },
+  {
+    id: 10,
+    title: "The Journey of a Ceramic Artist",
+    date: "December 5, 2024",
+    timestamp: new Date("2024-12-05"),
+    excerpt: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...",
+    content: "From clay to kiln, every piece tells a story of transformation. The process is as important as the final result...\n\nWorking with clay is a meditation. Each piece is unique, bearing the marks of the maker's hands and the kiln's fire. There's beauty in imperfection.\n\nThe Japanese concept of wabi-sabi teaches us to embrace the beauty of things that are imperfect, impermanent, and incomplete."
+  }
   ];
 
   // Sort entries by date (newest first)
@@ -80,9 +157,18 @@ export function Journal({ isDarkMode }: JournalProps) {
   const handleEntryClick = (entry: JournalEntry) => {
     // If clicking the same entry, deselect it
     if (selectedEntry?.id === entry.id) {
+      // Mark previous entry as read when closing it
+      if (selectedEntry) {
+        setReadEntries(prev => new Set([...prev, selectedEntry.id]));
+      }
       setIsTyping(false);
       setSelectedEntry(null);
       return;
+    }
+
+    // Mark previous entry as read when switching to a new entry
+    if (selectedEntry) {
+      setReadEntries(prev => new Set([...prev, selectedEntry.id]));
     }
 
     // Stop current typing and clear
@@ -101,7 +187,14 @@ export function Journal({ isDarkMode }: JournalProps) {
   };
 
   return (
-    <div className="fixed inset-0 overflow-hidden" style={{ fontFamily: '"Indie Flower", cursive' }}>
+    <motion.div 
+      className="fixed inset-0 overflow-hidden" 
+      style={{ fontFamily: '"Indie Flower", cursive' }}
+      initial={{ opacity: 0, y: 30, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -30, scale: 1.02 }}
+      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+    >
       <PageHeader title="Journal" isDarkMode={isDarkMode} />
       
       <div className="relative w-full h-full">
@@ -136,11 +229,19 @@ export function Journal({ isDarkMode }: JournalProps) {
         {/* Left Sidebar - Entry List (Far Left) */}
         {isLoaded && (
           <div 
-            className="fixed left-0 h-screen overflow-y-auto px-8 z-10" 
-            style={{ width: '24.5vw', top: '0', paddingTop: '8rem' }}
+            className="fixed overflow-y-auto px-8 z-1 border-2 border-black rounded-xl bg-white" 
+            style={{ 
+              width: '24vw', 
+              left: '2rem', 
+              top: '30vh', 
+              paddingTop: '1rem', 
+              bottom: '4vh', 
+              paddingBottom: '2rem',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none'
+            }}
           >
-            <h3 className="text-2xl font-bold mb-6 text-black">Random Thoughts ... </h3>
-            <div className="space-y-3 pb-12">
+            <div className="space-y-3 pb-12" style={{ marginTop: '1rem' }}>
             {sortedEntries.map((entry) => (
               <button
                 key={entry.id}
@@ -155,22 +256,50 @@ export function Journal({ isDarkMode }: JournalProps) {
                   setIsEntryListHovered(false);
                   setHoveredEntryId(null);
                 }}
-                className={`w-full text-left p-4 rounded-xl ${
-                  selectedEntry?.id === entry.id
-                    ? 'bg-black text-white shadow-lg'
-                    : 'text-black shadow-md'
-                }`}
-                style={{
-                  backgroundColor: selectedEntry?.id === entry.id 
-                    ? '#1C1C1C'
-                    : '#F4DE7C',
-                  border: '1px solid #1C1C1C',
-                  transition: 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
-                  transform: hoveredEntryId === entry.id ? 'scale(1.02)' : 'scale(1)'
-                }}
+                 className={`w-full text-left p-2    ${
+                   selectedEntry?.id === entry.id
+                     ? 'text-black shadow-lg'
+                     : 'text-black shadow-md'
+                 }`}
+                 style={{
+                   paddingLeft: '10%',
+                   border: selectedEntry?.id === entry.id ? '2px solid black' : 'none',
+                   ...(readEntries.has(entry.id)
+                     ? {
+                         backgroundColor: 'transparent',
+                         backgroundImage: 'url(/entry_bg.jpeg)',
+                         backgroundSize: 'cover',
+                         backgroundRepeat: 'no-repeat',
+                         backgroundPosition: 'center'
+                       }
+                     : {
+                         backgroundColor: 'transparent',
+                         backgroundImage: 'url(/entry_bg.jpeg)',
+                         backgroundSize: 'cover',
+                         backgroundRepeat: 'no-repeat',
+                         backgroundPosition: 'center'
+                       }),
+                   transition: 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
+                   transform: hoveredEntryId === entry.id ? 'scale(1.02)' : 'scale(1)'
+                 }}
               >
-                <h4 className="font-bold text-lg mb-1">{entry.title}</h4>
-                <p className={`text-sm ${selectedEntry?.id === entry.id ? 'text-zinc-300' : 'text-zinc-600'}`}>
+                <h4 
+                  className="text-lg mb-0.5"
+                  style={{
+                    color: 'black',
+                    textDecoration: readEntries.has(entry.id) ? 'line-through' : 'none',
+                    textDecorationColor: readEntries.has(entry.id) ? 'red' : 'black',
+                    textDecorationThickness: '0.5px'
+                  }}
+                >
+                  {entry.title}
+                </h4>
+                <p 
+                  className="text-sm"
+                  style={{
+                    color: '#71717a'
+                  }}
+                >
                   {entry.date}
                 </p>
               </button>
@@ -241,6 +370,6 @@ export function Journal({ isDarkMode }: JournalProps) {
           </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
