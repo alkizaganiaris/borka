@@ -30,7 +30,7 @@ export function FilmFrame({
         {/* Film frame background with perforations */}
         <div className="absolute inset-0 bg-white">
           <img
-            src="/film-frame-bg.jpg"
+            src="/media/film-frame-bg.jpg"
             alt="Film frame"
             className="w-full h-full object-fill scale-110"
           />

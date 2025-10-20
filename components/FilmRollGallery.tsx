@@ -347,7 +347,7 @@ export function FilmRollGallery({
           >
             <div className="relative w-40 h-70">
               <img
-                src="/film-canister.png"
+                src="/media/film-canister.png"
                 alt="Film Roll"
                 className="w-full h-full object-contain"
               />

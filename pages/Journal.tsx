@@ -29,6 +29,7 @@ export function Journal({ isDarkMode }: JournalProps) {
   const [readEntries, setReadEntries] = useState<Set<string>>(new Set());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [entryFonts, setEntryFonts] = useState<Map<string, string>>(new Map());
   const videoRef = useRef<HTMLVideoElement>(null);
   
   // Configuration values
@@ -36,6 +37,9 @@ export function Journal({ isDarkMode }: JournalProps) {
   const textTranslateY = 0;
   const fontSize = 1.4;
   const lineHeight = 2.2;
+
+  // Custom fonts array
+  const customFonts = ['Caveat', 'Indie Flower', 'Patrick Hand SC'];
 
   // Fetch journal entries from Sanity
   useEffect(() => {
@@ -56,6 +60,14 @@ export function Journal({ isDarkMode }: JournalProps) {
           timestamp: new Date(entry.date)
         }));
         setJournalEntries(formatted);
+        
+        // Assign random fonts to each entry
+        const fonts = new Map<string, string>();
+        formatted.forEach((entry: JournalEntry) => {
+          const randomFont = customFonts[Math.floor(Math.random() * customFonts.length)];
+          fonts.set(entry.id, randomFont);
+        });
+        setEntryFonts(fonts);
       } catch (error) {
         console.error('Error fetching journal entries:', error);
       }
@@ -210,7 +222,7 @@ export function Journal({ isDarkMode }: JournalProps) {
             style={{ 
               height: 'auto'
             }}
-            src="/notebook_transparent.webm"
+            src="/media/notebook_transparent.webm"
             muted
             playsInline
           />
@@ -231,10 +243,30 @@ export function Journal({ isDarkMode }: JournalProps) {
               msOverflowStyle: 'none'
             }}
           >
+            {/* Background text */}
+            <div 
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                fontSize: '1.8rem',
+                color: 'black',
+                fontWeight: 'bold',
+                pointerEvents: 'none',
+                zIndex: 0,
+                whiteSpace: 'nowrap',
+                fontFamily: '"Indie Flower", cursive'
+              }}
+            >
+              Need more thoughts...
+            </div>
             <div className="space-y-3 pb-12" 
             style={{ 
               marginTop: '0rem',
-              marginBottom: '0rem'
+              marginBottom: '0rem',
+              position: 'relative',
+              zIndex: 1
                }}
                >
             {sortedEntries.map((entry) => (
@@ -259,17 +291,18 @@ export function Journal({ isDarkMode }: JournalProps) {
                  style={{
                    paddingLeft: '10%',
                    border: selectedEntry?.id === entry.id ? '2px solid black' : 'none',
+                   fontFamily: entryFonts.get(entry.id) || 'Indie Flower',
                    ...(readEntries.has(entry.id)
                      ? {
                          backgroundColor: 'transparent',
-                         backgroundImage: 'url(/entry_bg.jpeg)',
+                         backgroundImage: 'url(/media/entry_bg.jpeg)',
                          backgroundSize: 'cover',
                          backgroundRepeat: 'no-repeat',
                          backgroundPosition: 'center'
                        }
                      : {
                          backgroundColor: 'transparent',
-                         backgroundImage: 'url(/entry_bg.jpeg)',
+                         backgroundImage: 'url(/media/entry_bg.jpeg)',
                          backgroundSize: 'cover',
                          backgroundRepeat: 'no-repeat',
                          backgroundPosition: 'center'
@@ -325,7 +358,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                 paddingBottom: '3rem',
                 paddingLeft: '13%', 
                 paddingRight: '7%',
-                transform: `translateY(${textTranslateY}vh)`,
+                transform: `translateY(-2vh)`,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start'
@@ -341,6 +374,21 @@ export function Journal({ isDarkMode }: JournalProps) {
                     transition={{ duration: 0.3 }}
                     className="text-black"
                   >
+                    {/* Title and Date Header */}
+                    {isTyping && (
+                      <div 
+                        className="mb-2"
+                        style={{
+                          fontSize: `${fontSize * 1.2}rem`,
+                          fontWeight: 'bold',
+                          lineHeight: `${lineHeight}`,
+                          fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
+                        }}
+                      >
+                        {selectedEntry.title} — {selectedEntry.date}
+                      </div>
+                    )}
+                    
                     {/* Typed Content */}
                     {isTyping && (
                       <TextType
@@ -350,7 +398,8 @@ export function Journal({ isDarkMode }: JournalProps) {
                         className="text-black"
                         style={{
                           fontSize: `${fontSize}rem`,
-                          lineHeight: `${lineHeight}`
+                          lineHeight: `${lineHeight}`,
+                          fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
                         }}
                         showCursor={false}
                         cursorCharacter="|"

@@ -6,7 +6,7 @@ interface PageHeaderProps {
   isDarkMode?: boolean;
 }
 
-export function PageHeader({ title}: PageHeaderProps) {
+export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
   const monoFont = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
 
   return (
@@ -36,7 +36,7 @@ export function PageHeader({ title}: PageHeaderProps) {
                        }}
                      >
                        <motion.img 
-                         src="/pencil.png" 
+                         src="/media/pencil.png" 
                          alt="Pencil" 
                          className="h-auto cursor-pointer"
                          style={{ 
@@ -52,7 +52,7 @@ export function PageHeader({ title}: PageHeaderProps) {
                    {/* Shavings image - bottom right */}
                    <div className="fixed bottom-[-20px] right-4 z-1">
                      <img 
-                       src="/shavings_1.png" 
+                       src="/media/shavings_1.png" 
                        alt="Pencil shavings" 
                        className="h-auto"
                        style={{ 
@@ -62,11 +62,11 @@ export function PageHeader({ title}: PageHeaderProps) {
                      />
                    </div>
 
-                   {/* Coffee image - center viewport */}
+                   {/* Coffee/Tea image - center viewport */}
                    <div className="fixed top-1/2 left-1/2 z-1" style={{ transform: 'translate(-50%, -35%)' }}>
                      <motion.img 
-                       src="/coffee.png" 
-                       alt="Coffee" 
+                       src={isDarkMode ? "/media/tea.png" : "/media/coffee.png"} 
+                       alt={isDarkMode ? "Tea" : "Coffee"} 
                        className="h-auto cursor-pointer"
                        style={{ 
                          width: '400px',

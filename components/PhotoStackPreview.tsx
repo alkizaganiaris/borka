@@ -110,7 +110,7 @@ export function PhotoStackPreview({
           <motion.div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{ 
-              backgroundImage: 'url(/wooden_table.jpg)',
+              backgroundImage: 'url(/media/wooden_table.jpg)',
               opacity: isTopHovered ? 0.3 : 1
             }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
