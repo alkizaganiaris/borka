@@ -3,6 +3,7 @@ import { PageHeader } from "../components/PageHeader";
 import { useState, useRef, useEffect } from "react";
 import TextType from "../components/TextType";
 import "../styles/fonts.css";
+import StaggeredMenu from "../components/StaggeredMenu";
 
 interface JournalProps {
   isDarkMode: boolean;
@@ -25,6 +26,7 @@ export function Journal({ isDarkMode }: JournalProps) {
   const [hoveredEntryId, setHoveredEntryId] = useState<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [readEntries, setReadEntries] = useState<Set<number>>(new Set());
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   
   // Configuration values
@@ -186,6 +188,20 @@ export function Journal({ isDarkMode }: JournalProps) {
     }, 800); // Adjust this delay to match your video duration
   };
 
+  const menuItems = [
+    { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+    { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
+    { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
+    { label: 'Typography', ariaLabel: 'View typography showcase', link: '/typography' }
+  ];
+
+  const socialItems = [
+    { label: 'Instagram', link: 'https://www.instagram.com/borbalakun/' },
+    { label: 'Twitter', link: 'https://twitter.com' },
+    { label: 'Email', link: 'mailto:hello@borka.com' }
+  ];
+
   return (
     <motion.div 
       className="fixed inset-0 overflow-hidden" 
@@ -196,6 +212,33 @@ export function Journal({ isDarkMode }: JournalProps) {
       transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
     >
       <PageHeader title="Journal" isDarkMode={isDarkMode} />
+      <StaggeredMenu
+        position="left"
+        items={menuItems}
+        socialItems={socialItems}
+        displaySocials={true}
+        displayItemNumbering={true}
+        menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
+        openMenuButtonColor="#1C1C1C"
+        changeMenuColorOnOpen={true}
+        colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
+        logoUrl=""
+        accentColor="#1e5a55"
+        isFixed={true}
+        onMenuOpen={() => setIsMenuOpen(true)}
+        onMenuClose={() => setIsMenuOpen(false)}
+      />
+      
+      {/* Opacity overlay when menu is open */}
+      {isMenuOpen && (
+        <div 
+          className="fixed inset-0 pointer-events-none"
+          style={{ 
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 35
+          }}
+        />
+      )}
       
       <div className="relative w-full h-full">
         {/* Notebook Background - Fixed in Center, Above Background Layer */}
@@ -229,19 +272,24 @@ export function Journal({ isDarkMode }: JournalProps) {
         {/* Left Sidebar - Entry List (Far Left) */}
         {isLoaded && (
           <div 
-            className="fixed overflow-y-auto px-8 z-1 border-2 border-black rounded-xl bg-white" 
+            className="fixed overflow-y-auto px-1 z-1 border-2 border-black rounded-xl bg-white" 
             style={{ 
-              width: '24vw', 
+              width: '20vw', 
               left: '2rem', 
               top: '30vh', 
-              paddingTop: '1rem', 
+              paddingTop: '0rem', 
               bottom: '4vh', 
-              paddingBottom: '2rem',
+              paddingBottom: '0rem',
               scrollbarWidth: 'none',
               msOverflowStyle: 'none'
             }}
           >
-            <div className="space-y-3 pb-12" style={{ marginTop: '1rem' }}>
+            <div className="space-y-3 pb-12" 
+            style={{ 
+              marginTop: '0rem',
+              marginBottom: '0rem'
+               }}
+               >
             {sortedEntries.map((entry) => (
               <button
                 key={entry.id}

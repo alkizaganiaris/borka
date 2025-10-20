@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { motion } from "motion/react";
 import { PageHeader } from "../components/PageHeader";
+import StaggeredMenu from "../components/StaggeredMenu";
 
 interface CeramicsProps {
   isDarkMode: boolean;
 }
 
 export function Ceramics({ isDarkMode }: CeramicsProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const ceramicPieces = [
     {
       id: 1,
@@ -62,9 +66,50 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
     window.open('mailto:contact@borka.com?subject=Ceramics Inquiry', '_blank');
   };
 
+  const menuItems = [
+    { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+    { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
+    { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
+    { label: 'Typography', ariaLabel: 'View typography showcase', link: '/typography' }
+  ];
+
+  const socialItems = [
+    { label: 'Instagram', link: 'https://www.instagram.com/borbalakun/' },
+    { label: 'Twitter', link: 'https://twitter.com' },
+    { label: 'Email', link: 'mailto:hello@borka.com' }
+  ];
+
   return (
     <div>
       <PageHeader title="Ceramics" isDarkMode={isDarkMode} />
+      <StaggeredMenu
+        position="left"
+        items={menuItems}
+        socialItems={socialItems}
+        displaySocials={true}
+        displayItemNumbering={true}
+        menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
+        openMenuButtonColor="#1C1C1C"
+        changeMenuColorOnOpen={true}
+        colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
+        logoUrl=""
+        accentColor="#1e5a55"
+        isFixed={true}
+        onMenuOpen={() => setIsMenuOpen(true)}
+        onMenuClose={() => setIsMenuOpen(false)}
+      />
+      
+      {/* Opacity overlay when menu is open */}
+      {isMenuOpen && (
+        <div 
+          className="fixed inset-0 pointer-events-none"
+          style={{ 
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 35
+          }}
+        />
+      )}
       
       <div className="max-w-6xl mx-auto px-8 py-8">
         <motion.div

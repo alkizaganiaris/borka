@@ -78,39 +78,6 @@ function AppContent() {
       }}
     >
 
-      {/* Back to Home arrow - shown on non-home pages */}
-      {!isHomePage && (
-        <motion.button
-          onClick={() => navigate('/')}
-          className="fixed left-8 top-8 z-50 p-3 rounded-full transition-all duration-300 pointer-events-auto"
-          style={{
-            background: isDarkMode 
-              ? 'radial-gradient(circle, #3E4BAA 0%, #2a3577 70%, #1f2656 100%)'
-              : 'radial-gradient(circle, #F4DE7C 0%, #e8cc5c 70%, #d4b84a 100%)',
-            opacity: 0.7
-          }}
-          whileHover={{ 
-            scale: 1.1,
-            opacity: 1
-          }}
-          whileTap={{ scale: 0.95 }}
-          aria-label="Back to home"
-        >
-          <svg 
-            width="24" 
-            height="24" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke={isDarkMode ? "#ffffff" : "#1C1C1C"}
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
-          </svg>
-        </motion.button>
-      )}
-
       {/* Decorative Shapes - Behind Menu */}
       {isHomePage && (
         <>

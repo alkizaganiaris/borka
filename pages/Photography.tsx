@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { FilmRollGallery } from "../components/FilmRollGallery";
 import { PageHeader } from "../components/PageHeader";
+import StaggeredMenu from "../components/StaggeredMenu";
 
 // ---------- Demo images ----------
 const galleryImages = [
@@ -41,6 +42,9 @@ interface PhotographyProps {
 
 export function Photography({ isDarkMode }: PhotographyProps) {
   const [openGalleryId, setOpenGalleryId] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  console.log('Photography - isMenuOpen:', isMenuOpen);
 
   const handleGalleryToggle = (id: string) => (isOpen: boolean) => {
     if (isOpen) {
@@ -50,9 +54,50 @@ export function Photography({ isDarkMode }: PhotographyProps) {
     }
   };
 
+  const menuItems = [
+    { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+    { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
+    { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
+    { label: 'Typography', ariaLabel: 'View typography showcase', link: '/typography' }
+  ];
+
+  const socialItems = [
+    { label: 'Instagram', link: 'https://www.instagram.com/borbalakun/' },
+    { label: 'Twitter', link: 'https://twitter.com' },
+    { label: 'Email', link: 'mailto:hello@borka.com' }
+  ];
+
   return (
     <div className="relative">
       <PageHeader title="Photography" isDarkMode={isDarkMode} />
+      <StaggeredMenu
+        position="left"
+        items={menuItems}
+        socialItems={socialItems}
+        displaySocials={true}
+        displayItemNumbering={true}
+        menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
+        openMenuButtonColor="#1C1C1C"
+        changeMenuColorOnOpen={true}
+        colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
+        logoUrl=""
+        accentColor="#1e5a55"
+        isFixed={true}
+        onMenuOpen={() => setIsMenuOpen(true)}
+        onMenuClose={() => setIsMenuOpen(false)}
+      />
+      
+      {/* Opacity overlay when menu is open */}
+      {isMenuOpen && (
+        <div 
+          className="fixed inset-0 pointer-events-none"
+          style={{ 
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 35
+          }}
+        />
+      )}
       
       {/* Gallery Instances */}
       <FilmRollGallery 
