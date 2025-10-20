@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { useState } from "react";
 
 interface PageHeaderProps {
   title: string;
@@ -40,12 +41,8 @@ export function PageHeader({ title}: PageHeaderProps) {
                          className="h-auto cursor-pointer"
                          style={{ 
                            width: '320px',
-                           borderRadius: '8px'
-                         }}
-                         whileHover={{ 
-                           scale: 1.1,
-                           rotate: 25,
-                           transition: { duration: 0.5, ease: "easeOut" },
+                           borderRadius: '8px',
+                           border: '2px solid black'
                          }}
                          whileTap={{ scale: 0.95 }}
                        />
@@ -62,6 +59,24 @@ export function PageHeader({ title}: PageHeaderProps) {
                          width: '300px',
                          opacity: 0.8
                        }}
+                     />
+                   </div>
+
+                   {/* Coffee image - center viewport */}
+                   <div className="fixed top-1/2 left-1/2 z-1" style={{ transform: 'translate(-50%, -35%)' }}>
+                     <motion.img 
+                       src="/coffee.png" 
+                       alt="Coffee" 
+                       className="h-auto cursor-pointer"
+                       style={{ 
+                         width: '400px',
+                         opacity: 1
+                       }}
+                       whileHover={{ 
+                         rotate: 58,
+                         transition: { duration: 0.3, ease: "easeOut" }
+                       }}
+                       whileTap={{ scale: 0.95 }}
                      />
                    </div>
                  </>
