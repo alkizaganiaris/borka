@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import { PageHeader } from "../components/PageHeader";
 import StaggeredMenu from "../components/StaggeredMenu";
+import HorizontalPhotoRow from "../components/HorizontalPhotoRow";
 
 interface CeramicsProps {
   isDarkMode: boolean;
@@ -59,6 +60,34 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
       image: "🎐",
       available: false
     }
+  ];
+
+  // Ceramic images - using placeholder images for now, you can replace with actual ceramic photos
+  const ceramicImages = [
+    { src: '/media/wooden_table_1.jpg', alt: 'Ocean Bowl - Hand-thrown stoneware bowl with blue glaze' },
+    { src: '/media/wooden_table_2.jpg', alt: 'Forest Vase - Tall ceramic vase with earthy green tones' },
+    { src: '/media/wooden_table_3.jpg', alt: 'Sunrise Plate Set - Set of 4 dinner plates with warm gradient glaze' },
+    { src: '/media/wooden_table_4.jpg', alt: 'Moonlight Mug - Handcrafted coffee mug with speckled glaze' },
+    { src: '/media/wooden_table.jpg', alt: 'Earth Pot - Large planter with natural brown finish' },
+    { src: '/media/entry_bg.jpeg', alt: 'Wind Chime Set - Ceramic wind chimes with unique tones' },
+    { src: '/media/pencil.png', alt: 'Mountain Mug - Rugged coffee mug with mountain landscape glaze' },
+    { src: '/media/coffee.png', alt: 'Coral Teapot - Delicate teapot with coral-inspired design' },
+    { src: '/media/tea.png', alt: 'Desert Wind Chime - Ceramic wind chime with desert-inspired tones' },
+    { src: '/media/shavings_1.png', alt: 'River Stone Bowl - Small serving bowl with river stone texture' },
+    { src: '/media/film-canister.png', alt: 'Sky Sculpture - Abstract ceramic sculpture with flowing lines' },
+    { src: '/media/film-frame-bg.jpg', alt: 'Earth Pot - Large planter with natural brown finish' },
+    { src: '/media/wooden_table_1.jpg', alt: 'Sunset Plate - Hand-painted dinner plate with sunset colors' },
+    { src: '/media/wooden_table_2.jpg', alt: 'Forest Bowl - Wood-fired bowl with natural ash glaze' },
+    { src: '/media/wooden_table_3.jpg', alt: 'Ocean Vase - Tall vase inspired by ocean waves' },
+    { src: '/media/wooden_table_4.jpg', alt: 'Mountain Teacup - Small teacup with mountain silhouette' },
+    { src: '/media/wooden_table.jpg', alt: 'Desert Jar - Storage jar with desert sand texture' },
+    { src: '/media/entry_bg.jpeg', alt: 'Rainbow Mug - Colorful mug with rainbow glaze pattern' },
+    { src: '/media/pencil.png', alt: 'Stone Plate - Natural stone-inspired serving plate' },
+    { src: '/media/coffee.png', alt: 'Leaf Bowl - Organic bowl shaped like a large leaf' },
+    { src: '/media/tea.png', alt: 'Fire Pot - Dramatic pot with flame-like glaze patterns' },
+    { src: '/media/shavings_1.png', alt: 'Ice Vase - Cool-toned vase with crystalline texture' },
+    { src: '/media/film-canister.png', alt: 'Wood Grain Plate - Plate with realistic wood grain pattern' },
+    { src: '/media/film-frame-bg.jpg', alt: 'Cloud Sculpture - Abstract cloud-shaped ceramic piece' }
   ];
 
   const handleContact = () => {
@@ -138,62 +167,76 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           </motion.button>
         </div>
 
-        {/* Ceramics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {ceramicPieces.map((piece, index) => (
-            <motion.div
-              key={piece.id}
-              className={`p-6 rounded-2xl border transition-all duration-300 ${
-                piece.available
-                  ? isDarkMode 
-                    ? 'bg-zinc-800/30 border-zinc-700 hover:border-zinc-500 hover:scale-105' 
-                    : 'bg-white/50 border-zinc-200 hover:border-zinc-400 hover:scale-105'
-                  : isDarkMode
-                    ? 'bg-zinc-800/10 border-zinc-800 opacity-60'
-                    : 'bg-zinc-50/30 border-zinc-200 opacity-60'
-              }`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              whileHover={piece.available ? { y: -5 } : {}}
-            >
-              <div className="text-6xl mb-4 text-center">
-                {piece.image}
-              </div>
-              
-              <h3 className={`text-xl font-bold mb-2 transition-colors duration-500 ${
-                isDarkMode ? 'text-white' : 'text-black'
-              }`}>
-                {piece.name}
-              </h3>
-              
-              <p className={`text-sm mb-4 transition-colors duration-500 ${
-                isDarkMode ? 'text-zinc-400' : 'text-zinc-600'
-              }`}>
-                {piece.description}
-              </p>
-              
-              <div className="flex justify-between items-center">
-                <span className={`text-lg font-semibold transition-colors duration-500 ${
-                  isDarkMode ? 'text-white' : 'text-black'
-                }`}>
-                  {piece.price}
-                </span>
-                
-                <span className={`text-xs px-3 py-1 rounded-full transition-colors duration-500 ${
-                  piece.available
-                    ? isDarkMode 
-                      ? 'bg-green-500/20 text-green-400' 
-                      : 'bg-green-100 text-green-700'
-                    : isDarkMode
-                      ? 'bg-red-500/20 text-red-400'
-                      : 'bg-red-100 text-red-700'
-                }`}>
-                  {piece.available ? 'Available' : 'Sold'}
-                </span>
-              </div>
-            </motion.div>
-          ))}
+        {/* Ceramics Gallery - Multi-Row Auto-Scroll */}
+        <div className="mb-16 relative z-10" style={{ minHeight: '100vh' }}>
+          <div className="text-center p-4 text-black font-bold mb-12">
+            Ceramics Gallery - Auto-Scrolling Display
+          </div>
+          
+          {/* Row 1 - Scrolling Right */}
+          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
+            <HorizontalPhotoRow
+              images={ceramicImages.slice(0, 3)}
+              imageSize={120}
+              spacing={60}
+              enableHover={true}
+              autoScroll={true}
+              scrollDirection="right"
+              scrollSpeed={12}
+              rowIndex={0}
+              className="h-full"
+            />
+          </div>
+          
+          {/* Row 2 - Scrolling Left */}
+          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
+            <HorizontalPhotoRow
+              images={ceramicImages.slice(3, 6)}
+              imageSize={120}
+              spacing={60}
+              enableHover={true}
+              autoScroll={true}
+              scrollDirection="left"
+              scrollSpeed={12}
+              rowIndex={1}
+              className="h-full"
+            />
+          </div>
+          
+          {/* Row 3 - Scrolling Right */}
+          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
+            <HorizontalPhotoRow
+              images={ceramicImages.slice(6, 9)}
+              imageSize={120}
+              spacing={60}
+              enableHover={true}
+              autoScroll={true}
+              scrollDirection="right"
+              scrollSpeed={12}
+              rowIndex={2}
+              className="h-full"
+            />
+          </div>
+          
+          {/* Row 4 - Scrolling Left */}
+          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
+            <HorizontalPhotoRow
+              images={ceramicImages.slice(9, 12)}
+              imageSize={120}
+              spacing={60}
+              enableHover={true}
+              autoScroll={true}
+              scrollDirection="left"
+              scrollSpeed={12}
+              rowIndex={3}
+              className="h-full"
+            />
+          </div>
+          
+          {/* Info */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm">
+            {ceramicImages.length} ceramic pieces • 4 rows scrolling in alternating directions
+          </div>
         </div>
 
         {/* About Section */}
