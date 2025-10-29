@@ -71,6 +71,18 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         onMenuClose={() => setIsMenuOpen(false)}
       />
       
+      {/* Viewfinder Overlay - Fixed on screen */}
+      <img
+        src="/media/viewfinder_transparent.png"
+        alt=""
+        className="fixed inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ 
+          zIndex: 15,
+          transform: 'scale(1)',
+          opacity: 0.1
+        }}
+      />
+      
       {/* Opacity overlay when menu is open */}
       {isMenuOpen && (
         <div 

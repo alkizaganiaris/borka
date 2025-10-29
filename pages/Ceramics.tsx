@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { PageHeader } from "../components/PageHeader";
 import StaggeredMenu from "../components/StaggeredMenu";
 import HorizontalPhotoRow from "../components/HorizontalPhotoRow";
+import ScrollControlledVideo from "../components/ScrollControlledVideo";
 
 interface CeramicsProps {
   isDarkMode: boolean;
@@ -166,6 +167,34 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
             Contact for Custom Orders
           </motion.button>
         </div>
+
+        {/* Scroll-Controlled Video */}
+        <motion.div
+          className="mb-16 relative z-10"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <div className="text-center mb-6">
+            <h2 className={`text-3xl font-bold transition-colors duration-500 ${
+              isDarkMode ? 'text-white' : 'text-black'
+            }`}>
+              The Making Process
+            </h2>
+            <p className={`text-sm mt-2 transition-colors duration-500 ${
+              isDarkMode ? 'text-zinc-400' : 'text-zinc-600'
+            }`}>
+              Hover and scroll to explore
+            </p>
+          </div>
+          
+          <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ maxWidth: '900px', margin: '0 auto', aspectRatio: '16/9' }}>
+            <ScrollControlledVideo 
+              videoSrc="/media/Claymotion.mp4"
+              className="w-full h-full"
+            />
+          </div>
+        </motion.div>
 
         {/* Ceramics Gallery - Multi-Row Auto-Scroll */}
         <div className="mb-16 relative z-10" style={{ minHeight: '100vh' }}>

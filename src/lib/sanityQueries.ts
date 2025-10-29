@@ -15,7 +15,7 @@ export async function getJournalEntries() {
 
 // Fetch all published photography galleries
 export async function getPhotographyGalleries() {
-  const query = `*[_type == "photographyGallery" && published == true] | order(order asc) {
+  const query = `*[_type == "photographyGallery"] | order(order asc) {
     _id,
     title,
     subtitle,
