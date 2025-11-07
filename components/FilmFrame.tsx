@@ -21,20 +21,16 @@ export function FilmFrame({
         onClick={onClick}
         className={`
           relative w-[240px] h-[160px] transition-all duration-300
-          ${
-            isSelected
-              ? "drop-shadow-[0_0_25px_rgba(225,29,72,0)]"
-              : "drop-shadow-2xl"
-          }
+
         `}
         // Hover = “lit” only, no movement
-        whileHover={{ filter: "brightness(1.8)" }}
+        whileHover={{ filter: "brightness(1.4)" }}
         whileTap={{ scale: 0.995 }}
       >
         {/* Film frame background with perforations */}
         <div className="absolute inset-0 bg-white">
           <img
-            src="/film-frame-bg.jpg"
+            src="/media/film-frame-bg.jpg"
             alt="Film frame"
             className="w-full h-full object-fill scale-110"
           />
@@ -50,7 +46,7 @@ export function FilmFrame({
               className="w-[92%] h-full object-cover opacity-100 translate-x-[10px]"
               style={{
                 filter:
-                  "sepia(0.8) saturate(2.5) brightness(0.8) contrast(1)",
+                  "sepia(0.8) saturate(2) brightness(0.8) contrast(1)",
               }}
             />
 

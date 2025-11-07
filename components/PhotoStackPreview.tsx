@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 
 export type StackItem = {
@@ -14,32 +14,79 @@ interface PhotoStackPreviewProps {
   stack: StackItem[];
   rolledOut: boolean;
   className?: string;
+  title?: string;
+  subtitle?: string;
+  filmUsed?: string;
+  description?: string;
 }
 
 export function PhotoStackPreview({
   stack,
   rolledOut,
   className = "",
+  title,
+  subtitle,
+  filmUsed,
 }: PhotoStackPreviewProps) {
   const [isTopHovered, setIsTopHovered] = useState(false);
+  const [lastStackLength, setLastStackLength] = useState(0);
+  const [newlyAddedItem, setNewlyAddedItem] = useState<string | null>(null);
+  const [mouseMoved, setMouseMoved] = useState(false);
+
+  // Track when new items are added to the stack
+  useEffect(() => {
+    if (stack.length > lastStackLength && stack.length > 0) {
+      // A new item was added
+      const newestItem = stack[stack.length - 1];
+      setNewlyAddedItem(newestItem.key);
+      setMouseMoved(false); // Reset mouse movement flag
+    }
+    setLastStackLength(stack.length);
+  }, [stack.length, stack, lastStackLength]);
+
+  // Track mouse movement to drop zoomed photo
+  useEffect(() => {
+    if (!newlyAddedItem) return;
+
+    const handleMouseMove = () => {
+      setMouseMoved(true);
+      setNewlyAddedItem(null); // Drop the zoomed photo when mouse moves
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [newlyAddedItem]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95, height: 0 }}
-      animate={{
-        opacity: rolledOut ? 1 : 0,
-        scale: rolledOut ? 1 : 0.95,
-        height: rolledOut ? "auto" : 0,
-      }}
-      transition={{ duration: 0.5 }}
-      className={`max-w-4xl mx-auto px-4 ${className}`}
-      style={{ 
-        marginBottom: rolledOut ? "2rem" : "0",
-        overflow: rolledOut ? "visible" : "hidden"
-      }}
-    >
+    <div className="relative">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, height: 0 }}
+        animate={{
+          opacity: rolledOut ? 1 : 0,
+          scale: rolledOut ? 1 : 0.95,
+          height: rolledOut ? "auto" : 0,
+        }}
+        transition={{ 
+          duration: 0.8,
+          ease: [0.34, 1.56, 0.64, 1], // Bounce easing for swell effect
+          opacity: { duration: 0.5, ease: "easeOut" },
+          scale: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }, // Extra bounce for scale
+        }}
+        className={`px-4 ${className}`}
+        style={{ 
+          marginBottom: rolledOut ? "2rem" : "0",
+          overflow: rolledOut ? "visible" : "hidden",
+          width: '87vw', // Adjust this value to control width
+          marginLeft: 'auto',
+          marginRight: 'auto'
+        }}
+      >
       <motion.div 
-        className="relative aspect-video overflow-visible flex items-center justify-center border-2 border-black p-8"
+        className="relative overflow-visible flex items-center justify-center p-8 border border-black"
+        style={{ 
+          borderWidth: '0.5px',
+          height: '63vh' // Adjust this value to control height
+        }}
         animate={{
           borderRadius: isTopHovered ? "8px" : "16px"
         }}
@@ -59,26 +106,63 @@ export function PhotoStackPreview({
             ease: "easeInOut"
           }}
         >
-          <div className="absolute inset-0 bg-yellow-300/80" style={{ clipPath: 'polygon(0 0, 50% 0, 25% 100%, 0 100%)' }}></div>
-          <div className="absolute inset-0 bg-purple-300/80" style={{ clipPath: 'polygon(50% 0, 100% 0, 75% 100%, 25% 100%)' }}></div>
-          <div className="absolute inset-0 bg-blue-300/80" style={{ clipPath: 'polygon(100% 0, 100% 100%, 75% 100%)' }}></div>
-          <div className="absolute inset-0 bg-pink-300/80" style={{ clipPath: 'polygon(0 100%, 25% 100%, 0 50%)' }}></div>
+          {/* Wooden table background */}
+          <motion.div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ 
+              backgroundImage: 'url(/media/wooden_table.jpg)',
+              opacity: isTopHovered ? 0.3 : 1
+            }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          ></motion.div>
+
+          {/* Visual notes overlay */}
+          <motion.div 
+            className="absolute bottom-4 right-4 bg-buttery/100 border border-black rounded-lg px-3 py-2 text-black text-sm shadow-lg"
+            style={{
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+            }}
+            animate={{
+              opacity: isTopHovered ? 0 : 1
+            }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            {title && (
+              <span className="font-bold mr-3">{title}</span>
+            )}
+            {subtitle && (
+              <span className="opacity-90 mr-3">{subtitle}</span>
+            )}
+            {filmUsed && (
+              <span className="opacity-75">Film: {filmUsed}</span>
+            )}
+          </motion.div>
+
         </motion.div>
+        
+        
         {/* STACK: newest on top */}
         <div
-          className="relative flex items-center justify-center"
-          style={{ width: "74%", height: "74%" }}
+          className="absolute"
+          style={{ 
+            width: "500px", 
+            height: "333px",
+            // Position controls - adjust these values:
+            left: '70%',      // Horizontal position: 'left', 'center', 'right', or percentage/px
+            top: '50%',       // Vertical position: 'top', 'center', 'bottom', or percentage/px
+            transform: 'translate(-50%, -50%)', // Centers when using percentages
+          }}
           onMouseEnter={() => setIsTopHovered(true)}
           onMouseLeave={() => setIsTopHovered(false)}
         >
           {stack.map((item, i) => {
             const isTop = i === stack.length - 1;
-            const hoverActive = isTop && isTopHovered;
+            const isNewlyAdded = newlyAddedItem === item.key;
+            const hoverActive = isTop && isTopHovered && !isNewlyAdded; // Don't hover if newly added
             
-            // Calculate scale to fit the full preview when hovering
-            const stackSize = 0.74; // 74% of preview (current container size)
-            const hoverScale = 1.35; // Adjust this value to control hover zoom (1.5 = 150% of original size)
-            const scaleToFit = hoverActive ? hoverScale : (isTop ? 1.02 : 1);
+            // Calculate scale - newly added items are zoomed, hovered items are zoomed, top items are slightly scaled
+            const hoverScale = 1.35; // Adjust this value to control hover zoom
+            const scaleToFit = isNewlyAdded ? hoverScale : (hoverActive ? hoverScale : (isTop ? 1.02 : 1));
             
             return (
               <motion.div
@@ -94,16 +178,16 @@ export function PhotoStackPreview({
                   opacity: 0,
                   scale: 0.9,
                   rotate: 0,
-                  x: 0,
-                  y: 0,
+                  x: isNewlyAdded ? (Math.random() - 0.5) * 100 : 0,  // Random horizontal slide (-50 to +50px)
+                  y: isNewlyAdded ? (Math.random() - 0.5) * 80 : 0,   // Random vertical slide (-40 to +40px)
                 }}
                 animate={{
                   opacity: 1,
-                  rotate: hoverActive ? 0 : item.rot,
-                  x: hoverActive ? 0 : item.dx,
-                  y: hoverActive ? 0 : item.dy,
+                  rotate: (hoverActive || isNewlyAdded) ? 0 : item.rot,
+                  x: (hoverActive || isNewlyAdded) ? 0 : item.dx,
+                  y: (hoverActive || isNewlyAdded) ? 0 : item.dy,
                   scale: scaleToFit,
-                  boxShadow: hoverActive
+                  boxShadow: (hoverActive || isNewlyAdded)
                     ? "0 16px 48px rgba(0,0,0,0.55)"
                     : isTop
                       ? "0 12px 36px rgba(0,0,0,0.4)"
@@ -143,7 +227,8 @@ export function PhotoStackPreview({
           })}
         </div>
       </motion.div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 

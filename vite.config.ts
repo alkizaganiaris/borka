@@ -10,5 +10,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './'),
     },
   },
+  server: {
+    host: '127.0.0.1', // avoid dual IPv4/IPv6 binding weirdness
+    port: 5173,
+    strictPort: true,  // fail fast if taken
+  },
 })
 

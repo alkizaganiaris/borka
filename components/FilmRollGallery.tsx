@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect } from "react";
 import { motion, useScroll } from "motion/react";
 import { FilmFrame } from "./FilmFrame";
 import { PhotoStackPreview, type StackItem } from "./PhotoStackPreview";
+import DecryptedText from "./DecryptedText";
 
 interface FilmRollGalleryProps {
   images: string[];
@@ -9,11 +10,15 @@ interface FilmRollGalleryProps {
   subtitle?: string;
   filmUsed?: string;
   year?: string;
+  description?: string;
   className?: string;
   isOpen?: boolean;
   onToggle?: (isOpen: boolean) => void;
   scrollToPreview?: boolean;
   previewScrollOffset?: number; // Vertical offset in pixels when centering (negative = higher, positive = lower)
+  onPreviewPositionChange?: (top: number, height: number) => void; // Callback to report preview position
+  showBubbleVideo?: boolean; // Whether to show the bubble video for this gallery (defaults to true)
+  isDarkMode?: boolean;
 }
 
 
@@ -23,12 +28,18 @@ function NotesContent({
   subtitle = "/ ˌɪn spəˈreɪ ʃən /",
   filmUsed,
   year,
+  photos,
+  //isDarkMode = false,
+  isCanisterHovered = false,
 }: { 
   compact?: boolean;
   title?: string;
   subtitle?: string;
   filmUsed?: string;
   year?: string;
+  photos?: number;
+  isDarkMode?: boolean;
+  isCanisterHovered?: boolean;
 }) {
   const monoFont =
     "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
@@ -38,26 +49,76 @@ function NotesContent({
       style={{ fontFamily: monoFont }}
       className={
         compact
-          ? "text-zinc-900 text-sm leading-tight tracking-tight"
-          : "text-zinc-900 text-base leading-tight tracking-tight"
+          ? `text-sm leading-tight tracking-tight transition-colors duration-500 text-zinc-900`
+          : `text-base leading-tight tracking-tight transition-colors duration-500 text-zinc-900`
       }
     >
       <h2
         className={
           compact
-            ? "font-semibold uppercase"
+            ? "font-semibold uppercase text-2xl"
             : "text-lg font-semibold uppercase"
         }
       >
-        {title}
+        <DecryptedText 
+          text={title}
+          speed={30}
+          maxIterations={10}
+          animateOn="trigger"
+          trigger={isCanisterHovered}
+          revealDirection="start"
+        />
       </h2>
-      <p className="text-zinc-600 mb-2">{subtitle}</p>
+      <p className="mb-0 transition-colors duration-500 text-zinc-600">
+        <DecryptedText 
+          text={subtitle}
+          speed={25}
+          maxIterations={8}
+          animateOn="trigger"
+          trigger={isCanisterHovered}
+          revealDirection="start"
+        />
+      </p>
 
       {/* Film metadata */}
-      {(filmUsed || year) && (
-        <div className="mt-2 space-y-0.5 text-zinc-600 text-xs">
-          {filmUsed && <p>Film: {filmUsed}</p>}
-          {year && <p>Year: {year}</p>}
+      {(filmUsed || year || photos) && (
+        <div className="mt-4 space-y-0.5 text-xs transition-colors duration-500 text-black">
+          {filmUsed && (
+            <p>
+              <DecryptedText 
+                text={`Film: ${filmUsed}`}
+                speed={25}
+                maxIterations={8}
+                animateOn="trigger"
+                trigger={isCanisterHovered}
+                revealDirection="start"
+              />
+            </p>
+          )}
+          {year && (
+            <p>
+              <DecryptedText 
+                text={`Year: ${year}`}
+                speed={25}
+                maxIterations={8}
+                animateOn="trigger"
+                trigger={isCanisterHovered}
+                revealDirection="start"
+              />
+            </p>
+          )}
+          {photos && (
+            <p>
+              <DecryptedText 
+                text={`Photos: ${photos}`}
+                speed={25}
+                maxIterations={8}
+                animateOn="trigger"
+                trigger={isCanisterHovered}
+                revealDirection="start"
+              />
+            </p>
+          )}
         </div>
       )}
 
@@ -87,20 +148,36 @@ export function FilmRollGallery({
   subtitle,
   filmUsed,
   year,
+  description,
   className = "",
   isOpen,
   onToggle,
   scrollToPreview = true,
-  previewScrollOffset = 120,
+  previewScrollOffset = 180, // Negative = scroll higher up
+  onPreviewPositionChange,
+  isDarkMode = false,
 }: FilmRollGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [stack, setStack] = useState<StackItem[]>([]);
   const [internalRolledOut, setInternalRolledOut] = useState(false);
+  const [isCanisterHovered, setIsCanisterHovered] = useState(false);
   
   // Use controlled state if provided, otherwise use internal state
   const rolledOut = isOpen !== undefined ? isOpen : internalRolledOut;
+  
+  // Track if animations should be enabled (prevents glitchy first render)
+  const [animationsEnabled, setAnimationsEnabled] = useState(false);
 
-  const REEL_DUR = 1; // seconds — keep this in sync with the reel animation
+  const REEL_DUR = 1.2; // seconds — faster, smoother animation
+
+  // Enable animations after first render to prevent glitches
+  useEffect(() => {
+    // Small delay to ensure DOM is fully ready
+    const timer = setTimeout(() => {
+      setAnimationsEnabled(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const rand = (min: number, max: number) =>
     Math.random() * (max - min) + min;
@@ -143,6 +220,30 @@ export function FilmRollGallery({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [rolledOut, onToggle]);
 
+  // Report preview position to parent component (only when rolled out and this gallery is active)
+  useEffect(() => {
+    if (!previewRef.current || !onPreviewPositionChange || !rolledOut || !isOpen) return;
+
+    const updatePosition = () => {
+      if (previewRef.current) {
+        const rect = previewRef.current.getBoundingClientRect();
+        onPreviewPositionChange(rect.top + window.scrollY, rect.height);
+      }
+    };
+
+    // Initial position update
+    updatePosition();
+    
+    // Only update on scroll/resize, not on every render
+    window.addEventListener('scroll', updatePosition, { passive: true });
+    window.addEventListener('resize', updatePosition, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [rolledOut, isOpen, onPreviewPositionChange]);
+
   function addToStack(index: number) {
     const src = images[index];
     setStack((prev) => {
@@ -155,7 +256,7 @@ export function FilmRollGallery({
         dy: rand(-12, 12),
         key: `${index}-${crypto.randomUUID?.() ?? Date.now()}`,
       };
-      return [...prev, item].slice(-6);
+      return [...prev, item].slice(-images.length);
     });
   }
 
@@ -205,7 +306,14 @@ export function FilmRollGallery({
     <div className={`w-full ${className}`}>
       {/* Preview box (stack of chosen photos) */}
       <div ref={previewRef}>
-        <PhotoStackPreview stack={stack} rolledOut={rolledOut} />
+        <PhotoStackPreview 
+          stack={stack} 
+          rolledOut={rolledOut} 
+          title={title}
+          subtitle={subtitle}
+          filmUsed={filmUsed}
+          description={description}
+        />
       </div>
 
       {/* Reel section */}
@@ -231,15 +339,17 @@ export function FilmRollGallery({
 
               toggleRolledOut(next);
             }}
+            onMouseEnter={() => setIsCanisterHovered(true)}
+            onMouseLeave={() => setIsCanisterHovered(false)}
             initial={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.04 }}
             className="absolute left-0 top-[7.5%] z-30 w-40 h-48 flex items-center justify-center"
           >
             <div className="relative w-40 h-70">
               <img
-                src="/film-canister.png"
+                src="/media/film-canister.png"
                 alt="Film Roll"
-                className="w-full h-full object-contain drop-shadow-2xl"
+                className="w-full h-full object-contain"
               />
               {/* Leader grows/shrinks with rollout, but waits on close */}
               <motion.div
@@ -279,15 +389,16 @@ export function FilmRollGallery({
                 minHeight: '48px', // Match canister height
                 willChange: "clip-path"
               }}
-              initial={false}
-              animate={{
+              initial={{ clipPath: "inset(0 100% 0 0)" }}
+              animate={animationsEnabled ? {
                 clipPath: rolledOut
                   ? "inset(0 0% 0 0)"
                   : "inset(0 100% 0 0)",
-              }}
+              } : false}
               transition={{
                 duration: REEL_DUR,
-                ease: "easeInOut",
+                ease: [0.4, 0, 0.2, 1], // Custom bezier curve for smoother animation
+                delay: rolledOut ? 0.8 : 0, // Wait 1s for scroll to complete before unraveling
               }}
             >
               {/* Frames */}
@@ -308,27 +419,27 @@ export function FilmRollGallery({
               </div>
             </motion.div>
 
-            {/* LANE NOTES (pinned overlay: Y fixed, X animates) */}
+            {/* LANE NOTES (pinned overlay: Y fixed, X animates) - Left half */}
             <div
               className="absolute z-20 pointer-events-none"
               style={{
                 left: "11rem",
                 top: "50%",
                 transform: "translateY(-50%)",
-                width: "calc(100% - 11rem - 2rem)",
+                width: "calc(50% - 11rem - 1rem)",
               }}
             >
               <motion.div
-                initial={false}
-                animate={rolledOut ? "off" : "on"}
+                initial={{ x: 0, opacity: 1 }}
+                animate={animationsEnabled ? (rolledOut ? "off" : "on") : false}
                 variants={{
                   on: { x: 0, opacity: 1 },
                   off: { x: "40vw", opacity: 0 },
                 }}
                 transition={{
-                  duration: 0.25,
-                  ease: "easeInOut",
-                  delay: rolledOut ? 0 : REEL_DUR,
+                  duration: 0.3,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: rolledOut ? 0.05 : REEL_DUR,
                 }}
                 style={{ willChange: "transform, opacity" }}
               >
@@ -338,7 +449,60 @@ export function FilmRollGallery({
                   subtitle={subtitle}
                   filmUsed={filmUsed}
                   year={year}
+                  photos={images.length}
+                  isDarkMode={isDarkMode}
+                  isCanisterHovered={isCanisterHovered}
                 />
+              </motion.div>
+            </div>
+
+            {/* LANE DESCRIPTION (pinned overlay: Y fixed, X animates) - Right half */}
+            <div
+              className="absolute z-20 pointer-events-none"
+              style={{
+                right: "0", // Align with right edge of container
+                top: "0", // Align with top of container
+                width: "80vh", // Fixed width - FULL CONTROL
+                height: "100%", // Match container height
+              }}
+            >
+              <motion.div
+                initial={{ x: "100%", opacity: 0 }}
+                animate={{
+                  x: (isCanisterHovered && !rolledOut) ? "0%" : "100%",
+                  opacity: (isCanisterHovered && !rolledOut) ? 1 : 0,
+                }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.4, 0, 0.2, 1],
+                }}
+                style={{ 
+                  willChange: "transform, opacity",
+                  width: "100%",
+                  height: "100%",
+                }}
+              >
+                {description && (
+                  <div 
+                    className="text-sm leading-relaxed rounded-l-lg transition-colors duration-500 relative overflow-hidden font-mono text-black"
+                    style={{
+                      width: "100%", // Fill the fixed container
+                      height: "100%", // Fill the fixed container
+                      padding: "16px 20px", // Fixed padding
+                      boxSizing: "border-box", // Include padding in height calculation
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {/* White background - 50% opacity */}
+                    <div className="absolute inset-0 bg-white opacity-0" />
+                    {/* Content - centered in fixed container */}
+                    <div className="relative z-10 text-center">
+                      {description}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             </div>
           </div>

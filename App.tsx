@@ -1,109 +1,482 @@
-import { useState } from "react";
-import { FilmRollGallery } from "./components";
+import { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import StaggeredMenu from "./components/StaggeredMenu";
+import { PageTransition } from "./components/PageTransition";
+import { Homepage } from "./pages/Homepage";
+import { Photography } from "./pages/Photography";
+import { Journal } from "./pages/Journal";
+import { Ceramics } from "./pages/Ceramics";
+import { Typography } from "./pages/Typography";
+import DotGrid from "./components/BlastBackground";
+import { motion, AnimatePresence } from "motion/react";
+import Magnet from "./components/MagnetButton";
 
-// ---------- Demo images ----------
-const galleryImages = [
-  "https://images.unsplash.com/photo-1496203695688-3b8985780d6a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx2aW50YWdlJTIwcG9ydHJhaXR8ZW58MXx8fHwxNzYwNzU3OTY1fDA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1617634667039-8e4cb277ab46?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXR1cmUlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYwNzY0NTcxfDA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1487452066049-a710f7296400?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1cmJhbiUyMHN0cmVldHxlbnwxfHx8fDE3NjA2ODQzNTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1528543606781-2f6e6857f318?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmF2ZWwlMjBhZHZlbnR1cmV8ZW58MXx8fHwxNzYwNzMxOTUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1663940019982-c14294717dbd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcmNoaXRlY3R1cmUlMjBidWlsZGluZ3xlbnwxfHx8fDE3NjA3MTkzMzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1503803548695-c2a7b4a5b875?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBvY2VhbnxlbnwxfHx8fDE3NjA3MDcxNzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMHBlYWt8ZW58MXx8fHwxNzYwNzA0MzQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1498036882173-b41c28a8ba34?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5JTIwbGlnaHRzfGVufDF8fHx8MTc2MDc3Njk5OHww&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb3Jlc3QlMjB0cmVlc3xlbnwxfHx8fDE3NjA3NTMzMzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1599854100970-974129a5c8b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWFjaCUyMHdhdmVzfGVufDF8fHx8MTc2MDc3Njk5OHww&ixlib=rb-4.1.0&q=80&w=1080",
-];
+function AppContent() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isButtonHovered, setIsButtonHovered] = useState(false);
+  const [wasCaught, setWasCaught] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showHoverIcon, setShowHoverIcon] = useState(false);
+  const [hoverDisabled, setHoverDisabled] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-// Additional image sets for demonstrating multiple instances
-const natureImages = [
-  "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb3Jlc3QlMjB0cmVlc3xlbnwxfHx8fDE3NjA3NTMzMzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1617634667039-8e4cb277ab46?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXR1cmUlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYwNzY0NTcxfDA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMHBlYWt8ZW58MXx8fHwxNzYwNzA0MzQ2fDA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1503803548695-c2a7b4a5b875?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdW5zZXQlMjBvY2VhbnxlbnwxfHx8fDE3NjA3MDcxNzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-  "https://images.unsplash.com/photo-1599854100970-974129a5c8b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWFjaCUyMHdhdmVzfGVufDF8fHx8MTc2MDc3Njk5OHww&ixlib=rb-4.1.0&q=80&w=1080",
-];
+  const isHomePage = location.pathname === '/';
 
-export default function App() {
-  const [openGalleryId, setOpenGalleryId] = useState<string | null>(null);
 
-  const handleGalleryToggle = (id: string) => (isOpen: boolean) => {
-    if (isOpen) {
-      // Close any other open gallery and open this one
-      setOpenGalleryId(id);
-    } else {
-      // Close this gallery
-      setOpenGalleryId(null);
+  // Close menu when navigating to a different page
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
+
+  const handleDarkModeClick = () => {
+    setIsDarkMode(!isDarkMode);
+    setHoverDisabled(true);
+    setShowHoverIcon(false);
+    if (isButtonHovered) {
+      setWasCaught(true);
+      // Hide "You got me!" after 1.5 seconds
+      setTimeout(() => {
+        setWasCaught(false);
+      }, 1500);
     }
   };
 
+  const handleMouseEnter = () => {
+    if (!hoverDisabled) {
+      setIsButtonHovered(true);
+      setShowHoverIcon(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsButtonHovered(false);
+    setShowHoverIcon(false);
+    setHoverDisabled(false);
+  };
+
+  const menuItems = [
+    { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+    { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
+    { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
+    { label: 'Typography', ariaLabel: 'View typography showcase', link: '/typography' }
+  ];
+
+  const socialItems = [
+    { label: 'Instagram', link: 'https://www.instagram.com/borbalakun/' },
+    { label: 'Twitter', link: 'https://twitter.com' },
+    { label: 'Email', link: 'mailto:hello@borka.com' }
+  ];
+
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      {/* Subtle neutral vignette */}
-      <div className="fixed inset-0 bg-gradient-radial from-transparent via-white/60 to-white pointer-events-none" />
+    <div 
+      className="min-h-screen relative overflow-hidden transition-colors duration-500"
+      style={{
+        backgroundColor: isDarkMode ? '#a8b4d9' : '#fffef0'
+      }}
+    >
 
-      <div className="relative z-10">
-        {/* Gallery Instances */}
-        <FilmRollGallery 
-          images={galleryImages} 
-          title="Inspiration"
-          subtitle="/ ˌɪn spəˈreɪ ʃən /"
-          filmUsed="Kodak Portra 400"
-          year="2023"
-          isOpen={openGalleryId === "inspiration"}
-          onToggle={handleGalleryToggle("inspiration")}
-        />
-        
-        <FilmRollGallery 
-          images={natureImages} 
-          title="Nature Collection"
-          subtitle="/ ˈneɪ tʃər kəˈlek ʃən /"
-          filmUsed="Fujifilm Pro 400H"
-          year="2024"
-          isOpen={openGalleryId === "nature"}
-          onToggle={handleGalleryToggle("nature")}
-        />
-        
-        
-        <FilmRollGallery 
-          images={natureImages} 
-          title="Enrico"
-          subtitle="/ ˈenɪ ʃəə kə'w /"
-          filmUsed="Ilford HP5 Plus"
-          year="2022"
-          isOpen={openGalleryId === "enrico"}
-          onToggle={handleGalleryToggle("enrico")}
-        />
-        
-        <FilmRollGallery 
-          images={natureImages} 
-          title="Alki"
-          subtitle="/ ˈenɪ ʃəə kə'w /"
-          filmUsed="Ilford HP5 Plus"
-          year="2022"
-          isOpen={openGalleryId === "alki"}
-          onToggle={handleGalleryToggle("alki")}
-        />        
+      {/* Decorative Shapes - Behind Menu */}
+      {isHomePage && (
+        <>
+          {/* Cobalt Blue Circle */}
+          <div 
+            className="fixed"
+            style={{
+              left: '21%',
+              top: '30%',
+              zIndex: 5
+            }}
+          >
+            <Magnet magnetStrength={-10} padding={100}>
+              <motion.div
+                className="group"
+                initial={{ x: '-200%', opacity: 0 }}
+                animate={{
+                  x: isMenuOpen ? '0%' : '-200%',
+                  opacity: isMenuOpen ? 1 : 0,
+                  rotate: 0
+                }}
+                transition={{ 
+                  duration: isMenuOpen ? 0.5 : 0.25,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: isMenuOpen ? 0 : 0
+                }}
+                style={{
+                  transform: 'translate(-50%, -50%)',
+                  width: '28vw',
+                  height: '28vw',
+                  borderRadius: '50%',
+                  backgroundColor: '#3E4BAA',
+                  border: '1px solid #1C1C1C',
+                  pointerEvents: 'auto',
+                  cursor: 'pointer'
+                }}
+                whileHover={{
+                  borderColor: 'transparent'
+                }}
+              />
+            </Magnet>
+          </div>
 
-        <FilmRollGallery 
-          images={natureImages} 
-          title="Silvia"
-          subtitle="/ ˈenɪ ʃəə kə'w /"
-          filmUsed="Ilford HP5 Plus"
-          year="2022"
-          isOpen={openGalleryId === "silvia"}
-          onToggle={handleGalleryToggle("silvia")}
+          {/* Bubblegum Pink Rectangle */}
+          <div 
+            className="fixed"
+            style={{
+              left: '10%',
+              top: '85%',
+              zIndex: 5
+            }}
+          >
+            <Magnet magnetStrength={10} padding={100}>
+              <motion.div
+                className="group"
+                initial={{ x: '-200%', opacity: 0 }}
+                animate={{
+                  x: isMenuOpen ? '0%' : '-200%',
+                  opacity: isMenuOpen ? 1 : 0,
+                  rotate: 360
+                }}
+                transition={{ 
+                  duration: isMenuOpen ? 0.5 : 0.25,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: isMenuOpen ? 0.15 : 0
+                }}
+                style={{
+                  transform: 'translate(-50%, -50%)',
+                  width: '30vw',
+                  height: '7vw',
+                  borderRadius: '1rem',
+                  backgroundColor: '#E875A8',
+                  border: '1px solid #1C1C1C',
+                  pointerEvents: 'auto',
+                  cursor: 'pointer'
+                }}
+                whileHover={{
+                  borderColor: 'transparent'
+                }}
+              />
+            </Magnet>
+          </div>
+
+          {/* Black Triangle */}
+          <div 
+            className="fixed"
+            style={{
+              left: '29%',
+              top: '9%',
+              zIndex: 6
+            }}
+          >
+            <Magnet magnetStrength={-10} padding={100}>
+              <motion.div
+                initial={{ x: '-200%', opacity: 0 }}
+                animate={{
+                  x: isMenuOpen ? '0%' : '-200%',
+                  opacity: isMenuOpen ? 1 : 0,
+                  rotate: 90
+                }}
+                transition={{ 
+                  duration: isMenuOpen ? 0.5 : 0.25,
+                  ease: [0.4, 0, 0.2, 1],
+                  delay: isMenuOpen ? 0.3 : 0
+                }}
+                style={{
+                  transform: 'translate(-50%, 0)',
+                  width: '0',
+                  height: '0',
+                  borderLeft: '6vw solid transparent',
+                  borderRight: '6vw solid transparent',
+                  borderBottom: '10vw solid #1C1C1C',
+                  pointerEvents: 'auto',
+                  cursor: 'pointer'
+                }}
+              />
+            </Magnet>
+          </div>
+        </>
+      )}
+
+      {/* StaggeredMenu Navigation - only on home page */}
+      {isHomePage && (
+        <StaggeredMenu
+          position="left"
+          items={menuItems}
+          socialItems={socialItems}
+          displaySocials={true}
+          displayItemNumbering={true}
+          menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
+          openMenuButtonColor="#1C1C1C"
+          changeMenuColorOnOpen={true}
+          colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
+          logoUrl=""
+          accentColor="#1e5a55"
+          isFixed={true}
+          onMenuOpen={() => setIsMenuOpen(true)}
+          onMenuClose={() => setIsMenuOpen(false)}
         />
-        {/* Uncomment to add more instances:
-        <FilmRollGallery 
-          images={galleryImages} 
-          title="Urban Life"
-          showTitle={true}
-          isOpen={openGalleryId === "urban"}
-          onToggle={handleGalleryToggle("urban")}
+      )}
+
+      {/* Dark mode toggle button with playful text */}
+      <motion.div 
+        className="fixed right-4 z-50"
+        initial={{ opacity: 1, y: 0 }}
+        animate={{ 
+          top: "1rem",
+          opacity: isMenuOpen ? 0 : 1,
+          y: isMenuOpen ? -20 : 0
+        }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+        style={{ pointerEvents: isMenuOpen ? 'none' : 'auto' }}
+      >
+        <Magnet padding={50} magnetStrength={10}>
+          <div className="relative">
+            <motion.button
+              onClick={handleDarkModeClick}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              className="relative w-16 h-16 rounded-full transition-all duration-500 overflow-hidden"
+              initial={{ opacity: 0.5 }}
+              animate={{ 
+                opacity: isButtonHovered ? 1 : 0.5,
+                background: showHoverIcon
+                  ? (isDarkMode 
+                      ? 'radial-gradient(circle, #F4DE7C 0%, #e8cc5c 70%, #d4b84a 100%)'
+                      : 'radial-gradient(circle, #3E4BAA 0%, #2a3577 70%, #1f2656 100%)')
+                  : (isDarkMode 
+                      ? 'radial-gradient(circle, #3E4BAA 0%, #2a3577 70%, #1f2656 100%)'
+                      : 'radial-gradient(circle, #F4DE7C 0%, #e8cc5c 70%, #d4b84a 100%)')
+              }}
+              transition={{ 
+                duration: 0.3, 
+                ease: "easeInOut",
+                background: { duration: 0.3 }
+              }}
+              whileHover={{ 
+                scale: 1.05,
+                rotate: isDarkMode ? -5 : 5
+              }}
+              whileTap={{ scale: 0.95 }}
+              aria-label="Toggle dark mode"
+            >
+              {/* Background stars/rays effect */}
+              <motion.div
+                className="absolute inset-0"
+                animate={{
+                  rotate: isDarkMode ? 360 : 0,
+                }}
+                transition={{
+                  duration: 20,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              >
+                <AnimatePresence mode="wait">
+                  {showHoverIcon ? (
+                    // Show opposite background effect on hover
+                    <motion.div
+                      key="hover-effect"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      {isDarkMode ? (
+                        // Sun rays for dark mode hover
+                        <div className="absolute inset-0">
+                          {[...Array(8)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="absolute top-1/2 left-1/2 w-0.5 h-3 bg-yellow-200/40 origin-top"
+                              style={{
+                                transform: `rotate(${i * 45}deg) translateX(-50%)`
+                              }}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        // Stars for light mode hover
+                        <>
+                          <div className="absolute top-2 left-2 w-1 h-1 bg-white rounded-full opacity-60" />
+                          <div className="absolute top-4 right-3 w-1 h-1 bg-white rounded-full opacity-80" />
+                          <div className="absolute bottom-3 left-4 w-0.5 h-0.5 bg-white rounded-full opacity-70" />
+                          <div className="absolute bottom-4 right-2 w-1 h-1 bg-white rounded-full opacity-50" />
+                        </>
+                      )}
+                    </motion.div>
+                  ) : (
+                    // Normal background effect
+                    <motion.div
+                      key="normal-effect"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      {isDarkMode ? (
+                        // Stars for dark mode
+                        <>
+                          <div className="absolute top-2 left-2 w-1 h-1 bg-white rounded-full opacity-60" />
+                          <div className="absolute top-4 right-3 w-1 h-1 bg-white rounded-full opacity-80" />
+                          <div className="absolute bottom-3 left-4 w-0.5 h-0.5 bg-white rounded-full opacity-70" />
+                          <div className="absolute bottom-4 right-2 w-1 h-1 bg-white rounded-full opacity-50" />
+                        </>
+                      ) : (
+                        // Sun rays for light mode
+                        <div className="absolute inset-0">
+                          {[...Array(8)].map((_, i) => (
+                            <div
+                              key={i}
+                              className="absolute top-1/2 left-1/2 w-0.5 h-3 bg-yellow-200/40 origin-top"
+                              style={{
+                                transform: `rotate(${i * 45}deg) translateX(-50%)`
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* Icon */}
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center text-2xl"
+                animate={{
+                  rotate: isDarkMode ? 0 : 360,
+                  scale: wasCaught ? [1, 1.2, 1] : 1
+                }}
+                transition={{
+                  rotate: { duration: 0.6, ease: "easeInOut" },
+                  scale: { duration: 0.5 }
+                }}
+              >
+                <AnimatePresence mode="wait">
+                  {showHoverIcon ? (
+                    <motion.span
+                      key="hover"
+                      initial={{ opacity: 0, scale: 0.5, rotate: 180 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      exit={{ opacity: 0, scale: 0.5, rotate: -180 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      {isDarkMode ? '☀️' : '🌙'}
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="normal"
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.5 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      {isDarkMode ? '🌙' : '☀️'}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </motion.button>
+            
+            {/* Playful text */}
+            <motion.div
+              className={`absolute right-full mr-4 top-1/3 -translate-y-1/2 font-mono text-xs whitespace-nowrap ${
+                isDarkMode ? 'text-black' : 'text-zinc-700'
+              }`}
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ 
+                opacity: (isButtonHovered || wasCaught) ? 1 : 0,
+                x: (isButtonHovered || wasCaught) ? 0 : 10,
+              }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              {wasCaught 
+                ? "'click'" 
+                : isButtonHovered && !wasCaught
+                  ? location.pathname === '/journal'
+                    ? (isDarkMode ? "Grab a coffee while you're at it" : "Stop doomscrolling! Read a journal entry instead")
+                    : (isDarkMode ? "Lights on?" : "Lights off?")
+                  : ""}
+            </motion.div>
+          </div>
+        </Magnet>
+      </motion.div>
+
+        {/* Interactive dot grid background */}
+        <div className="fixed inset-0 z-0">
+          <DotGrid 
+            dotSize={2}
+            gap={15}
+            baseColor={isDarkMode ? "#FFFFFF" : "#D3D3D3"}
+            activeColor={isDarkMode ? "#FFFFFF" : "#A0A0A0"}
+            proximity={60}
+          />
+        </div>
+        
+        {/* Subtle neutral vignette */}
+        <div 
+          className="fixed inset-0 z-[1] pointer-events-none transition-colors duration-500"
+          style={{
+            background: isDarkMode 
+              ? 'radial-gradient(circle, transparent 0%, rgba(168, 180, 217, 0.6) 50%, #a8b4d9 100%)'
+              : 'radial-gradient(circle, transparent 0%, rgba(255, 254, 240, 0.6) 50%, #fffef0 100%)'
+          }}
         />
-        */}
+
+        {/* Main content */}
+        <motion.div 
+          className="relative z-10"
+          animate={{
+            marginLeft: isHomePage && isMenuOpen ? "35vw" : "0vw", // Move content to start after menu
+            width: isHomePage && isMenuOpen ? "65vw" : "100vw", // Constrain width to remaining viewport
+            borderLeft: isHomePage && isMenuOpen ? "4px solid #1C1C1C" : "0px solid transparent"
+          }}
+          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center", // Center content horizontally within the container
+            justifyContent: "flex-start", // Align content to top
+          }}
+        >
+          <AnimatePresence mode="wait">
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={
+                <PageTransition>
+                  <Homepage isDarkMode={isDarkMode} />
+                </PageTransition>
+              } />
+              <Route path="/photography" element={
+                <PageTransition>
+                  <Photography isDarkMode={isDarkMode} />
+                </PageTransition>
+              } />
+              <Route path="/journal" element={
+                <Journal isDarkMode={isDarkMode} />
+              } />
+              <Route path="/ceramics" element={
+                <PageTransition>
+                  <Ceramics isDarkMode={isDarkMode} />
+                </PageTransition>
+              } />
+              <Route path="/typography" element={
+                <PageTransition>
+                  <Typography isDarkMode={isDarkMode} />
+                </PageTransition>
+              } />
+            </Routes>
+          </AnimatePresence>
+        </motion.div>
       </div>
-    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
