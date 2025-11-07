@@ -190,19 +190,21 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           
           <div className="rounded-2xl overflow-hidden shadow-2xl" style={{ maxWidth: '900px', margin: '0 auto', aspectRatio: '16/9' }}>
             <ScrollControlledVideo 
-              videoSrc="/media/Claymotion.mp4"
+              videoSrc="/media/ffout1.mp4"
               className="w-full h-full"
             />
           </div>
         </motion.div>
 
         {/* Ceramics Gallery - Multi-Row Auto-Scroll */}
+        {/*
         <div className="mb-16 relative z-10" style={{ minHeight: '100vh' }}>
           <div className="text-center p-4 text-black font-bold mb-12">
             Ceramics Gallery - Auto-Scrolling Display
           </div>
           
           {/* Row 1 - Scrolling Right */}
+          {/*
           <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
             <HorizontalPhotoRow
               images={ceramicImages.slice(0, 3)}
@@ -218,6 +220,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           </div>
           
           {/* Row 2 - Scrolling Left */}
+          {/*
           <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
             <HorizontalPhotoRow
               images={ceramicImages.slice(3, 6)}
@@ -233,6 +236,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           </div>
           
           {/* Row 3 - Scrolling Right */}
+          {/*
           <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
             <HorizontalPhotoRow
               images={ceramicImages.slice(6, 9)}
@@ -248,6 +252,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           </div>
           
           {/* Row 4 - Scrolling Left */}
+          {/*
           <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
             <HorizontalPhotoRow
               images={ceramicImages.slice(9, 12)}
@@ -263,10 +268,12 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           </div>
           
           {/* Info */}
+          {/*
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm">
             {ceramicImages.length} ceramic pieces • 4 rows scrolling in alternating directions
           </div>
         </div>
+        */}
 
         {/* About Section */}
         <motion.div

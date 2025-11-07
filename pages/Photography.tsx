@@ -77,7 +77,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         alt=""
         className="fixed inset-0 w-full h-full object-cover pointer-events-none"
         style={{ 
-          zIndex: 15,
+          zIndex: 0,
           transform: 'scale(1)',
           opacity: 0.1
         }}
