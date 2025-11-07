@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
 
     /* Linting */
     "strict": true,
@@ -27,7 +27,8 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["src/**/*", "*.tsx", "*.ts", "*.d.ts", "components/**/*"],
+  "include": ["src/**/*", "pages/**/*", "components/**/*", "lib/**/*", "*.tsx", "*.d.ts"],
+  "exclude": ["vite.config.ts", "components/ui/**/*"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
 
