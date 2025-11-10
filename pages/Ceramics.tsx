@@ -23,8 +23,10 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
       description:
         "A family of bowls that carry the movement of tides in layered celadon glazes. These pieces are burnished by hand, leaving slight variations that feel like shorelines.",
       heroImage: {
-        src: "/media/wooden_table_1.jpg",
-        alt: "Tall ocean blue bowl with layered glazes"
+        src: "/media/ffout1.mp4",
+        poster: "/media/wooden_table_1.jpg",
+        mediaType: "video",
+        alt: "Looping video of a ceramic bowl being shaped on a wheel"
       },
       galleryImages: [
         { src: "/media/wooden_table_2.jpg", alt: "Detail of layered blue glaze", height: 460 },
@@ -42,9 +44,11 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
       description:
         "Soft greens and charcoal washes build a canopy effect across the form. This vessel was fired over three days, picking up subtle atmospheric markings from the kiln.",
       heroImage: {
-        src: "/media/entry_bg.jpeg",
-        alt: "Forest green porcelain vessel"
-      },
+          src: "/media/ffout1.mp4",
+          poster: "/media/wooden_table_1.jpg",
+          mediaType: "video",
+          alt: "Looping video of a ceramic bowl being shaped on a wheel"
+        },
       galleryImages: [
         { src: "/media/pencil.png", alt: "Studio notes beside green test tiles", height: 360 },
         { src: "/media/coffee.png", alt: "Close-up of carved porcelain rim", height: 420 },
@@ -61,9 +65,11 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
       description:
         "A table setting designed for long breakfasts. Warm gradients meet speckled clay bodies, transitioning from blush to amber. Each firing introduces new shifts in the palette.",
       heroImage: {
-        src: "/media/film-canister.png",
-        alt: "Stack of sunrise plates with warm gradient glazes"
-      },
+          src: "/media/ffout1.mp4",
+          poster: "/media/wooden_table_1.jpg",
+          mediaType: "video",
+          alt: "Looping video of a ceramic bowl being shaped on a wheel"
+        },
       galleryImages: [
         { src: "/media/film-frame-bg.jpg", alt: "Sunrise tableware styled on linen", height: 520 },
         { src: "/media/wooden_table_1.jpg", alt: "Detail of blush glaze pooling", height: 420 },

@@ -8,6 +8,8 @@ type GalleryImage = {
   alt: string;
   link?: string;
   height?: number;
+  mediaType?: "image" | "video";
+  poster?: string;
 };
 
 export type CeramicProject = {
@@ -73,6 +75,10 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
   const [isMounted, setIsMounted] = useState(false);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [isHeroVideoPlaying, setIsHeroVideoPlaying] = useState(false);
+  const heroDirectionalRafRef = useRef<number | null>(null);
+  const heroDirectionalDirectionRef = useRef<"forward" | "backward" | null>(null);
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -91,6 +97,18 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       return prev;
     });
   }, [totalImages]);
+  useEffect(() => {
+    if (project.heroImage.mediaType === "video") {
+      const video = heroVideoRef.current;
+      if (video) {
+        setIsHeroVideoPlaying(!video.paused);
+      } else {
+        setIsHeroVideoPlaying(false);
+      }
+    } else {
+      setIsHeroVideoPlaying(false);
+    }
+  }, [project.heroImage.mediaType, project.id]);
 
   const handleNavigate = useCallback(
     (direction: number) => {
@@ -116,6 +134,94 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     [totalImages]
   );
 
+  const stopHeroDirectionalSeek = useCallback(() => {
+    heroDirectionalDirectionRef.current = null;
+    if (heroDirectionalRafRef.current !== null) {
+      cancelAnimationFrame(heroDirectionalRafRef.current);
+      heroDirectionalRafRef.current = null;
+    }
+  }, []);
+
+  const startHeroDirectionalSeek = useCallback(
+    (direction: "forward" | "backward") => {
+      const video = heroVideoRef.current;
+      if (!video) return;
+
+      video.pause();
+      setIsHeroVideoPlaying(false);
+      heroDirectionalDirectionRef.current = direction;
+
+      let previousTimestamp: number | null = null;
+
+      const step = (timestamp: number) => {
+        if (heroDirectionalDirectionRef.current !== direction) return;
+        const currentVideo = heroVideoRef.current;
+        if (!currentVideo) {
+          stopHeroDirectionalSeek();
+          return;
+        }
+
+        if (previousTimestamp === null) {
+          previousTimestamp = timestamp;
+        }
+
+        const deltaSeconds = (timestamp - previousTimestamp) / 1000;
+        previousTimestamp = timestamp;
+
+        const duration = Number.isFinite(currentVideo.duration) ? currentVideo.duration : undefined;
+        const nextTime =
+          direction === "forward"
+            ? currentVideo.currentTime + deltaSeconds
+            : currentVideo.currentTime - deltaSeconds;
+
+        const clampedTime =
+          duration !== undefined
+            ? Math.min(Math.max(0, nextTime), duration)
+            : Math.max(0, nextTime);
+
+        currentVideo.currentTime = clampedTime;
+
+        if (
+          (direction === "forward" && duration !== undefined && clampedTime >= duration) ||
+          (direction === "backward" && clampedTime <= 0)
+        ) {
+          stopHeroDirectionalSeek();
+          return;
+        }
+
+        heroDirectionalRafRef.current = requestAnimationFrame(step);
+      };
+
+      heroDirectionalRafRef.current = requestAnimationFrame(step);
+    },
+    [stopHeroDirectionalSeek]
+  );
+
+  const handleHeroPlayPause = useCallback(() => {
+    stopHeroDirectionalSeek();
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      const playPromise = video.play();
+      if (playPromise) {
+        playPromise
+          .then(() => {
+            setIsHeroVideoPlaying(true);
+          })
+          .catch(() => {
+            setIsHeroVideoPlaying(false);
+          });
+      }
+      if (!playPromise) {
+        setIsHeroVideoPlaying(true);
+      }
+    } else {
+      video.pause();
+      setIsHeroVideoPlaying(false);
+    }
+  }, [stopHeroDirectionalSeek]);
+
   const openModal = useCallback((startIndex: number) => {
     setModalImageIndex(startIndex);
     setIsModalOpen(true);
@@ -138,6 +244,13 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     "shadow-lg",
     isDarkMode
       ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+      : "border-black/10 bg-white/80 text-zinc-900 hover:bg-white"
+  );
+
+  const heroVideoControlStyles = clsx(
+    "inline-flex h-11 w-11 items-center justify-center rounded-full border text-base transition duration-200 backdrop-blur-md",
+    isDarkMode
+      ? "border-white/25 bg-white/10 text-white hover:bg-white/20"
       : "border-black/10 bg-white/80 text-zinc-900 hover:bg-white"
   );
 
@@ -228,38 +341,158 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     }
   }, [isModalOpen, modalImageIndex]);
 
+  useEffect(() => {
+    return () => {
+      stopHeroDirectionalSeek();
+    };
+  }, [stopHeroDirectionalSeek]);
+
   return (
     <>
-      <motion.section
-        className="flex flex-col gap-8 md:gap-10 md:h-[95vh] md:max-h-[95vh]"
-        initial={{ opacity: 0, y: 48 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.35 }}
-        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      <div
+        className={clsx(
+          "transition-opacity duration-200",
+          isModalOpen && "opacity-10"
+        )}
       >
+        <motion.section
+          className="flex flex-col gap-2 md:gap-2 md:h-[95vh] md:max-h-[95vh]"
+          initial={{ opacity: 0, y: 48 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.35 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        >
         <div
           className={clsx(
-            "flex flex-col gap-8 md:gap-10",
+            "flex flex-col gap-2 md:gap-2",
             "md:flex-row md:items-stretch md:h-full"
           )}
         >
           {/* Hero image column */}
           <motion.figure
             className={clsx(
-              "w-full h-[320px] md:h-full md:w-[28%] lg:w-[36%] flex-shrink-0 rounded-[20px] overflow-hidden border relative shadow-xl shadow-black/5 md:min-h-[360px]",
+              "w-full h-[320px] md:h-full md:w-[40%] lg:w-[40%] flex-shrink-0 rounded-[20px] overflow-hidden border relative shadow-xl shadow-black/5 md:min-h-[360px]",
               accentBorder,
               heroOrder
             )}
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: "spring", stiffness: 180, damping: 20 }}
           >
-            <img
-              src={project.heroImage.src}
-              alt={project.heroImage.alt}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-black/5" />
+            {project.heroImage.mediaType === "video" ? (
+              <>
+                <video
+                  ref={heroVideoRef}
+                  src={project.heroImage.src}
+                  poster={project.heroImage.poster}
+                  className="h-full w-full object-cover"
+                  aria-label={project.heroImage.alt}
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  autoPlay
+                  onPlay={() => setIsHeroVideoPlaying(true)}
+                  onPause={() => setIsHeroVideoPlaying(false)}
+                />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/30 via-transparent to-black/5" />
+                <div
+                  className={clsx(
+                    "absolute bottom-4 right-4 flex items-center gap-3 rounded-full px-4 py-2 backdrop-blur-sm border",
+                    isDarkMode
+                      ? "bg-black/50 border-white/10"
+                      : "bg-white/80 border-black/10 shadow-lg"
+                  )}
+                >
+                  <button
+                    type="button"
+                    className={heroVideoControlStyles}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      if (event.currentTarget.setPointerCapture) {
+                        event.currentTarget.setPointerCapture(event.pointerId);
+                      }
+                      startHeroDirectionalSeek("backward");
+                    }}
+                    onPointerUp={(event) => {
+                      event.stopPropagation();
+                      if (event.currentTarget.releasePointerCapture) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                      stopHeroDirectionalSeek();
+                    }}
+                    onPointerLeave={(event) => {
+                      if (event.currentTarget.releasePointerCapture) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                      stopHeroDirectionalSeek();
+                    }}
+                    onPointerCancel={(event) => {
+                      if (event.currentTarget.releasePointerCapture) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                      stopHeroDirectionalSeek();
+                    }}
+                    aria-label="Rewind hero video"
+                  >
+                    ⏪
+                  </button>
+                  <button
+                    type="button"
+                    className={heroVideoControlStyles}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleHeroPlayPause();
+                    }}
+                    aria-label="Play or pause hero video"
+                  >
+                    {isHeroVideoPlaying ? "⏸" : "▶"}
+                  </button>
+                  <button
+                    type="button"
+                    className={heroVideoControlStyles}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      if (event.currentTarget.setPointerCapture) {
+                        event.currentTarget.setPointerCapture(event.pointerId);
+                      }
+                      startHeroDirectionalSeek("forward");
+                    }}
+                    onPointerUp={(event) => {
+                      event.stopPropagation();
+                      if (event.currentTarget.releasePointerCapture) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                      stopHeroDirectionalSeek();
+                    }}
+                    onPointerLeave={(event) => {
+                      if (event.currentTarget.releasePointerCapture) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                      stopHeroDirectionalSeek();
+                    }}
+                    onPointerCancel={(event) => {
+                      if (event.currentTarget.releasePointerCapture) {
+                        event.currentTarget.releasePointerCapture(event.pointerId);
+                      }
+                      stopHeroDirectionalSeek();
+                    }}
+                    aria-label="Fast forward hero video"
+                  >
+                    ⏩
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <img
+                  src={project.heroImage.src}
+                  alt={project.heroImage.alt}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-black/5" />
+              </>
+            )}
             <figcaption
               className={clsx(
                 "absolute bottom-5 left-6 text-lg font-semibold tracking-wide drop-shadow-lg",
@@ -420,7 +653,8 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
             </div>
           </motion.div>
         </div>
-      </motion.section>
+        </motion.section>
+      </div>
 
       {isMounted &&
         createPortal(
@@ -429,7 +663,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
               <motion.div
                 className={clsx(
                   "fixed inset-0 z-[2000] flex items-center justify-center px-4 sm:px-8 py-8",
-                  isDarkMode ? "bg-black/80" : "bg-black/70"
+                  "bg-black/50"
                 )}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -440,7 +674,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                 <motion.div
                   className={clsx(
                     "relative w-full max-w-5xl rounded-[28px] shadow-2xl",
-                    isDarkMode ? "bg-zinc-900/95 border border-zinc-700/60" : "bg-white/95 border border-white/60"
+                    isDarkMode ? "bg-zinc-900 border border-zinc-700/60" : "bg-white border border-white/60"
                   )}
                   initial={{ opacity: 0, scale: 0.96, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
