@@ -1,6 +1,7 @@
 import clsx from "clsx";
-import { motion } from "motion/react";
-import Masonry from "./masonry";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "motion/react";
 
 type GalleryImage = {
   src: string;
@@ -32,14 +33,21 @@ export function CeramicProjectsGallery({
   if (!projects?.length) return null;
 
   return (
-    <div className="flex flex-col gap-28 md:gap-32 w-full mx-auto max-w-[1200px]">
+    <div className="flex flex-col gap-10 md:gap-10 w-full mx-auto max-w-[1200px]">
       {projects.map((project, index) => (
-        <ProjectRow
-          key={project.id ?? index}
-          project={project}
-          index={index}
-          isDarkMode={isDarkMode}
-        />
+        <Fragment key={project.id ?? index}>
+          <ProjectRow project={project} index={index} isDarkMode={isDarkMode} />
+          {index < projects.length - 1 && (
+            <div className="flex justify-center">
+              <div
+                className={clsx(
+                  "h-px w-full max-w-xl",
+                  isDarkMode ? "bg-zinc-700/60" : "bg-zinc-200"
+                )}
+              />
+            </div>
+          )}
+        </Fragment>
       ))}
     </div>
   );
@@ -53,143 +61,500 @@ type ProjectRowProps = {
 
 function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
   const isEven = index % 2 === 0;
-  const textCardOrder = isEven ? "md:order-1" : "md:order-3";
-  const mosaicOrder = "md:order-2";
+  const contentOrder = isEven ? "md:order-1" : "md:order-3";
   const heroOrder = isEven ? "md:order-3" : "md:order-1";
   const accentBorder = isDarkMode ? "border-zinc-600/60" : "border-zinc-300/80";
   const bgSurface = isDarkMode ? "bg-zinc-900/60" : "bg-white/80";
   const textPrimary = isDarkMode ? "text-zinc-50" : "text-zinc-900";
   const textSecondary = isDarkMode ? "text-zinc-400" : "text-zinc-600";
 
-  const masonryItems = project.galleryImages.map((image, imageIndex) => ({
-    id: `${project.id}-${imageIndex}`,
-    img: image.src,
-    url: image.link ?? image.src,
-    height: image.height ?? 420
-  }));
+  const totalImages = project.galleryImages.length;
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImageIndex, setModalImageIndex] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [project.id, totalImages]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMounted(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!totalImages) return;
+    setModalImageIndex((prev) => {
+      if (prev >= totalImages) return 0;
+      return prev;
+    });
+  }, [totalImages]);
+
+  const handleNavigate = useCallback(
+    (direction: number) => {
+      if (!totalImages) return;
+
+      setActiveImageIndex((prevIndex) => {
+        const nextIndex = (prevIndex + direction + totalImages) % totalImages;
+        return nextIndex;
+      });
+    },
+    [totalImages]
+  );
+
+  const handleModalNavigate = useCallback(
+    (direction: number) => {
+      if (!totalImages) return;
+
+      setModalImageIndex((prevIndex) => {
+        const nextIndex = (prevIndex + direction + totalImages) % totalImages;
+        return nextIndex;
+      });
+    },
+    [totalImages]
+  );
+
+  const openModal = useCallback((startIndex: number) => {
+    setModalImageIndex(startIndex);
+    setIsModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setActiveImageIndex(modalImageIndex);
+  }, [modalImageIndex]);
+
+  const controlStyles = clsx(
+    "inline-flex h-11 w-11 items-center justify-center rounded-full border transition duration-200 backdrop-blur-md opacity-70 hover:opacity-100",
+    isDarkMode
+      ? "border-zinc-600/40 bg-zinc-900/60 text-zinc-200 hover:bg-zinc-800"
+      : "border-zinc-200 bg-white/60 text-zinc-700 hover:bg-zinc-100"
+  );
+
+  const modalControlStyles = clsx(
+    "inline-flex h-12 w-12 items-center justify-center rounded-full border transition duration-200 backdrop-blur-lg opacity-70 hover:opacity-100",
+    "shadow-lg",
+    isDarkMode
+      ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+      : "border-black/10 bg-white/80 text-zinc-900 hover:bg-white"
+  );
+
+  const decodedImagesRef = useRef<Map<string, boolean>>(new Map());
+
+  const currentImage =
+    totalImages > 0 ? project.galleryImages[activeImageIndex] : null;
+  const isCurrentImageDecoded = currentImage
+    ? decodedImagesRef.current.get(currentImage.src) ?? false
+    : false;
+
+  const modalImage =
+    totalImages > 0 ? project.galleryImages[modalImageIndex] : null;
+  const isModalImageDecoded = modalImage
+    ? decodedImagesRef.current.get(modalImage.src) ?? false
+    : false;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let cancelled = false;
+
+    project.galleryImages.forEach((image) => {
+      if (decodedImagesRef.current.has(image.src)) return;
+
+      const preload = new window.Image();
+      preload.decoding = "async";
+      preload.src = image.src;
+
+      const setDecoded = () => {
+        if (!cancelled) {
+          decodedImagesRef.current.set(image.src, true);
+        }
+      };
+
+      if (preload.decode) {
+        preload
+          .decode()
+          .then(setDecoded)
+          .catch(() => {
+            // Fallback to marking as decoded even if decode isn't supported
+            setDecoded();
+          });
+      } else {
+        preload.onload = setDecoded;
+        preload.onerror = setDecoded;
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [project.galleryImages, project.id]);
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      if (typeof document !== "undefined") {
+        document.body.style.removeProperty("overflow");
+      }
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeModal();
+      } else if (event.key === "ArrowRight") {
+        handleModalNavigate(1);
+      } else if (event.key === "ArrowLeft") {
+        handleModalNavigate(-1);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    if (typeof document !== "undefined") {
+      document.body.style.overflow = "hidden";
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      if (typeof document !== "undefined") {
+        document.body.style.removeProperty("overflow");
+      }
+    };
+  }, [isModalOpen, handleModalNavigate, closeModal]);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      setActiveImageIndex(modalImageIndex);
+    }
+  }, [isModalOpen, modalImageIndex]);
 
   return (
-    <motion.section
-      className="flex flex-col gap-10 md:gap-12"
-      initial={{ opacity: 0, y: 48 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.35 }}
-      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <div
-        className={clsx(
-          "flex flex-col gap-10 md:gap-12",
-          "md:flex-row md:items-stretch"
-        )}
+    <>
+      <motion.section
+        className="flex flex-col gap-8 md:gap-10 md:h-[95vh] md:max-h-[95vh]"
+        initial={{ opacity: 0, y: 48 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.35 }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
-        {/* Hero image column */}
-        <motion.figure
-          className={clsx(
-            "w-full md:w-[28%] lg:w-[40%] flex-shrink-0 rounded-[36px] overflow-hidden border relative shadow-xl shadow-black/5",
-            accentBorder,
-            heroOrder
-          )}
-          whileHover={{ scale: 1.02 }}
-          transition={{ type: "spring", stiffness: 180, damping: 20 }}
-        >
-          <img
-            src={project.heroImage.src}
-            alt={project.heroImage.alt}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
-          <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-black/5" />
-          <figcaption
-            className={clsx(
-              "absolute bottom-5 left-6 text-lg font-semibold tracking-wide drop-shadow-lg",
-              "uppercase"
-            )}
-          >
-            <span className={textPrimary}>{project.title}</span>
-          </figcaption>
-        </motion.figure>
-
-        {/* Mosaic column */}
         <div
           className={clsx(
-            "flex-1 md:max-w-[38%] lg:max-w-[32%]",
-            "rounded-[32px] border relative overflow-hidden",
-            accentBorder,
-            mosaicOrder,
-            isDarkMode ? "bg-zinc-900/30" : "bg-white/70"
+            "flex flex-col gap-8 md:gap-10",
+            "md:flex-row md:items-stretch md:h-full"
           )}
         >
-          <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-black/15 via-transparent to-black/10 pointer-events-none mix-blend-multiply" />
-          <div className="relative h-full w-full p-4 md:p-5">
-            <div className="relative w-full min-h-[360px] md:min-h-[440px]">
-              <Masonry
-                items={masonryItems}
-                ease="power3.out"
-                duration={0.6}
-                stagger={0.05}
-                animateFrom="bottom"
-                scaleOnHover
-                hoverScale={0.97}
-                blurToFocus
-                colorShiftOnHover={false}
-                columnsOverride={2}
-                maxRows={2}
-                gap={20}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Text column */}
-        <motion.div
-          className={clsx(
-            "w-full md:flex-1 rounded-[36px] border shadow-lg shadow-black/5 backdrop-blur-sm",
-            accentBorder,
-            bgSurface,
-            "px-10 py-12 md:px-12 md:py-16 flex flex-col justify-between gap-8",
-            textCardOrder
-          )}
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-        >
-          <div className="space-y-4">
-            {project.subtitle && (
-              <p className={clsx("text-sm tracking-[0.4em] uppercase", textSecondary)}>
-                {project.subtitle}
-              </p>
+          {/* Hero image column */}
+          <motion.figure
+            className={clsx(
+              "w-full h-[320px] md:h-full md:w-[28%] lg:w-[36%] flex-shrink-0 rounded-[20px] overflow-hidden border relative shadow-xl shadow-black/5 md:min-h-[360px]",
+              accentBorder,
+              heroOrder
             )}
-            <h3
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 180, damping: 20 }}
+          >
+            <img
+              src={project.heroImage.src}
+              alt={project.heroImage.alt}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-black/5" />
+            <figcaption
               className={clsx(
-                "text-3xl md:text-4xl font-extrabold leading-tight",
-                textPrimary
+                "absolute bottom-5 left-6 text-lg font-semibold tracking-wide drop-shadow-lg",
+                "uppercase"
               )}
             >
-              {project.title}
-            </h3>
-            <p className={clsx("text-base md:text-lg leading-relaxed", textSecondary)}>
-              {project.description}
-            </p>
-          </div>
-          {project.ctaLabel && project.ctaHref && (
-            <motion.a
-              href={project.ctaHref}
+              <span className={textPrimary}>{project.title}</span>
+            </figcaption>
+          </motion.figure>
+
+          {/* Content column */}
+          <motion.div
+            className={clsx(
+              "w-full md:flex-1 rounded-[20px] border shadow-lg shadow-black/5 backdrop-blur-sm",
+              accentBorder,
+              bgSurface,
+              "px-8 py-8 md:px-9 md:py-9 flex flex-col gap-8 md:h-full",
+              contentOrder
+            )}
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-8">
+                <div className="space-y-3">
+                  {project.subtitle && (
+                    <p className={clsx("text-sm tracking-[0.4em] uppercase", textSecondary)}>
+                      {project.subtitle}
+                    </p>
+                  )}
+                  <h3
+                    className={clsx(
+                      "text-3xl md:text-4xl font-extrabold leading-tight",
+                      textPrimary
+                    )}
+                  >
+                    {project.title}
+                  </h3>
+                </div>
+                {project.ctaLabel && project.ctaHref && (
+                  <motion.a
+                    href={project.ctaHref}
+                    className={clsx(
+                      "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-colors duration-300 self-start whitespace-nowrap",
+                      isDarkMode
+                        ? "bg-white text-zinc-900 hover:bg-zinc-200"
+                        : "bg-zinc-900 text-white hover:bg-zinc-700"
+                    )}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {project.ctaLabel}
+                  </motion.a>
+                )}
+              </div>
+              <p className={clsx("text-base md:text-lg leading-relaxed", textSecondary)}>
+                {project.description}
+              </p>
+            </div>
+            <div
               className={clsx(
-                "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-colors duration-300",
-                isDarkMode
-                  ? "bg-white text-zinc-900 hover:bg-zinc-200"
-                  : "bg-zinc-900 text-white hover:bg-zinc-700"
+                "relative rounded-[20px] border overflow-hidden flex flex-col md:flex-1",
+                accentBorder,
+                isDarkMode ? "bg-zinc-900/30" : "bg-white/70"
               )}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.98 }}
             >
-              {project.ctaLabel}
-            </motion.a>
-          )}
-        </motion.div>
-      </div>
-    </motion.section>
+              <div className="pointer-events-none absolute inset-0 rounded-[20px] bg-gradient-to-br from-black/15 via-transparent to-black/10 mix-blend-multiply" />
+              <div className="relative flex flex-col gap-5 p-0 md:p-0 md:flex-1 md:min-h-0 ">
+                {currentImage ? (
+                  <>
+                    <div
+                      className="relative w-full h-72 md:flex-1 md:min-h-[360px] md:h-full overflow-hidden rounded-[16px] bg-black/5 cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-zinc-400"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => openModal(activeImageIndex)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          openModal(activeImageIndex);
+                        }
+                      }}
+                    >
+                      <AnimatePresence mode="sync" initial={false}>
+                        <motion.img
+                          key={currentImage.src}
+                          src={currentImage.src}
+                          alt={currentImage.alt}
+                          className="absolute inset-0 h-full w-full object-fill md:object-cover"
+                          loading={isCurrentImageDecoded ? "eager" : "lazy"}
+                          initial={{ opacity: isCurrentImageDecoded ? 0.4 : 0, scale: 1.01 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.995 }}
+                          transition={{ duration: 0.18, ease: [0.33, 1, 0.68, 1] }}
+                        />
+                      </AnimatePresence>
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/5" />
+                      <motion.div
+                        className={clsx(
+                          "absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-full px-3 py-1.5 backdrop-blur-sm transition duration-200",
+                          isDarkMode ? "bg-black/20" : "bg-white/60"
+                        )}
+                        initial={{ opacity: 0.6 }}
+                        whileHover={{ opacity: 1 }}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <motion.button
+                          type="button"
+                          className={controlStyles}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleNavigate(-1);
+                          }}
+                          aria-label="Previous gallery image"
+                          initial={{ opacity: 0.7 }}
+                          whileHover={{ opacity: 1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {"<"}
+                        </motion.button>
+                        <span
+                          className={clsx(
+                            "text-xs font-semibold tracking-[0.3em] uppercase",
+                            isDarkMode ? "text-zinc-100" : "text-zinc-700"
+                          )}
+                        >
+                          {activeImageIndex + 1} / {totalImages}
+                        </span>
+                        <motion.button
+                          type="button"
+                          className={controlStyles}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleNavigate(1);
+                          }}
+                          aria-label="Next gallery image"
+                          initial={{ opacity: 0.7 }}
+                          whileHover={{ opacity: 1 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {">"}
+                        </motion.button>
+                      </motion.div>
+                    </div>
+                  </>
+                ) : (
+                  <p
+                    className={clsx(
+                      "text-center text-sm font-medium",
+                      isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                    )}
+                  >
+                    Gallery coming soon.
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {isMounted &&
+        createPortal(
+          <AnimatePresence>
+            {isModalOpen && (
+              <motion.div
+                className={clsx(
+                  "fixed inset-0 z-[2000] flex items-center justify-center px-4 sm:px-8 py-8",
+                  isDarkMode ? "bg-black/80" : "bg-black/70"
+                )}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={closeModal}
+              >
+                <motion.div
+                  className={clsx(
+                    "relative w-full max-w-5xl rounded-[28px] shadow-2xl",
+                    isDarkMode ? "bg-zinc-900/95 border border-zinc-700/60" : "bg-white/95 border border-white/60"
+                  )}
+                  initial={{ opacity: 0, scale: 0.96, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 10 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={`${project.title} gallery`}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className={clsx(
+                      "absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold transition",
+                      isDarkMode
+                        ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
+                        : "border-black/10 bg-white text-zinc-800 hover:bg-zinc-100"
+                    )}
+                    aria-label="Close gallery modal"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="flex flex-col gap-6 px-6 pb-8 pt-12 sm:px-8 sm:pt-14">
+                    <div className="text-center">
+                      <p
+                        className={clsx(
+                          "text-xs uppercase tracking-[0.4em] mb-2",
+                          isDarkMode ? "text-zinc-400" : "text-zinc-500"
+                        )}
+                      >
+                        {project.subtitle}
+                      </p>
+                      <h3
+                        className={clsx(
+                          "text-2xl sm:text-3xl font-bold",
+                          isDarkMode ? "text-white" : "text-zinc-900"
+                        )}
+                      >
+                        {project.title}
+                      </h3>
+                    </div>
+
+                    <div className="relative flex items-center justify-center">
+                      <div className="relative w-full max-h-[70vh] rounded-[20px] bg-zinc-950/50 flex items-center justify-center overflow-hidden">
+                        {modalImage ? (
+                          <AnimatePresence mode="wait" initial={false}>
+                            <motion.img
+                              key={modalImage.src}
+                              src={modalImage.src}
+                              alt={modalImage.alt}
+                              className="max-h-[70vh] w-full object-contain"
+                              loading={isModalImageDecoded ? "eager" : "lazy"}
+                              initial={{ opacity: isModalImageDecoded ? 0.3 : 0, scale: 0.99 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 1.01 }}
+                              transition={{ duration: 0.2, ease: [0.33, 1, 0.68, 1] }}
+                            />
+                          </AnimatePresence>
+                        ) : (
+                          <p
+                            className={clsx(
+                              "py-12 text-center text-sm",
+                              isDarkMode ? "text-zinc-500" : "text-zinc-600"
+                            )}
+                          >
+                            No images available.
+                          </p>
+                        )}
+                      </div>
+
+                    </div>
+
+                    <div className="flex items-center justify-center gap-4">
+                      <motion.button
+                        type="button"
+                        className={modalControlStyles}
+                        onClick={() => handleModalNavigate(-1)}
+                        aria-label="Previous image"
+                        initial={{ opacity: 0.7 }}
+                        whileHover={{ opacity: 1, scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {"<"}
+                      </motion.button>
+                      <span
+                        className={clsx(
+                          "text-sm font-semibold tracking-[0.4em] uppercase",
+                          isDarkMode ? "text-zinc-200" : "text-zinc-700"
+                        )}
+                      >
+                        {modalImageIndex + 1} / {totalImages}
+                      </span>
+                      <motion.button
+                        type="button"
+                        className={modalControlStyles}
+                        onClick={() => handleModalNavigate(1)}
+                        aria-label="Next image"
+                        initial={{ opacity: 0.7 }}
+                        whileHover={{ opacity: 1, scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {">"}
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
+    </>
   );
 }
 

@@ -125,7 +125,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
         />
       )}
       
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="w-full px-10 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -153,7 +153,8 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
         </div>
 
         {/* Scroll-Controlled Video */}
-        <motion.div
+
+        {/* <motion.div
           className="mb-16 relative z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -178,9 +179,9 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
               className="w-full h-full"
             />
           </div>
-        </motion.div>
+        </motion.div> */}
 
-        <div className="mb-24">
+        <div className="mb-24 w-full px-10">
           <CeramicProjectsGallery
             projects={ceramicProjects}
             isDarkMode={isDarkMode}
