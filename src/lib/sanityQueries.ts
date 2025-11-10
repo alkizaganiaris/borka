@@ -33,3 +33,30 @@ export async function getPhotographyGalleries() {
   return await sanityClient.fetch(query)
 }
 
+// Fetch all ceramic projects
+export async function getCeramicProjects() {
+  const query = `*[_type == "ceramicProject"] | order(_createdAt desc) {
+    _id,
+    title,
+    subtitle,
+    description,
+    status,
+    price,
+    images[] {
+      _key,
+      alt,
+      "url": asset->url,
+      "height": asset->metadata.dimensions.height
+    },
+    heroVideo {
+      asset->{
+        _id,
+        url,
+        mimeType
+      }
+    }
+  }`
+
+  return await sanityClient.fetch(query)
+}
+

@@ -10,11 +10,15 @@ interface PageHeaderProps {
 export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
   const monoFont = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
   const isCeramicsPage = title === "Ceramics";
+  const isJournalPage = title === "Journal";
+  const isPhotographyPage = title === "Photography";
   const ceramicsImageSrc = isCeramicsPage
     ? isDarkMode
       ? "/media/ceramics_unglazed.png"
       : "/media/ceramics_glazed.png"
     : null;
+  const journalImageSrc = isJournalPage ? "/media/journal_header.png" : null;
+  const photographyImageSrc = isPhotographyPage ? "/media/photography_header.png" : null;
 
   return (
     <motion.header
@@ -27,10 +31,12 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
         <h1
           className={clsx(
             "leading-none mb-8",
-            isCeramicsPage ? "flex justify-center" : "font-medium uppercase tracking-tight"
+            isCeramicsPage || isJournalPage || isPhotographyPage
+              ? "flex justify-center"
+              : "font-medium uppercase tracking-tight"
           )}
           style={
-            isCeramicsPage
+            isCeramicsPage || isJournalPage || isPhotographyPage
               ? undefined
               : {
                   fontFamily: monoFont,
@@ -49,32 +55,35 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
             />
+          ) : isJournalPage && journalImageSrc ? (
+            <motion.img
+              key={journalImageSrc}
+              src={journalImageSrc}
+              alt="Journal title"
+              className="h-auto max-w-full"
+              style={{ width: "min(680px, 82vw)" }}
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+          ) : isPhotographyPage && photographyImageSrc ? (
+            <motion.img
+              key={photographyImageSrc}
+              src={photographyImageSrc}
+              alt="Photography title"
+              className="h-auto max-w-full"
+              style={{ width: "min(720px, 82vw)" }}
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
           ) : (
             title
           )}
         </h1>
                {title === "Journal" && (
                  <>
-                   <div className="flex justify-center">
-                     <div 
-                       style={{ 
-                         transform: 'translate(450px, -220px)',
-                         zIndex: 1
-                       }}
-                     >
-                       <motion.img 
-                         src="/media/pencil.png" 
-                         alt="Pencil" 
-                         className="h-auto cursor-pointer"
-                         style={{ 
-                           width: '320px',
-                           borderRadius: '8px',
-                           border: '2px solid black'
-                         }}
-                         whileTap={{ scale: 0.95 }}
-                       />
-                     </div>
-                   </div>
+
                    
                    {/* Shavings image - bottom right */}
                    <div className="fixed bottom-[-20px] right-4 z-1">

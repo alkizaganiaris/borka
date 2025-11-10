@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { PageHeader } from "../components/PageHeader";
 import StaggeredMenu from "../components/StaggeredMenu";
-import ScrollControlledVideo from "../components/ScrollControlledVideo";
 import {
   CeramicProjectsGallery,
   CeramicProject
 } from "../components/CeramicProjectsGallery";
+import { getCeramicProjects } from "../src/lib/sanityQueries";
 
 interface CeramicsProps {
   isDarkMode: boolean;
@@ -14,90 +14,95 @@ interface CeramicsProps {
 
 export function Ceramics({ isDarkMode }: CeramicsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [ceramicProjects, setCeramicProjects] = useState<CeramicProject[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
 
-  const ceramicProjects: CeramicProject[] = [
-    {
-      id: "ocean-bowl",
-      title: "Ocean Bowl Series",
-      subtitle: "Wheel Thrown Stoneware",
-      description:
-        "A family of bowls that carry the movement of tides in layered celadon glazes. These pieces are burnished by hand, leaving slight variations that feel like shorelines.",
-      heroImage: {
-        src: "/media/ffout1.mp4",
-        poster: "/media/wooden_table_1.jpg",
-        mediaType: "video",
-        alt: "Looping video of a ceramic bowl being shaped on a wheel"
-      },
-      availability: {
-        label: "Available",
-        price: "EUR 30",
-        colorClass: "bg-emerald-400",
-        status: "available"
-      },
-      galleryImages: [
-        { src: "/media/wooden_table_2.jpg", alt: "Detail of layered blue glaze", height: 460 },
-        { src: "/media/wooden_table_3.jpg", alt: "Stacked bowls from the Ocean series", height: 380 },
-        { src: "/media/wooden_table_4.jpg", alt: "Footed bowl in turquoise glaze", height: 520 },
-        { src: "/media/wooden_table.jpg", alt: "Throwing process of the Ocean Bowl", height: 410 }
-      ],
-      ctaLabel: "View Process Journal",
-      ctaHref: "/journal"
-    },
-    {
-      id: "forest-vessel",
-      title: "Forest Vessel",
-      subtitle: "Reduction Fired Porcelain",
-      description:
-        "Soft greens and charcoal washes build a canopy effect across the form. This vessel was fired over three days, picking up subtle atmospheric markings from the kiln.",
-      heroImage: {
-        src: "/media/ffout1.mp4",
-        poster: "/media/wooden_table_1.jpg",
-        mediaType: "video",
-        alt: "Looping video of a ceramic bowl being shaped on a wheel"
-      },
-      availability: {
-        label: "Commissioned",
-        price: "EUR 45",
-        colorClass: "bg-orange-400",
-        status: "commissioned"
-      },
-      galleryImages: [
-        { src: "/media/pencil.png", alt: "Studio notes beside green test tiles", height: 360 },
-        { src: "/media/coffee.png", alt: "Close-up of carved porcelain rim", height: 420 },
-        { src: "/media/tea.png", alt: "Forest vessel drying on a wooden bat", height: 480 },
-        { src: "/media/shavings_1.png", alt: "Trimming ribbons from porcelain base", height: 380 }
-      ],
-      ctaLabel: "Commission Similar Work",
-      ctaHref: "mailto:contact@borka.com?subject=Forest%20Vessel%20Inquiry"
-    },
-    {
-      id: "sunrise-tableware",
-      title: "Sunrise Tableware",
-      subtitle: "Hand Glazed Stoneware",
-      description:
-        "A table setting designed for long breakfasts. Warm gradients meet speckled clay bodies, transitioning from blush to amber. Each firing introduces new shifts in the palette.",
-      heroImage: {
-        src: "/media/ffout1.mp4",
-        poster: "/media/wooden_table_1.jpg",
-        mediaType: "video",
-        alt: "Looping video of a ceramic bowl being shaped on a wheel"
-      },
-      availability: {
-        label: "Sold",
-        price: "EUR 60",
-        colorClass: "bg-sky-400",
-        status: "sold"
-      },
-      galleryImages: [
-        { src: "/media/film-frame-bg.jpg", alt: "Sunrise tableware styled on linen", height: 520 },
-        { src: "/media/wooden_table_1.jpg", alt: "Detail of blush glaze pooling", height: 420 },
-        { src: "/media/wooden_table_2.jpg", alt: "Cup and saucer from sunrise set", height: 360 },
-        { src: "/media/wooden_table_3.jpg", alt: "Production line of gradient bowls", height: 480 }
-      ],
-      ctaLabel: "Shop Limited Release",
-      ctaHref: "/shop"
+  useEffect(() => {
+    async function fetchCeramics() {
+      try {
+        const data = await getCeramicProjects();
+        const mappedProjects: CeramicProject[] = data.map((project: any) => {
+          const galleryImages =
+            project.images?.map((image: any) => ({
+              src: image?.url ?? "",
+              alt: image?.alt ?? `${project.title} gallery image`,
+              height: image?.height ?? undefined
+            })) ?? [];
+
+          const firstImage = galleryImages[0];
+          const heroVideoUrl = project.heroVideo?.asset?.url;
+          const statusRaw = (project.status ?? "available").toLowerCase();
+          const normalizedStatus: AvailabilityStatus =
+            statusRaw.includes("not") ? "notAvailable" :
+            statusRaw.includes("commissioned") ? "commissioned" :
+            statusRaw.includes("sold") ? "sold" :
+            "available";
+
+          type AvailabilityStatus = "available" | "commissioned" | "sold" | "notAvailable";
+
+          const statusLabelMap: Record<AvailabilityStatus, { label: string; colorClass: string; status: AvailabilityStatus }> = {
+            available: { label: "Available", colorClass: "bg-emerald-400", status: "available" },
+            commissioned: { label: "Commissioned", colorClass: "bg-orange-400", status: "commissioned" },
+            sold: { label: "Sold", colorClass: "bg-sky-400", status: "sold" },
+            notAvailable: { label: "Not Available", colorClass: "bg-zinc-400", status: "notAvailable" }
+          };
+
+          const availabilityDetails = statusLabelMap[normalizedStatus];
+
+          const availability: CeramicProject["availability"] = {
+            label: availabilityDetails.label,
+            price:
+              typeof project.price === "number"
+                ? `EUR ${project.price.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                  })}`
+                : "Price on request",
+            colorClass: availabilityDetails.colorClass,
+            status: availabilityDetails.status
+          };
+
+          return {
+            id: project._id,
+            title: project.title ?? "Untitled Project",
+            subtitle: project.subtitle ?? "",
+            description: project.description ?? "",
+            heroImage: heroVideoUrl
+              ? {
+                  src: heroVideoUrl,
+                  poster: firstImage?.src,
+                  mediaType: "video" as const,
+                  alt: `${project.title ?? "Ceramic project"} hero video`
+                }
+              : firstImage
+                ? {
+                    src: firstImage.src,
+                    alt: firstImage.alt,
+                    mediaType: "image" as const
+                  }
+                : {
+                    src: "",
+                    alt: `${project.title ?? "Ceramic project"}`
+                  },
+            availability,
+            galleryImages,
+            ctaLabel: project.ctaLabel ?? undefined,
+            ctaHref: project.ctaHref ?? undefined
+          } satisfies CeramicProject;
+        });
+
+        setCeramicProjects(mappedProjects);
+      } catch (error) {
+        console.error("Error fetching ceramic projects:", error);
+        setProjectsError("Failed to load ceramic projects. Please try again later.");
+      } finally {
+        setIsLoadingProjects(false);
+      }
     }
-  ];
+
+    fetchCeramics();
+  }, []);
 
   const handleContact = () => {
     // In a real app, this would open a contact form or email
@@ -206,10 +211,32 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
         </motion.div> */}
 
         <div className="mb-24 w-full px-10">
-          <CeramicProjectsGallery
-            projects={ceramicProjects}
-            isDarkMode={isDarkMode}
-          />
+          {isLoadingProjects ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-xl font-semibold text-zinc-500">Loading projects…</p>
+            </div>
+          ) : projectsError ? (
+            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-zinc-400/60 py-16 px-6 text-center">
+              <p className="text-lg font-semibold text-zinc-600">{projectsError}</p>
+              <p className="text-sm text-zinc-500">
+                Refresh the page or check the Sanity Studio connection settings.
+              </p>
+            </div>
+          ) : ceramicProjects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-400/60 py-16 px-6 text-center">
+              <p className="text-xl font-semibold text-zinc-600">
+                No ceramic projects found.
+              </p>
+              <p className="text-sm text-zinc-500">
+                Head over to the Sanity Studio to add your first project.
+              </p>
+            </div>
+          ) : (
+            <CeramicProjectsGallery
+              projects={ceramicProjects}
+              isDarkMode={isDarkMode}
+            />
+          )}
         </div>
 
         {/* About Section */}

@@ -15,7 +15,8 @@ type GalleryImage = {
 const AVAILABILITY_STATUS_COLOR_CLASSES: Record<string, string> = {
   available: "bg-emerald-400",
   commissioned: "bg-orange-400",
-  sold: "bg-sky-400"
+  sold: "bg-sky-400",
+  notAvailable: "bg-zinc-400"
 };
 
 const STATUS_OPTIONS = [
@@ -25,7 +26,8 @@ const STATUS_OPTIONS = [
     label: "Commissioned",
     dotClass: AVAILABILITY_STATUS_COLOR_CLASSES.commissioned
   },
-  { key: "sold", label: "Sold", dotClass: AVAILABILITY_STATUS_COLOR_CLASSES.sold }
+  { key: "sold", label: "Sold", dotClass: AVAILABILITY_STATUS_COLOR_CLASSES.sold },
+  { key: "notAvailable", label: "Not Available", dotClass: AVAILABILITY_STATUS_COLOR_CLASSES.notAvailable }
 ] as const;
 
 const ALL_STATUS_KEYS = STATUS_OPTIONS.map((option) => option.key);
@@ -43,7 +45,7 @@ export type CeramicProject = {
     label: string;
     price: string;
     colorClass?: string;
-    status?: "available" | "commissioned" | "sold";
+    status?: "available" | "commissioned" | "sold" | "notAvailable";
   };
 };
 
@@ -211,6 +213,14 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
   const [isHeroVideoPlaying, setIsHeroVideoPlaying] = useState(false);
   const heroDirectionalRafRef = useRef<number | null>(null);
   const heroDirectionalDirectionRef = useRef<"forward" | "backward" | null>(null);
+  const [isModalHeroVideo, setIsModalHeroVideo] = useState(false);
+  const modalHeroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [isModalHeroVideoPlaying, setIsModalHeroVideoPlaying] = useState(false);
+  const modalHeroDirectionalRafRef = useRef<number | null>(null);
+  const modalHeroDirectionalDirectionRef = useRef<"forward" | "backward" | null>(null);
+  const heroVideoUrl = project.heroImage.mediaType === "video" ? project.heroImage.src : null;
+  const heroVideoPoster =
+    project.heroImage.mediaType === "video" ? project.heroImage.poster : undefined;
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -329,6 +339,69 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     [stopHeroDirectionalSeek]
   );
 
+  const stopModalHeroDirectionalSeek = useCallback(() => {
+    modalHeroDirectionalDirectionRef.current = null;
+    if (modalHeroDirectionalRafRef.current !== null) {
+      cancelAnimationFrame(modalHeroDirectionalRafRef.current);
+      modalHeroDirectionalRafRef.current = null;
+    }
+  }, []);
+
+  const startModalHeroDirectionalSeek = useCallback(
+    (direction: "forward" | "backward") => {
+      const video = modalHeroVideoRef.current;
+      if (!video) return;
+
+      video.pause();
+      setIsModalHeroVideoPlaying(false);
+      modalHeroDirectionalDirectionRef.current = direction;
+
+      let previousTimestamp: number | null = null;
+
+      const step = (timestamp: number) => {
+        if (modalHeroDirectionalDirectionRef.current !== direction) return;
+        const currentVideo = modalHeroVideoRef.current;
+        if (!currentVideo) {
+          stopModalHeroDirectionalSeek();
+          return;
+        }
+
+        if (previousTimestamp === null) {
+          previousTimestamp = timestamp;
+        }
+
+        const deltaSeconds = (timestamp - previousTimestamp) / 1000;
+        previousTimestamp = timestamp;
+
+        const duration = Number.isFinite(currentVideo.duration) ? currentVideo.duration : undefined;
+        const nextTime =
+          direction === "forward"
+            ? currentVideo.currentTime + deltaSeconds
+            : currentVideo.currentTime - deltaSeconds;
+
+        const clampedTime =
+          duration !== undefined
+            ? Math.min(Math.max(0, nextTime), duration)
+            : Math.max(0, nextTime);
+
+        currentVideo.currentTime = clampedTime;
+
+        if (
+          (direction === "forward" && duration !== undefined && clampedTime >= duration) ||
+          (direction === "backward" && clampedTime <= 0)
+        ) {
+          stopModalHeroDirectionalSeek();
+          return;
+        }
+
+        modalHeroDirectionalRafRef.current = requestAnimationFrame(step);
+      };
+
+      modalHeroDirectionalRafRef.current = requestAnimationFrame(step);
+    },
+    [stopModalHeroDirectionalSeek]
+  );
+
   const handleHeroPlayPause = useCallback(() => {
     stopHeroDirectionalSeek();
     const video = heroVideoRef.current;
@@ -354,15 +427,71 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     }
   }, [stopHeroDirectionalSeek]);
 
+  const handleModalHeroPlayPause = useCallback(() => {
+    stopModalHeroDirectionalSeek();
+    const video = modalHeroVideoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      const playPromise = video.play();
+      if (playPromise) {
+        playPromise
+          .then(() => {
+            setIsModalHeroVideoPlaying(true);
+          })
+          .catch(() => {
+            setIsModalHeroVideoPlaying(false);
+          });
+      }
+      if (!playPromise) {
+        setIsModalHeroVideoPlaying(true);
+      }
+    } else {
+      video.pause();
+      setIsModalHeroVideoPlaying(false);
+    }
+  }, [stopModalHeroDirectionalSeek]);
+
   const openModal = useCallback((startIndex: number) => {
+    setIsModalHeroVideo(false);
     setModalImageIndex(startIndex);
     setIsModalOpen(true);
   }, []);
 
+  const openHeroModal = useCallback(() => {
+    if (project.heroImage.mediaType === "video") {
+      stopModalHeroDirectionalSeek();
+      setIsModalHeroVideoPlaying(false);
+      const heroVideo = heroVideoRef.current;
+      if (heroVideo) {
+        heroVideo.pause();
+        setIsHeroVideoPlaying(false);
+      }
+      setIsModalHeroVideo(true);
+      const modalVideo = modalHeroVideoRef.current;
+      if (modalVideo) {
+        modalVideo.currentTime = 0;
+        modalVideo.pause();
+      }
+      setIsModalOpen(true);
+    } else if (totalImages > 0) {
+      setIsModalHeroVideo(false);
+      setModalImageIndex(activeImageIndex);
+      setIsModalOpen(true);
+    }
+  }, [project.heroImage.mediaType, totalImages, activeImageIndex, stopModalHeroDirectionalSeek]);
+
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
     setActiveImageIndex(modalImageIndex);
-  }, [modalImageIndex]);
+    setIsModalHeroVideo(false);
+    setIsModalHeroVideoPlaying(false);
+    stopModalHeroDirectionalSeek();
+    const modalVideo = modalHeroVideoRef.current;
+    if (modalVideo) {
+      modalVideo.pause();
+    }
+  }, [modalImageIndex, stopModalHeroDirectionalSeek]);
 
   const controlStyles = clsx(
     "inline-flex h-11 w-11 items-center justify-center rounded-full border transition duration-200 backdrop-blur-md opacity-70 hover:opacity-100",
@@ -376,13 +505,6 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     "shadow-lg",
     isDarkMode
       ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
-      : "border-black/10 bg-white/80 text-zinc-900 hover:bg-white"
-  );
-
-  const heroVideoControlStyles = clsx(
-    "inline-flex h-11 w-11 items-center justify-center rounded-full border text-base transition duration-200 backdrop-blur-md",
-    isDarkMode
-      ? "border-white/25 bg-white/10 text-white hover:bg-white/20"
       : "border-black/10 bg-white/80 text-zinc-900 hover:bg-white"
   );
 
@@ -406,6 +528,25 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         isDarkMode
           ? "bg-zinc-900/60 border-zinc-700/70 text-zinc-100"
           : "bg-white border-zinc-200 text-zinc-700 shadow-sm"
+      )}
+    >
+      <span
+        className={clsx("h-2.5 w-2.5 rounded-full", availabilityDotClass ?? "bg-emerald-400")}
+        aria-hidden="true"
+      />
+      <span>{project.availability.label}</span>
+      <span className={clsx(isDarkMode ? "text-zinc-500" : "text-zinc-400")}>—</span>
+      <span>{project.availability.price}</span>
+    </div>
+  ) : null;
+
+  const availabilityPillModal = project.availability ? (
+    <div
+      className={clsx(
+        "inline-flex items-center gap-3 rounded-full px-4 py-2 text-sm font-semibold transition-colors duration-200 border",
+        isDarkMode
+          ? "bg-zinc-900/80 border-zinc-700/80 text-zinc-100"
+          : "bg-white border-zinc-200 text-zinc-700 shadow"
       )}
     >
       <span
@@ -473,15 +614,16 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       if (typeof document !== "undefined") {
         document.body.style.removeProperty("overflow");
       }
+      stopModalHeroDirectionalSeek();
       return;
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         closeModal();
-      } else if (event.key === "ArrowRight") {
+      } else if (!isModalHeroVideo && event.key === "ArrowRight") {
         handleModalNavigate(1);
-      } else if (event.key === "ArrowLeft") {
+      } else if (!isModalHeroVideo && event.key === "ArrowLeft") {
         handleModalNavigate(-1);
       }
     };
@@ -496,20 +638,47 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       if (typeof document !== "undefined") {
         document.body.style.removeProperty("overflow");
       }
+      stopModalHeroDirectionalSeek();
     };
-  }, [isModalOpen, handleModalNavigate, closeModal]);
+  }, [isModalOpen, isModalHeroVideo, handleModalNavigate, closeModal, stopModalHeroDirectionalSeek]);
 
   useEffect(() => {
-    if (isModalOpen) {
+    if (!isModalOpen || !isModalHeroVideo) return;
+
+    const heroVideo = heroVideoRef.current;
+    const modalVideo = modalHeroVideoRef.current;
+    if (modalVideo) {
+      if (heroVideo) {
+        try {
+          modalVideo.currentTime = heroVideo.currentTime;
+        } catch {
+          // ignore sync errors
+        }
+      }
+      modalVideo.pause();
+      modalVideo.loop = true;
+    }
+    setIsModalHeroVideoPlaying(false);
+    stopModalHeroDirectionalSeek();
+  }, [isModalOpen, isModalHeroVideo, stopModalHeroDirectionalSeek]);
+
+  useEffect(() => {
+    if (isModalOpen && !isModalHeroVideo) {
       setActiveImageIndex(modalImageIndex);
     }
-  }, [isModalOpen, modalImageIndex]);
+  }, [isModalOpen, isModalHeroVideo, modalImageIndex]);
 
   useEffect(() => {
     return () => {
       stopHeroDirectionalSeek();
     };
   }, [stopHeroDirectionalSeek]);
+
+  useEffect(() => {
+    return () => {
+      stopModalHeroDirectionalSeek();
+    };
+  }, [stopModalHeroDirectionalSeek]);
 
   return (
     <>
@@ -539,6 +708,21 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
               accentBorder,
               heroOrder
             )}
+            role={project.heroImage.mediaType === "video" ? "button" : undefined}
+            tabIndex={project.heroImage.mediaType === "video" ? 0 : undefined}
+            onClick={(event) => {
+              if (project.heroImage.mediaType !== "video") return;
+              const target = event.target as HTMLElement;
+              if (target?.closest("[data-hero-control]")) return;
+              openHeroModal();
+            }}
+            onKeyDown={(event) => {
+              if (project.heroImage.mediaType !== "video") return;
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openHeroModal();
+              }
+            }}
           >
             {project.heroImage.mediaType === "video" ? (
               <>
@@ -567,7 +751,8 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                 >
                   <button
                     type="button"
-                    className={heroVideoControlStyles}
+                    className={controlStyles}
+                    data-hero-control="true"
                     onPointerDown={(event) => {
                       event.stopPropagation();
                       event.preventDefault();
@@ -601,7 +786,8 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                   </button>
                   <button
                     type="button"
-                    className={heroVideoControlStyles}
+                    className={controlStyles}
+                    data-hero-control="true"
                     onClick={(event) => {
                       event.stopPropagation();
                       handleHeroPlayPause();
@@ -612,7 +798,8 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                   </button>
                   <button
                     type="button"
-                    className={heroVideoControlStyles}
+                    className={controlStyles}
+                    data-hero-control="true"
                     onPointerDown={(event) => {
                       event.stopPropagation();
                       event.preventDefault();
@@ -657,13 +844,15 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/20 via-transparent to-black/5" />
               </>
             )}
-            <figcaption
-              className={clsx(
-                "absolute bottom-5 left-6 text-lg font-semibold tracking-wide drop-shadow-lg",
-                "uppercase"
-              )}
-            >
-              <span className={textPrimary}>{project.title}</span>
+            <figcaption className="absolute top-4 left-4">
+              <div
+                className={clsx(
+                  "rounded-full px-4 py-2 text-sm font-semibold shadow-md border",
+                  "bg-white text-zinc-900 border-black/10"
+                )}
+              >
+                {project.title}
+              </div>
             </figcaption>
           </motion.figure>
 
@@ -868,10 +1057,121 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                         {project.title}
                       </h3>
                     </div>
+                    {availabilityPillModal && (
+                      <div className="flex justify-center">
+                        <div className="mt-1">{availabilityPillModal}</div>
+                      </div>
+                    )}
 
                     <div className="relative flex items-center justify-center">
                       <div className="relative w-full max-h-[70vh] rounded-[20px] bg-zinc-950/50 flex items-center justify-center overflow-hidden">
-                        {modalImage ? (
+                        {isModalHeroVideo && heroVideoUrl ? (
+                          <>
+                            <video
+                              key={heroVideoUrl}
+                              ref={modalHeroVideoRef}
+                              src={heroVideoUrl}
+                              poster={heroVideoPoster}
+                              className="max-h-[70vh] w-full object-contain"
+                              muted
+                              loop
+                              playsInline
+                              onPlay={() => setIsModalHeroVideoPlaying(true)}
+                              onPause={() => setIsModalHeroVideoPlaying(false)}
+                            />
+                            <div
+                              className={clsx(
+                                "absolute bottom-4 right-4 flex items-center gap-3 rounded-full px-4 py-2 backdrop-blur-sm border",
+                                isDarkMode
+                                  ? "bg-black/60 border-white/10"
+                                  : "bg-white/80 border-black/10 shadow-lg"
+                              )}
+                            >
+                              <button
+                                type="button"
+                                className={controlStyles}
+                                data-hero-control="true"
+                                onPointerDown={(event) => {
+                                  event.stopPropagation();
+                                  event.preventDefault();
+                                  if (event.currentTarget.setPointerCapture) {
+                                    event.currentTarget.setPointerCapture(event.pointerId);
+                                  }
+                                  startModalHeroDirectionalSeek("backward");
+                                }}
+                                onPointerUp={(event) => {
+                                  event.stopPropagation();
+                                  if (event.currentTarget.releasePointerCapture) {
+                                    event.currentTarget.releasePointerCapture(event.pointerId);
+                                  }
+                                  stopModalHeroDirectionalSeek();
+                                }}
+                                onPointerLeave={(event) => {
+                                  if (event.currentTarget.releasePointerCapture) {
+                                    event.currentTarget.releasePointerCapture(event.pointerId);
+                                  }
+                                  stopModalHeroDirectionalSeek();
+                                }}
+                                onPointerCancel={(event) => {
+                                  if (event.currentTarget.releasePointerCapture) {
+                                    event.currentTarget.releasePointerCapture(event.pointerId);
+                                  }
+                                  stopModalHeroDirectionalSeek();
+                                }}
+                                aria-label="Rewind hero video"
+                              >
+                                ⏪
+                              </button>
+                              <button
+                                type="button"
+                                className={controlStyles}
+                                data-hero-control="true"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleModalHeroPlayPause();
+                                }}
+                                aria-label="Play or pause hero video"
+                              >
+                                {isModalHeroVideoPlaying ? "⏸" : "▶"}
+                              </button>
+                              <button
+                                type="button"
+                                className={controlStyles}
+                                data-hero-control="true"
+                                onPointerDown={(event) => {
+                                  event.stopPropagation();
+                                  event.preventDefault();
+                                  if (event.currentTarget.setPointerCapture) {
+                                    event.currentTarget.setPointerCapture(event.pointerId);
+                                  }
+                                  startModalHeroDirectionalSeek("forward");
+                                }}
+                                onPointerUp={(event) => {
+                                  event.stopPropagation();
+                                  if (event.currentTarget.releasePointerCapture) {
+                                    event.currentTarget.releasePointerCapture(event.pointerId);
+                                  }
+                                  stopModalHeroDirectionalSeek();
+                                }}
+                                onPointerLeave={(event) => {
+                                  if (event.currentTarget.releasePointerCapture) {
+                                    event.currentTarget.releasePointerCapture(event.pointerId);
+                                  }
+                                  stopModalHeroDirectionalSeek();
+                                }}
+                                onPointerCancel={(event) => {
+                                  if (event.currentTarget.releasePointerCapture) {
+                                    event.currentTarget.releasePointerCapture(event.pointerId);
+                                  }
+                                  stopModalHeroDirectionalSeek();
+                                }}
+                                aria-label="Fast forward hero video"
+                              >
+                                ⏩
+                              </button>
+                            </div>
+                          </>
+                        ) : modalImage ? (
                           <AnimatePresence mode="wait" initial={false}>
                             <motion.img
                               key={modalImage.src}
@@ -899,38 +1199,40 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
 
                     </div>
 
-                    <div className="flex items-center justify-center gap-4">
-                      <motion.button
-                        type="button"
-                        className={modalControlStyles}
-                        onClick={() => handleModalNavigate(-1)}
-                        aria-label="Previous image"
-                        initial={{ opacity: 0.7 }}
-                        whileHover={{ opacity: 1, scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {"<"}
-                      </motion.button>
-                      <span
-                        className={clsx(
-                          "text-sm font-semibold tracking-[0.4em] uppercase",
-                          isDarkMode ? "text-zinc-200" : "text-zinc-700"
-                        )}
-                      >
-                        {modalImageIndex + 1} / {totalImages}
-                      </span>
-                      <motion.button
-                        type="button"
-                        className={modalControlStyles}
-                        onClick={() => handleModalNavigate(1)}
-                        aria-label="Next image"
-                        initial={{ opacity: 0.7 }}
-                        whileHover={{ opacity: 1, scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {">"}
-                      </motion.button>
-                    </div>
+                    {!isModalHeroVideo && (
+                      <div className="flex items-center justify-center gap-4">
+                        <motion.button
+                          type="button"
+                          className={modalControlStyles}
+                          onClick={() => handleModalNavigate(-1)}
+                          aria-label="Previous image"
+                          initial={{ opacity: 0.7 }}
+                          whileHover={{ opacity: 1, scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {"<"}
+                        </motion.button>
+                        <span
+                          className={clsx(
+                            "text-sm font-semibold tracking-[0.4em] uppercase",
+                            isDarkMode ? "text-zinc-200" : "text-zinc-700"
+                          )}
+                        >
+                          {modalImageIndex + 1} / {totalImages}
+                        </span>
+                        <motion.button
+                          type="button"
+                          className={modalControlStyles}
+                          onClick={() => handleModalNavigate(1)}
+                          aria-label="Next image"
+                          initial={{ opacity: 0.7 }}
+                          whileHover={{ opacity: 1, scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {">"}
+                        </motion.button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               </motion.div>
