@@ -167,18 +167,6 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
               Handcrafted pottery and ceramic art, each piece unique and made with care.
             </p>
 
-          <motion.button
-            onClick={handleContact}
-            className={`px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:scale-105 ${
-              isDarkMode 
-                ? 'bg-white text-black hover:bg-zinc-200' 
-                : 'bg-black text-white hover:bg-zinc-800'
-            }`}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Contact for Custom Orders
-          </motion.button>
         </div>
 
         {/* Scroll-Controlled Video */}
@@ -246,6 +234,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
               ? 'bg-zinc-800/30 border-zinc-700' 
               : 'bg-white/50 border-zinc-200'
           }`}
+          style={{ marginTop: 40 }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.8 }}
@@ -282,6 +271,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
                 ? 'bg-zinc-700 text-white hover:bg-zinc-600' 
                 : 'bg-zinc-200 text-black hover:bg-zinc-300'
             }`}
+            style={{ marginTop: 20 }}
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.95 }}
           >

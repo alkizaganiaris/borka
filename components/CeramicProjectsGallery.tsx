@@ -31,6 +31,7 @@ const STATUS_OPTIONS = [
 ] as const;
 
 const ALL_STATUS_KEYS = STATUS_OPTIONS.map((option) => option.key);
+const HERO_VIDEO_EVENT = "ceramic-hero-play";
 
 export type CeramicProject = {
   id: string;
@@ -101,6 +102,7 @@ export function CeramicProjectsGallery({
             ? "border-zinc-700/60 bg-zinc-900/70 text-zinc-100"
             : "border-zinc-200 bg-white text-zinc-800 shadow-sm"
         )}
+        style={{ marginTop: 40 }}
       >
         <span className="text-sm font-semibold uppercase tracking-[0.4em]">
           Filter By Status
@@ -211,11 +213,13 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
   const [isMounted, setIsMounted] = useState(false);
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isHeroVideoPlaying, setIsHeroVideoPlaying] = useState(false);
+  const [isHeroVideoMuted, setIsHeroVideoMuted] = useState(true);
   const heroDirectionalRafRef = useRef<number | null>(null);
   const heroDirectionalDirectionRef = useRef<"forward" | "backward" | null>(null);
   const [isModalHeroVideo, setIsModalHeroVideo] = useState(false);
   const modalHeroVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isModalHeroVideoPlaying, setIsModalHeroVideoPlaying] = useState(false);
+  const [isModalHeroVideoMuted, setIsModalHeroVideoMuted] = useState(true);
   const modalHeroDirectionalRafRef = useRef<number | null>(null);
   const modalHeroDirectionalDirectionRef = useRef<"forward" | "backward" | null>(null);
   const heroVideoUrl = project.heroImage.mediaType === "video" ? project.heroImage.src : null;
@@ -276,13 +280,49 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     [totalImages]
   );
 
+  const handleHeroVideoLoaded = useCallback(() => {
+    const video = heroVideoRef.current;
+    if (video) {
+      try {
+        video.currentTime = 0;
+      } catch {
+        // ignore seek errors
+      }
+      video.pause();
+      video.muted = isHeroVideoMuted;
+    }
+  }, [isHeroVideoMuted]);
+
+  const handleModalHeroVideoLoaded = useCallback(() => {
+    const video = modalHeroVideoRef.current;
+    if (video) {
+      try {
+        video.currentTime = 0;
+      } catch {
+        // ignore seek errors
+      }
+      video.pause();
+      video.muted = isModalHeroVideoMuted;
+    }
+  }, [isModalHeroVideoMuted]);
+
+  useEffect(() => {
+    if (project.heroImage.mediaType === "video") {
+      handleHeroVideoLoaded();
+    }
+  }, [project.heroImage.mediaType, project.heroImage.src, handleHeroVideoLoaded]);
+
   const stopHeroDirectionalSeek = useCallback(() => {
     heroDirectionalDirectionRef.current = null;
     if (heroDirectionalRafRef.current !== null) {
       cancelAnimationFrame(heroDirectionalRafRef.current);
       heroDirectionalRafRef.current = null;
     }
-  }, []);
+    const video = heroVideoRef.current;
+    if (video) {
+      video.muted = isHeroVideoMuted;
+    }
+  }, [isHeroVideoMuted]);
 
   const startHeroDirectionalSeek = useCallback(
     (direction: "forward" | "backward") => {
@@ -290,6 +330,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       if (!video) return;
 
       video.pause();
+      video.muted = true;
       setIsHeroVideoPlaying(false);
       heroDirectionalDirectionRef.current = direction;
 
@@ -345,7 +386,11 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       cancelAnimationFrame(modalHeroDirectionalRafRef.current);
       modalHeroDirectionalRafRef.current = null;
     }
-  }, []);
+    const video = modalHeroVideoRef.current;
+    if (video) {
+      video.muted = isModalHeroVideoMuted;
+    }
+  }, [isModalHeroVideoMuted]);
 
   const startModalHeroDirectionalSeek = useCallback(
     (direction: "forward" | "backward") => {
@@ -353,6 +398,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       if (!video) return;
 
       video.pause();
+      video.muted = true;
       setIsModalHeroVideoPlaying(false);
       modalHeroDirectionalDirectionRef.current = direction;
 
@@ -408,11 +454,17 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     if (!video) return;
 
     if (video.paused) {
+      video.muted = isHeroVideoMuted;
       const playPromise = video.play();
       if (playPromise) {
         playPromise
           .then(() => {
             setIsHeroVideoPlaying(true);
+            window.dispatchEvent(
+              new CustomEvent(HERO_VIDEO_EVENT, {
+                detail: { id: project.id, source: "hero" as const }
+              })
+            );
           })
           .catch(() => {
             setIsHeroVideoPlaying(false);
@@ -420,12 +472,17 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       }
       if (!playPromise) {
         setIsHeroVideoPlaying(true);
+        window.dispatchEvent(
+          new CustomEvent(HERO_VIDEO_EVENT, {
+            detail: { id: project.id, source: "hero" as const }
+          })
+        );
       }
     } else {
       video.pause();
       setIsHeroVideoPlaying(false);
     }
-  }, [stopHeroDirectionalSeek]);
+  }, [stopHeroDirectionalSeek, project.id, isHeroVideoMuted]);
 
   const handleModalHeroPlayPause = useCallback(() => {
     stopModalHeroDirectionalSeek();
@@ -433,11 +490,17 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     if (!video) return;
 
     if (video.paused) {
+      video.muted = isModalHeroVideoMuted;
       const playPromise = video.play();
       if (playPromise) {
         playPromise
           .then(() => {
             setIsModalHeroVideoPlaying(true);
+            window.dispatchEvent(
+              new CustomEvent(HERO_VIDEO_EVENT, {
+                detail: { id: project.id, source: "modal" as const }
+              })
+            );
           })
           .catch(() => {
             setIsModalHeroVideoPlaying(false);
@@ -445,12 +508,17 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       }
       if (!playPromise) {
         setIsModalHeroVideoPlaying(true);
+        window.dispatchEvent(
+          new CustomEvent(HERO_VIDEO_EVENT, {
+            detail: { id: project.id, source: "modal" as const }
+          })
+        );
       }
     } else {
       video.pause();
       setIsModalHeroVideoPlaying(false);
     }
-  }, [stopModalHeroDirectionalSeek]);
+  }, [stopModalHeroDirectionalSeek, project.id, isModalHeroVideoMuted]);
 
   const openModal = useCallback((startIndex: number) => {
     setIsModalHeroVideo(false);
@@ -467,11 +535,13 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         heroVideo.pause();
         setIsHeroVideoPlaying(false);
       }
+      setIsModalHeroVideoMuted(isHeroVideoMuted);
       setIsModalHeroVideo(true);
       const modalVideo = modalHeroVideoRef.current;
       if (modalVideo) {
         modalVideo.currentTime = 0;
         modalVideo.pause();
+        modalVideo.muted = isHeroVideoMuted;
       }
       setIsModalOpen(true);
     } else if (totalImages > 0) {
@@ -479,7 +549,13 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       setModalImageIndex(activeImageIndex);
       setIsModalOpen(true);
     }
-  }, [project.heroImage.mediaType, totalImages, activeImageIndex, stopModalHeroDirectionalSeek]);
+  }, [
+    project.heroImage.mediaType,
+    totalImages,
+    activeImageIndex,
+    stopModalHeroDirectionalSeek,
+    isHeroVideoMuted
+  ]);
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
@@ -680,6 +756,58 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     };
   }, [stopModalHeroDirectionalSeek]);
 
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (video) {
+      video.muted = isHeroVideoMuted;
+    }
+  }, [isHeroVideoMuted]);
+
+  useEffect(() => {
+    const video = modalHeroVideoRef.current;
+    if (video) {
+      video.muted = isModalHeroVideoMuted;
+    }
+  }, [isModalHeroVideoMuted]);
+
+  useEffect(() => {
+    const handleGlobalHeroPlay = (event: Event) => {
+      const customEvent = event as CustomEvent<{ id: string; source: "hero" | "modal" }>;
+      const detail = customEvent.detail;
+      if (!detail) return;
+      const isSameProject = detail.id === project.id;
+
+      if (!isSameProject || detail.source === "modal") {
+        stopHeroDirectionalSeek();
+        const heroVideo = heroVideoRef.current;
+        if (heroVideo) {
+          heroVideo.pause();
+        }
+        setIsHeroVideoPlaying(false);
+      }
+
+      if (!isSameProject) {
+        stopModalHeroDirectionalSeek();
+        const modalVideo = modalHeroVideoRef.current;
+        if (modalVideo) {
+          modalVideo.pause();
+        }
+        setIsModalHeroVideoPlaying(false);
+      }
+    };
+
+    window.addEventListener(HERO_VIDEO_EVENT, handleGlobalHeroPlay);
+    return () => {
+      window.removeEventListener(HERO_VIDEO_EVENT, handleGlobalHeroPlay);
+    };
+  }, [
+    project.id,
+    stopHeroDirectionalSeek,
+    stopModalHeroDirectionalSeek,
+    setIsHeroVideoPlaying,
+    setIsModalHeroVideoPlaying
+  ]);
+
   return (
     <>
       <div
@@ -732,11 +860,12 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                   poster={project.heroImage.poster}
                   className="h-full w-full object-cover"
                   aria-label={project.heroImage.alt}
-                  muted
                   loop
                   playsInline
                   preload="metadata"
-                  autoPlay
+                  muted={isHeroVideoMuted}
+                  onLoadedMetadata={handleHeroVideoLoaded}
+                  onLoadedData={handleHeroVideoLoaded}
                   onPlay={() => setIsHeroVideoPlaying(true)}
                   onPause={() => setIsHeroVideoPlaying(false)}
                 />
@@ -830,6 +959,25 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                     aria-label="Fast forward hero video"
                   >
                     ⏩
+                  </button>
+                  <button
+                    type="button"
+                    className={controlStyles}
+                    data-hero-control="true"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setIsHeroVideoMuted((prev) => {
+                        const next = !prev;
+                        const video = heroVideoRef.current;
+                        if (video) {
+                          video.muted = next;
+                        }
+                        return next;
+                      });
+                    }}
+                    aria-label={isHeroVideoMuted ? "Unmute hero video" : "Mute hero video"}
+                  >
+                    {isHeroVideoMuted ? "🔇" : "🔊"}
                   </button>
                 </div>
               </>
@@ -1073,11 +1221,14 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                               src={heroVideoUrl}
                               poster={heroVideoPoster}
                               className="max-h-[70vh] w-full object-contain"
-                              muted
                               loop
                               playsInline
+                              preload="metadata"
+                              onLoadedMetadata={handleModalHeroVideoLoaded}
+                              onLoadedData={handleModalHeroVideoLoaded}
                               onPlay={() => setIsModalHeroVideoPlaying(true)}
                               onPause={() => setIsModalHeroVideoPlaying(false)}
+                              muted={isModalHeroVideoMuted}
                             />
                             <div
                               className={clsx(
@@ -1168,6 +1319,25 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                                 aria-label="Fast forward hero video"
                               >
                                 ⏩
+                              </button>
+                              <button
+                                type="button"
+                                className={controlStyles}
+                                data-hero-control="true"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setIsModalHeroVideoMuted((prev) => {
+                                    const next = !prev;
+                                    const video = modalHeroVideoRef.current;
+                                    if (video) {
+                                      video.muted = next;
+                                    }
+                                    return next;
+                                  });
+                                }}
+                                aria-label={isModalHeroVideoMuted ? "Unmute hero video" : "Mute hero video"}
+                              >
+                                {isModalHeroVideoMuted ? "🔇" : "🔊"}
                               </button>
                             </div>
                           </>
