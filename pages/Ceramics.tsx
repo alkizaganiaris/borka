@@ -2,8 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
 import { PageHeader } from "../components/PageHeader";
 import StaggeredMenu from "../components/StaggeredMenu";
-import HorizontalPhotoRow from "../components/HorizontalPhotoRow";
 import ScrollControlledVideo from "../components/ScrollControlledVideo";
+import {
+  CeramicProjectsGallery,
+  CeramicProject
+} from "../components/CeramicProjectsGallery";
 
 interface CeramicsProps {
   isDarkMode: boolean;
@@ -12,83 +15,64 @@ interface CeramicsProps {
 export function Ceramics({ isDarkMode }: CeramicsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const ceramicPieces = [
+  const ceramicProjects: CeramicProject[] = [
     {
-      id: 1,
-      name: "Ocean Bowl",
-      description: "Hand-thrown stoneware bowl with blue glaze",
-      price: "$85",
-      image: "🏺",
-      available: true
+      id: "ocean-bowl",
+      title: "Ocean Bowl Series",
+      subtitle: "Wheel Thrown Stoneware",
+      description:
+        "A family of bowls that carry the movement of tides in layered celadon glazes. These pieces are burnished by hand, leaving slight variations that feel like shorelines.",
+      heroImage: {
+        src: "/media/wooden_table_1.jpg",
+        alt: "Tall ocean blue bowl with layered glazes"
+      },
+      galleryImages: [
+        { src: "/media/wooden_table_2.jpg", alt: "Detail of layered blue glaze", height: 460 },
+        { src: "/media/wooden_table_3.jpg", alt: "Stacked bowls from the Ocean series", height: 380 },
+        { src: "/media/wooden_table_4.jpg", alt: "Footed bowl in turquoise glaze", height: 520 },
+        { src: "/media/wooden_table.jpg", alt: "Throwing process of the Ocean Bowl", height: 410 }
+      ],
+      ctaLabel: "View Process Journal",
+      ctaHref: "/journal"
     },
     {
-      id: 2,
-      name: "Forest Vase",
-      description: "Tall ceramic vase with earthy green tones",
-      price: "$120",
-      image: "🫖",
-      available: true
+      id: "forest-vessel",
+      title: "Forest Vessel",
+      subtitle: "Reduction Fired Porcelain",
+      description:
+        "Soft greens and charcoal washes build a canopy effect across the form. This vessel was fired over three days, picking up subtle atmospheric markings from the kiln.",
+      heroImage: {
+        src: "/media/entry_bg.jpeg",
+        alt: "Forest green porcelain vessel"
+      },
+      galleryImages: [
+        { src: "/media/pencil.png", alt: "Studio notes beside green test tiles", height: 360 },
+        { src: "/media/coffee.png", alt: "Close-up of carved porcelain rim", height: 420 },
+        { src: "/media/tea.png", alt: "Forest vessel drying on a wooden bat", height: 480 },
+        { src: "/media/shavings_1.png", alt: "Trimming ribbons from porcelain base", height: 380 }
+      ],
+      ctaLabel: "Commission Similar Work",
+      ctaHref: "mailto:contact@borka.com?subject=Forest%20Vessel%20Inquiry"
     },
     {
-      id: 3,
-      name: "Sunrise Plate Set",
-      description: "Set of 4 dinner plates with warm gradient glaze",
-      price: "$200",
-      image: "🍽️",
-      available: false
-    },
-    {
-      id: 4,
-      name: "Moonlight Mug",
-      description: "Handcrafted coffee mug with speckled glaze",
-      price: "$45",
-      image: "☕",
-      available: true
-    },
-    {
-      id: 5,
-      name: "Earth Pot",
-      description: "Large planter with natural brown finish",
-      price: "$95",
-      image: "🪴",
-      available: true
-    },
-    {
-      id: 6,
-      name: "Wind Chime Set",
-      description: "Ceramic wind chimes with unique tones",
-      price: "$75",
-      image: "🎐",
-      available: false
+      id: "sunrise-tableware",
+      title: "Sunrise Tableware",
+      subtitle: "Hand Glazed Stoneware",
+      description:
+        "A table setting designed for long breakfasts. Warm gradients meet speckled clay bodies, transitioning from blush to amber. Each firing introduces new shifts in the palette.",
+      heroImage: {
+        src: "/media/film-canister.png",
+        alt: "Stack of sunrise plates with warm gradient glazes"
+      },
+      galleryImages: [
+        { src: "/media/film-frame-bg.jpg", alt: "Sunrise tableware styled on linen", height: 520 },
+        { src: "/media/wooden_table_1.jpg", alt: "Detail of blush glaze pooling", height: 420 },
+        { src: "/media/wooden_table_2.jpg", alt: "Cup and saucer from sunrise set", height: 360 },
+        { src: "/media/wooden_table_3.jpg", alt: "Production line of gradient bowls", height: 480 }
+      ],
+      ctaLabel: "Shop Limited Release",
+      ctaHref: "/shop"
     }
-  ];
-
-  // Ceramic images - using placeholder images for now, you can replace with actual ceramic photos
-  const ceramicImages = [
-    { src: '/media/wooden_table_1.jpg', alt: 'Ocean Bowl - Hand-thrown stoneware bowl with blue glaze' },
-    { src: '/media/wooden_table_2.jpg', alt: 'Forest Vase - Tall ceramic vase with earthy green tones' },
-    { src: '/media/wooden_table_3.jpg', alt: 'Sunrise Plate Set - Set of 4 dinner plates with warm gradient glaze' },
-    { src: '/media/wooden_table_4.jpg', alt: 'Moonlight Mug - Handcrafted coffee mug with speckled glaze' },
-    { src: '/media/wooden_table.jpg', alt: 'Earth Pot - Large planter with natural brown finish' },
-    { src: '/media/entry_bg.jpeg', alt: 'Wind Chime Set - Ceramic wind chimes with unique tones' },
-    { src: '/media/pencil.png', alt: 'Mountain Mug - Rugged coffee mug with mountain landscape glaze' },
-    { src: '/media/coffee.png', alt: 'Coral Teapot - Delicate teapot with coral-inspired design' },
-    { src: '/media/tea.png', alt: 'Desert Wind Chime - Ceramic wind chime with desert-inspired tones' },
-    { src: '/media/shavings_1.png', alt: 'River Stone Bowl - Small serving bowl with river stone texture' },
-    { src: '/media/film-canister.png', alt: 'Sky Sculpture - Abstract ceramic sculpture with flowing lines' },
-    { src: '/media/film-frame-bg.jpg', alt: 'Earth Pot - Large planter with natural brown finish' },
-    { src: '/media/wooden_table_1.jpg', alt: 'Sunset Plate - Hand-painted dinner plate with sunset colors' },
-    { src: '/media/wooden_table_2.jpg', alt: 'Forest Bowl - Wood-fired bowl with natural ash glaze' },
-    { src: '/media/wooden_table_3.jpg', alt: 'Ocean Vase - Tall vase inspired by ocean waves' },
-    { src: '/media/wooden_table_4.jpg', alt: 'Mountain Teacup - Small teacup with mountain silhouette' },
-    { src: '/media/wooden_table.jpg', alt: 'Desert Jar - Storage jar with desert sand texture' },
-    { src: '/media/entry_bg.jpeg', alt: 'Rainbow Mug - Colorful mug with rainbow glaze pattern' },
-    { src: '/media/pencil.png', alt: 'Stone Plate - Natural stone-inspired serving plate' },
-    { src: '/media/coffee.png', alt: 'Leaf Bowl - Organic bowl shaped like a large leaf' },
-    { src: '/media/tea.png', alt: 'Fire Pot - Dramatic pot with flame-like glaze patterns' },
-    { src: '/media/shavings_1.png', alt: 'Ice Vase - Cool-toned vase with crystalline texture' },
-    { src: '/media/film-canister.png', alt: 'Wood Grain Plate - Plate with realistic wood grain pattern' },
-    { src: '/media/film-frame-bg.jpg', alt: 'Cloud Sculpture - Abstract cloud-shaped ceramic piece' }
   ];
 
   const handleContact = () => {
@@ -196,84 +180,12 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           </div>
         </motion.div>
 
-        {/* Ceramics Gallery - Multi-Row Auto-Scroll */}
-        {/*
-        <div className="mb-16 relative z-10" style={{ minHeight: '100vh' }}>
-          <div className="text-center p-4 text-black font-bold mb-12">
-            Ceramics Gallery - Auto-Scrolling Display
-          </div>
-          
-          {/* Row 1 - Scrolling Right */}
-          {/*
-          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
-            <HorizontalPhotoRow
-              images={ceramicImages.slice(0, 3)}
-              imageSize={120}
-              spacing={60}
-              enableHover={true}
-              autoScroll={true}
-              scrollDirection="right"
-              scrollSpeed={12}
-              rowIndex={0}
-              className="h-full"
-            />
-          </div>
-          
-          {/* Row 2 - Scrolling Left */}
-          {/*
-          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
-            <HorizontalPhotoRow
-              images={ceramicImages.slice(3, 6)}
-              imageSize={120}
-              spacing={60}
-              enableHover={true}
-              autoScroll={true}
-              scrollDirection="left"
-              scrollSpeed={12}
-              rowIndex={1}
-              className="h-full"
-            />
-          </div>
-          
-          {/* Row 3 - Scrolling Right */}
-          {/*
-          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
-            <HorizontalPhotoRow
-              images={ceramicImages.slice(6, 9)}
-              imageSize={120}
-              spacing={60}
-              enableHover={true}
-              autoScroll={true}
-              scrollDirection="right"
-              scrollSpeed={12}
-              rowIndex={2}
-              className="h-full"
-            />
-          </div>
-          
-          {/* Row 4 - Scrolling Left */}
-          {/*
-          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
-            <HorizontalPhotoRow
-              images={ceramicImages.slice(9, 12)}
-              imageSize={120}
-              spacing={60}
-              enableHover={true}
-              autoScroll={true}
-              scrollDirection="left"
-              scrollSpeed={12}
-              rowIndex={3}
-              className="h-full"
-            />
-          </div>
-          
-          {/* Info */}
-          {/*
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm">
-            {ceramicImages.length} ceramic pieces • 4 rows scrolling in alternating directions
-          </div>
+        <div className="mb-24">
+          <CeramicProjectsGallery
+            projects={ceramicProjects}
+            isDarkMode={isDarkMode}
+          />
         </div>
-        */}
 
         {/* About Section */}
         <motion.div

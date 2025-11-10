@@ -27,7 +27,7 @@ function NotesContent({
   title = "inspiration", 
   subtitle = "/ ˌɪn spəˈreɪ ʃən /",
   filmUsed,
-  year,
+  year, 
   photos,
   //isDarkMode = false,
   isCanisterHovered = false,
