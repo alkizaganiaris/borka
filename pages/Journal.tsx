@@ -33,7 +33,7 @@ export function Journal({ isDarkMode }: JournalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   
   // Configuration values
-  const containerTranslateY = -10;
+  const containerTranslateY = -11;
   const textTranslateY = 0;
   const fontSize = 1.4;
   const lineHeight = 2.2;
@@ -261,7 +261,7 @@ export function Journal({ isDarkMode }: JournalProps) {
             >
               Need more thoughts...
             </div>
-            <div className="space-y-3 pb-12" 
+            <div className="space-y-0 pb-12" 
             style={{ 
               marginTop: '0rem',
               marginBottom: '0rem',

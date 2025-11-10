@@ -1,9 +1,12 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { PageHeader } from "../components/PageHeader";
 import StaggeredMenu from "../components/StaggeredMenu";
-import HorizontalPhotoRow from "../components/HorizontalPhotoRow";
-import ScrollControlledVideo from "../components/ScrollControlledVideo";
+import {
+  CeramicProjectsGallery,
+  CeramicProject
+} from "../components/CeramicProjectsGallery";
+import { getCeramicProjects } from "../src/lib/sanityQueries";
 
 interface CeramicsProps {
   isDarkMode: boolean;
@@ -11,85 +14,95 @@ interface CeramicsProps {
 
 export function Ceramics({ isDarkMode }: CeramicsProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [ceramicProjects, setCeramicProjects] = useState<CeramicProject[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  const [projectsError, setProjectsError] = useState<string | null>(null);
 
-  const ceramicPieces = [
-    {
-      id: 1,
-      name: "Ocean Bowl",
-      description: "Hand-thrown stoneware bowl with blue glaze",
-      price: "$85",
-      image: "🏺",
-      available: true
-    },
-    {
-      id: 2,
-      name: "Forest Vase",
-      description: "Tall ceramic vase with earthy green tones",
-      price: "$120",
-      image: "🫖",
-      available: true
-    },
-    {
-      id: 3,
-      name: "Sunrise Plate Set",
-      description: "Set of 4 dinner plates with warm gradient glaze",
-      price: "$200",
-      image: "🍽️",
-      available: false
-    },
-    {
-      id: 4,
-      name: "Moonlight Mug",
-      description: "Handcrafted coffee mug with speckled glaze",
-      price: "$45",
-      image: "☕",
-      available: true
-    },
-    {
-      id: 5,
-      name: "Earth Pot",
-      description: "Large planter with natural brown finish",
-      price: "$95",
-      image: "🪴",
-      available: true
-    },
-    {
-      id: 6,
-      name: "Wind Chime Set",
-      description: "Ceramic wind chimes with unique tones",
-      price: "$75",
-      image: "🎐",
-      available: false
+  useEffect(() => {
+    async function fetchCeramics() {
+      try {
+        const data = await getCeramicProjects();
+        const mappedProjects: CeramicProject[] = data.map((project: any) => {
+          const galleryImages =
+            project.images?.map((image: any) => ({
+              src: image?.url ?? "",
+              alt: image?.alt ?? `${project.title} gallery image`,
+              height: image?.height ?? undefined
+            })) ?? [];
+
+          const firstImage = galleryImages[0];
+          const heroVideoUrl = project.heroVideo?.asset?.url;
+          const statusRaw = (project.status ?? "available").toLowerCase();
+          const normalizedStatus: AvailabilityStatus =
+            statusRaw.includes("not") ? "notAvailable" :
+            statusRaw.includes("commissioned") ? "commissioned" :
+            statusRaw.includes("sold") ? "sold" :
+            "available";
+
+          type AvailabilityStatus = "available" | "commissioned" | "sold" | "notAvailable";
+
+          const statusLabelMap: Record<AvailabilityStatus, { label: string; colorClass: string; status: AvailabilityStatus }> = {
+            available: { label: "Available", colorClass: "bg-emerald-400", status: "available" },
+            commissioned: { label: "Commissioned", colorClass: "bg-orange-400", status: "commissioned" },
+            sold: { label: "Sold", colorClass: "bg-sky-400", status: "sold" },
+            notAvailable: { label: "Not Available", colorClass: "bg-zinc-400", status: "notAvailable" }
+          };
+
+          const availabilityDetails = statusLabelMap[normalizedStatus];
+
+          const availability: CeramicProject["availability"] = {
+            label: availabilityDetails.label,
+            price:
+              typeof project.price === "number"
+                ? `EUR ${project.price.toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                  })}`
+                : "Price on request",
+            colorClass: availabilityDetails.colorClass,
+            status: availabilityDetails.status
+          };
+
+          return {
+            id: project._id,
+            title: project.title ?? "Untitled Project",
+            subtitle: project.subtitle ?? "",
+            description: project.description ?? "",
+            heroImage: heroVideoUrl
+              ? {
+                  src: heroVideoUrl,
+                  poster: firstImage?.src,
+                  mediaType: "video" as const,
+                  alt: `${project.title ?? "Ceramic project"} hero video`
+                }
+              : firstImage
+                ? {
+                    src: firstImage.src,
+                    alt: firstImage.alt,
+                    mediaType: "image" as const
+                  }
+                : {
+                    src: "",
+                    alt: `${project.title ?? "Ceramic project"}`
+                  },
+            availability,
+            galleryImages,
+            ctaLabel: project.ctaLabel ?? undefined,
+            ctaHref: project.ctaHref ?? undefined
+          } satisfies CeramicProject;
+        });
+
+        setCeramicProjects(mappedProjects);
+      } catch (error) {
+        console.error("Error fetching ceramic projects:", error);
+        setProjectsError("Failed to load ceramic projects. Please try again later.");
+      } finally {
+        setIsLoadingProjects(false);
+      }
     }
-  ];
 
-  // Ceramic images - using placeholder images for now, you can replace with actual ceramic photos
-  const ceramicImages = [
-    { src: '/media/wooden_table_1.jpg', alt: 'Ocean Bowl - Hand-thrown stoneware bowl with blue glaze' },
-    { src: '/media/wooden_table_2.jpg', alt: 'Forest Vase - Tall ceramic vase with earthy green tones' },
-    { src: '/media/wooden_table_3.jpg', alt: 'Sunrise Plate Set - Set of 4 dinner plates with warm gradient glaze' },
-    { src: '/media/wooden_table_4.jpg', alt: 'Moonlight Mug - Handcrafted coffee mug with speckled glaze' },
-    { src: '/media/wooden_table.jpg', alt: 'Earth Pot - Large planter with natural brown finish' },
-    { src: '/media/entry_bg.jpeg', alt: 'Wind Chime Set - Ceramic wind chimes with unique tones' },
-    { src: '/media/pencil.png', alt: 'Mountain Mug - Rugged coffee mug with mountain landscape glaze' },
-    { src: '/media/coffee.png', alt: 'Coral Teapot - Delicate teapot with coral-inspired design' },
-    { src: '/media/tea.png', alt: 'Desert Wind Chime - Ceramic wind chime with desert-inspired tones' },
-    { src: '/media/shavings_1.png', alt: 'River Stone Bowl - Small serving bowl with river stone texture' },
-    { src: '/media/film-canister.png', alt: 'Sky Sculpture - Abstract ceramic sculpture with flowing lines' },
-    { src: '/media/film-frame-bg.jpg', alt: 'Earth Pot - Large planter with natural brown finish' },
-    { src: '/media/wooden_table_1.jpg', alt: 'Sunset Plate - Hand-painted dinner plate with sunset colors' },
-    { src: '/media/wooden_table_2.jpg', alt: 'Forest Bowl - Wood-fired bowl with natural ash glaze' },
-    { src: '/media/wooden_table_3.jpg', alt: 'Ocean Vase - Tall vase inspired by ocean waves' },
-    { src: '/media/wooden_table_4.jpg', alt: 'Mountain Teacup - Small teacup with mountain silhouette' },
-    { src: '/media/wooden_table.jpg', alt: 'Desert Jar - Storage jar with desert sand texture' },
-    { src: '/media/entry_bg.jpeg', alt: 'Rainbow Mug - Colorful mug with rainbow glaze pattern' },
-    { src: '/media/pencil.png', alt: 'Stone Plate - Natural stone-inspired serving plate' },
-    { src: '/media/coffee.png', alt: 'Leaf Bowl - Organic bowl shaped like a large leaf' },
-    { src: '/media/tea.png', alt: 'Fire Pot - Dramatic pot with flame-like glaze patterns' },
-    { src: '/media/shavings_1.png', alt: 'Ice Vase - Cool-toned vase with crystalline texture' },
-    { src: '/media/film-canister.png', alt: 'Wood Grain Plate - Plate with realistic wood grain pattern' },
-    { src: '/media/film-frame-bg.jpg', alt: 'Cloud Sculpture - Abstract cloud-shaped ceramic piece' }
-  ];
+    fetchCeramics();
+  }, []);
 
   const handleContact = () => {
     // In a real app, this would open a contact form or email
@@ -141,7 +154,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
         />
       )}
       
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="w-full px-10 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -169,7 +182,8 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
         </div>
 
         {/* Scroll-Controlled Video */}
-        <motion.div
+
+        {/* <motion.div
           className="mb-16 relative z-10"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -194,86 +208,36 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
               className="w-full h-full"
             />
           </div>
-        </motion.div>
+        </motion.div> */}
 
-        {/* Ceramics Gallery - Multi-Row Auto-Scroll */}
-        {/*
-        <div className="mb-16 relative z-10" style={{ minHeight: '100vh' }}>
-          <div className="text-center p-4 text-black font-bold mb-12">
-            Ceramics Gallery - Auto-Scrolling Display
-          </div>
-          
-          {/* Row 1 - Scrolling Right */}
-          {/*
-          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
-            <HorizontalPhotoRow
-              images={ceramicImages.slice(0, 3)}
-              imageSize={120}
-              spacing={60}
-              enableHover={true}
-              autoScroll={true}
-              scrollDirection="right"
-              scrollSpeed={12}
-              rowIndex={0}
-              className="h-full"
+        <div className="mb-24 w-full px-10">
+          {isLoadingProjects ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-xl font-semibold text-zinc-500">Loading projects…</p>
+            </div>
+          ) : projectsError ? (
+            <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-zinc-400/60 py-16 px-6 text-center">
+              <p className="text-lg font-semibold text-zinc-600">{projectsError}</p>
+              <p className="text-sm text-zinc-500">
+                Refresh the page or check the Sanity Studio connection settings.
+              </p>
+            </div>
+          ) : ceramicProjects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-zinc-400/60 py-16 px-6 text-center">
+              <p className="text-xl font-semibold text-zinc-600">
+                No ceramic projects found.
+              </p>
+              <p className="text-sm text-zinc-500">
+                Head over to the Sanity Studio to add your first project.
+              </p>
+            </div>
+          ) : (
+            <CeramicProjectsGallery
+              projects={ceramicProjects}
+              isDarkMode={isDarkMode}
             />
-          </div>
-          
-          {/* Row 2 - Scrolling Left */}
-          {/*
-          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
-            <HorizontalPhotoRow
-              images={ceramicImages.slice(3, 6)}
-              imageSize={120}
-              spacing={60}
-              enableHover={true}
-              autoScroll={true}
-              scrollDirection="left"
-              scrollSpeed={12}
-              rowIndex={1}
-              className="h-full"
-            />
-          </div>
-          
-          {/* Row 3 - Scrolling Right */}
-          {/*
-          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
-            <HorizontalPhotoRow
-              images={ceramicImages.slice(6, 9)}
-              imageSize={120}
-              spacing={60}
-              enableHover={true}
-              autoScroll={true}
-              scrollDirection="right"
-              scrollSpeed={12}
-              rowIndex={2}
-              className="h-full"
-            />
-          </div>
-          
-          {/* Row 4 - Scrolling Left */}
-          {/*
-          <div className="h-[22vh] flex items-center" style={{ paddingBottom: '5rem' }}>
-            <HorizontalPhotoRow
-              images={ceramicImages.slice(9, 12)}
-              imageSize={120}
-              spacing={60}
-              enableHover={true}
-              autoScroll={true}
-              scrollDirection="left"
-              scrollSpeed={12}
-              rowIndex={3}
-              className="h-full"
-            />
-          </div>
-          
-          {/* Info */}
-          {/*
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm">
-            {ceramicImages.length} ceramic pieces • 4 rows scrolling in alternating directions
-          </div>
+          )}
         </div>
-        */}
 
         {/* About Section */}
         <motion.div
