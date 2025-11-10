@@ -28,6 +28,12 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
         mediaType: "video",
         alt: "Looping video of a ceramic bowl being shaped on a wheel"
       },
+      availability: {
+        label: "Available",
+        price: "EUR 30",
+        colorClass: "bg-emerald-400",
+        status: "available"
+      },
       galleryImages: [
         { src: "/media/wooden_table_2.jpg", alt: "Detail of layered blue glaze", height: 460 },
         { src: "/media/wooden_table_3.jpg", alt: "Stacked bowls from the Ocean series", height: 380 },
@@ -44,11 +50,17 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
       description:
         "Soft greens and charcoal washes build a canopy effect across the form. This vessel was fired over three days, picking up subtle atmospheric markings from the kiln.",
       heroImage: {
-          src: "/media/ffout1.mp4",
-          poster: "/media/wooden_table_1.jpg",
-          mediaType: "video",
-          alt: "Looping video of a ceramic bowl being shaped on a wheel"
-        },
+        src: "/media/ffout1.mp4",
+        poster: "/media/wooden_table_1.jpg",
+        mediaType: "video",
+        alt: "Looping video of a ceramic bowl being shaped on a wheel"
+      },
+      availability: {
+        label: "Commissioned",
+        price: "EUR 45",
+        colorClass: "bg-orange-400",
+        status: "commissioned"
+      },
       galleryImages: [
         { src: "/media/pencil.png", alt: "Studio notes beside green test tiles", height: 360 },
         { src: "/media/coffee.png", alt: "Close-up of carved porcelain rim", height: 420 },
@@ -65,11 +77,17 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
       description:
         "A table setting designed for long breakfasts. Warm gradients meet speckled clay bodies, transitioning from blush to amber. Each firing introduces new shifts in the palette.",
       heroImage: {
-          src: "/media/ffout1.mp4",
-          poster: "/media/wooden_table_1.jpg",
-          mediaType: "video",
-          alt: "Looping video of a ceramic bowl being shaped on a wheel"
-        },
+        src: "/media/ffout1.mp4",
+        poster: "/media/wooden_table_1.jpg",
+        mediaType: "video",
+        alt: "Looping video of a ceramic bowl being shaped on a wheel"
+      },
+      availability: {
+        label: "Sold",
+        price: "EUR 60",
+        colorClass: "bg-sky-400",
+        status: "sold"
+      },
       galleryImages: [
         { src: "/media/film-frame-bg.jpg", alt: "Sunrise tableware styled on linen", height: 520 },
         { src: "/media/wooden_table_1.jpg", alt: "Detail of blush glaze pooling", height: 420 },

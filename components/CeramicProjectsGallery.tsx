@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 
@@ -12,6 +12,24 @@ type GalleryImage = {
   poster?: string;
 };
 
+const AVAILABILITY_STATUS_COLOR_CLASSES: Record<string, string> = {
+  available: "bg-emerald-400",
+  commissioned: "bg-orange-400",
+  sold: "bg-sky-400"
+};
+
+const STATUS_OPTIONS = [
+  { key: "available", label: "Available", dotClass: AVAILABILITY_STATUS_COLOR_CLASSES.available },
+  {
+    key: "commissioned",
+    label: "Commissioned",
+    dotClass: AVAILABILITY_STATUS_COLOR_CLASSES.commissioned
+  },
+  { key: "sold", label: "Sold", dotClass: AVAILABILITY_STATUS_COLOR_CLASSES.sold }
+] as const;
+
+const ALL_STATUS_KEYS = STATUS_OPTIONS.map((option) => option.key);
+
 export type CeramicProject = {
   id: string;
   title: string;
@@ -21,6 +39,12 @@ export type CeramicProject = {
   galleryImages: GalleryImage[];
   ctaLabel?: string;
   ctaHref?: string;
+  availability?: {
+    label: string;
+    price: string;
+    colorClass?: string;
+    status?: "available" | "commissioned" | "sold";
+  };
 };
 
 type CeramicProjectsGalleryProps = {
@@ -34,12 +58,119 @@ export function CeramicProjectsGallery({
 }: CeramicProjectsGalleryProps) {
   if (!projects?.length) return null;
 
+  const [activeStatuses, setActiveStatuses] = useState<string[]>(() => [...ALL_STATUS_KEYS]);
+
+  const toggleStatus = useCallback((statusKey: string) => {
+    setActiveStatuses((prev) => {
+      if (prev.includes(statusKey)) {
+        const next = prev.filter((key) => key !== statusKey);
+        return next;
+      }
+      return [...prev, statusKey];
+    });
+  }, []);
+
+  const handleShowAll = useCallback(() => {
+    setActiveStatuses(() => [...ALL_STATUS_KEYS]);
+  }, []);
+
+  const isShowAllActive = activeStatuses.length === ALL_STATUS_KEYS.length;
+
+  const filteredProjects = useMemo(() => {
+    if (!projects?.length) return [];
+    if (!activeStatuses.length) return projects;
+
+    return projects.filter((project) => {
+      const statusKey =
+        project.availability?.status ??
+        project.availability?.label?.trim().toLowerCase() ??
+        "available";
+      const normalizedStatus = statusKey.replace(/\s+/g, "-");
+      return activeStatuses.includes(normalizedStatus);
+    });
+  }, [projects, activeStatuses]);
+
   return (
-    <div className="flex flex-col gap-10 md:gap-10 w-full mx-auto max-w-[1200px]">
-      {projects.map((project, index) => (
+    <div className="flex flex-col gap-8 md:gap-10 w-full mx-auto max-w-[1200px]">
+      <div
+        className={clsx(
+          "flex flex-col gap-3 rounded-2xl border px-5 py-4",
+          isDarkMode
+            ? "border-zinc-700/60 bg-zinc-900/70 text-zinc-100"
+            : "border-zinc-200 bg-white text-zinc-800 shadow-sm"
+        )}
+      >
+        <span className="text-sm font-semibold uppercase tracking-[0.4em]">
+          Filter By Status
+        </span>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleShowAll}
+            className={clsx(
+              "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition border",
+              isShowAllActive
+                ? isDarkMode
+                  ? "bg-zinc-800 border-zinc-600 text-zinc-100 shadow-inner"
+                  : "bg-white border-zinc-300 text-zinc-800 shadow-sm"
+                : isDarkMode
+                  ? "bg-zinc-800/80 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  : "bg-zinc-100 border-zinc-200 text-zinc-600 hover:bg-white"
+            )}
+            aria-pressed={isShowAllActive}
+          >
+            Show All
+          </button>
+          {STATUS_OPTIONS.map((option) => {
+            const isSelected = activeStatuses.includes(option.key);
+            return (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => toggleStatus(option.key)}
+                className={clsx(
+                  "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition",
+                  isSelected
+                    ? isDarkMode
+                      ? "bg-emerald-500/20 border border-emerald-500/60 text-emerald-200 shadow-inner"
+                      : "bg-emerald-100 border border-emerald-400/60 text-emerald-900 shadow-sm"
+                    : isDarkMode
+                      ? "bg-zinc-800 border border-zinc-700 text-zinc-300"
+                      : "bg-zinc-100 border border-zinc-200 text-zinc-600 hover:bg-white"
+                )}
+              >
+                <span className={clsx("h-2.5 w-2.5 rounded-full", option.dotClass)} />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className={clsx("text-xs", isDarkMode ? "text-zinc-500" : "text-zinc-500")}>
+          Select one or multiple statuses to refine the projects.
+        </p>
+      </div>
+
+      {!filteredProjects.length ? (
+        <div
+          className={clsx(
+            "flex flex-col items-center justify-center gap-4 rounded-2xl border px-8 py-16 text-center",
+            isDarkMode
+              ? "border-zinc-700/60 bg-zinc-900/70 text-zinc-300"
+              : "border-zinc-200 bg-white text-zinc-600 shadow-sm"
+          )}
+        >
+          <span className="text-lg font-semibold tracking-wide">
+            No projects match the selected filters.
+          </span>
+          <span className="text-sm">
+            Try adjusting the status filters to explore more ceramics.
+          </span>
+        </div>
+      ) : (
+        filteredProjects.map((project, index) => (
         <Fragment key={project.id ?? index}>
           <ProjectRow project={project} index={index} isDarkMode={isDarkMode} />
-          {index < projects.length - 1 && (
+          {index < filteredProjects.length - 1 && (
             <div className="flex justify-center">
               <div
                 className={clsx(
@@ -50,7 +181,8 @@ export function CeramicProjectsGallery({
             </div>
           )}
         </Fragment>
-      ))}
+        ))
+      )}
     </div>
   );
 }
@@ -253,6 +385,38 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       ? "border-white/25 bg-white/10 text-white hover:bg-white/20"
       : "border-black/10 bg-white/80 text-zinc-900 hover:bg-white"
   );
+
+  const availabilityStatusKey = project.availability
+    ? project.availability.status ?? project.availability.label.trim().toLowerCase()
+    : null;
+  const normalizedAvailabilityKey = availabilityStatusKey
+    ? availabilityStatusKey.replace(/\s+/g, "-")
+    : null;
+  const availabilityDotClass =
+    project.availability && normalizedAvailabilityKey
+      ? project.availability.colorClass ??
+        AVAILABILITY_STATUS_COLOR_CLASSES[normalizedAvailabilityKey] ??
+        "bg-emerald-400"
+      : project.availability?.colorClass ?? null;
+
+  const availabilityPill = project.availability ? (
+    <div
+      className={clsx(
+        "inline-flex items-center gap-3 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 border self-start",
+        isDarkMode
+          ? "bg-zinc-900/60 border-zinc-700/70 text-zinc-100"
+          : "bg-white border-zinc-200 text-zinc-700 shadow-sm"
+      )}
+    >
+      <span
+        className={clsx("h-2.5 w-2.5 rounded-full", availabilityDotClass ?? "bg-emerald-400")}
+        aria-hidden="true"
+      />
+      <span>{project.availability.label}</span>
+      <span className={clsx(isDarkMode ? "text-zinc-500" : "text-zinc-400")}>—</span>
+      <span>{project.availability.price}</span>
+    </div>
+  ) : null;
 
   const decodedImagesRef = useRef<Map<string, boolean>>(new Map());
 
@@ -534,21 +698,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                     {project.title}
                   </h3>
                 </div>
-                {project.ctaLabel && project.ctaHref && (
-                  <motion.a
-                    href={project.ctaHref}
-                    className={clsx(
-                      "inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold uppercase tracking-wider transition-colors duration-300 self-start whitespace-nowrap",
-                      isDarkMode
-                        ? "bg-white text-zinc-900 hover:bg-zinc-200"
-                        : "bg-zinc-900 text-white hover:bg-zinc-700"
-                    )}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {project.ctaLabel}
-                  </motion.a>
-                )}
+                {availabilityPill}
               </div>
               <p className={clsx("text-base md:text-lg leading-relaxed", textSecondary)}>
                 {project.description}

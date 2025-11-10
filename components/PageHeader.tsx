@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { motion } from "motion/react";
 import { useState } from "react";
 
@@ -8,6 +9,12 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
   const monoFont = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
+  const isCeramicsPage = title === "Ceramics";
+  const ceramicsImageSrc = isCeramicsPage
+    ? isDarkMode
+      ? "/media/ceramics_unglazed.png"
+      : "/media/ceramics_glazed.png"
+    : null;
 
   return (
     <motion.header
@@ -18,13 +25,33 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
     >
       <div className="max-w-7xl mx-auto text-center">
         <h1
-          className="font-medium uppercase tracking-tight leading-none mb-8"
-          style={{ 
-            fontFamily: monoFont,
-            fontSize: '13vw'
-          }}
+          className={clsx(
+            "leading-none mb-8",
+            isCeramicsPage ? "flex justify-center" : "font-medium uppercase tracking-tight"
+          )}
+          style={
+            isCeramicsPage
+              ? undefined
+              : {
+                  fontFamily: monoFont,
+                  fontSize: "13vw"
+                }
+          }
         >
-          {title}
+          {isCeramicsPage && ceramicsImageSrc ? (
+            <motion.img
+              key={ceramicsImageSrc}
+              src={ceramicsImageSrc}
+              alt="Ceramics title"
+              className="h-auto max-w-full"
+              style={{ width: "min(680px, 80vw)" }}
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+            />
+          ) : (
+            title
+          )}
         </h1>
                {title === "Journal" && (
                  <>
