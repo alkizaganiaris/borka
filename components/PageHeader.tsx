@@ -12,12 +12,20 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
   const isCeramicsPage = title === "Ceramics";
   const isJournalPage = title === "Journal";
   const isPhotographyPage = title === "Photography";
+  const [journalHeaderIndex, setJournalHeaderIndex] = useState(0);
+
+  const handleJournalHeaderClick = () => {
+    if (isJournalPage && journalHeaderIndex < 7) {
+      setJournalHeaderIndex(prev => Math.min(prev + 1, 7));
+    }
+  };
+
   const ceramicsImageSrc = isCeramicsPage
     ? isDarkMode
       ? "/media/ceramics_unglazed.png"
       : "/media/ceramics_glazed.png"
     : null;
-  const journalImageSrc = isJournalPage ? "/media/journal_header.png" : null;
+  const journalImageSrc = isJournalPage ? `/media/journal_header_${journalHeaderIndex}.png` : null;
   const photographyImageSrc = isPhotographyPage ? "/media/photography_header.png" : null;
 
   return (
@@ -61,10 +69,15 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
               src={journalImageSrc}
               alt="Journal title"
               className="h-auto max-w-full"
-              style={{ width: "min(680px, 82vw)" }}
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              style={{
+                width: "min(680px, 82vw)",
+                cursor: journalHeaderIndex >= 7 ? "default" : "pointer",
+                pointerEvents: journalHeaderIndex >= 7 ? "none" : "auto"
+              }}
+              onClick={handleJournalHeaderClick}
+              initial={false}
+              animate={{}}
+              transition={{ duration: 0 }}
             />
           ) : isPhotographyPage && photographyImageSrc ? (
             <motion.img
@@ -101,7 +114,7 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                    {/* Coffee/Tea image - center viewport */}
                    <div
                     className="fixed top-1/2 left-1/2 pointer-events-auto"
-                    style={{ transform: 'translate(-50%, -35%)', zIndex: 60 }}
+                    style={{ transform: 'translate(-50%, -35%)', zIndex: 1 }}
                   >
                      <motion.img 
                        src={isDarkMode ? "/media/tea.png" : "/media/coffee.png"} 
