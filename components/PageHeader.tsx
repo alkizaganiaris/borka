@@ -100,7 +100,7 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                    
                    {/* Shavings image - bottom right */}
                    <div className="fixed bottom-[-20px] right-4 z-1">
-                     <img 
+                     <motion.img 
                        src="/media/shavings_1.png" 
                        alt="Pencil shavings" 
                        className="h-auto"
@@ -108,13 +108,16 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                          width: '300px',
                          opacity: 0.8
                        }}
+                       initial={{ opacity: 0, y: 25, rotate: -4 }}
+                       animate={{ opacity: 1, y: 0, rotate: 0 }}
+                       transition={{ duration: 0.6, ease: "easeOut", delay: 0.25 }}
                      />
                    </div>
 
                    {/* Coffee/Tea image - center viewport */}
                    <div
                     className="fixed top-1/2 left-1/2 pointer-events-auto"
-                    style={{ transform: 'translate(-50%, -35%)', zIndex: 1 }}
+                    style={{ transform: 'translate(-50%, -35%)', zIndex: 1  }}
                   >
                      <motion.img 
                        src={isDarkMode ? "/media/tea.png" : "/media/coffee.png"} 
@@ -125,6 +128,9 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                          opacity: 1,
                          pointerEvents: 'auto'
                        }}
+                       initial={{ opacity: 0, scale: 0.85, y: -20 }}
+                       animate={{ opacity: 1, scale: 1, y: 0 }}
+                       transition={{ duration: 0.55, ease: "easeOut", delay: 0.15 }}
                        whileHover={{ 
                          rotate: 58,
                          transition: { duration: 0.3, ease: "easeOut" }
