@@ -15,18 +15,20 @@ function AppContent() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [wasCaught, setWasCaught] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showHoverIcon, setShowHoverIcon] = useState(false);
   const [hoverDisabled, setHoverDisabled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   const isHomePage = location.pathname === '/';
+  const [isMenuOpen, setIsMenuOpen] = useState(() => isHomePage);
 
 
-  // Close menu when navigating to a different page
+  // Close menu when navigating away from the homepage
   useEffect(() => {
-    setIsMenuOpen(false);
+    if (location.pathname !== '/') {
+      setIsMenuOpen(false);
+    }
   }, [location.pathname]);
 
 
@@ -214,6 +216,7 @@ function AppContent() {
           logoUrl=""
           accentColor="#1e5a55"
           isFixed={true}
+          defaultOpen={true}
           onMenuOpen={() => setIsMenuOpen(true)}
           onMenuClose={() => setIsMenuOpen(false)}
         />

@@ -1,4 +1,4 @@
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { Link } from 'react-router-dom';
 
@@ -25,6 +25,7 @@ export interface StaggeredMenuProps {
   accentColor?: string;
   isFixed: boolean;
   changeMenuColorOnOpen?: boolean;
+  defaultOpen?: boolean;
   onMenuOpen?: () => void;
   onMenuClose?: () => void;
 }
@@ -43,11 +44,13 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   changeMenuColorOnOpen = true,
   accentColor = '#5227FF',
   isFixed = false,
+  defaultOpen = false,
   onMenuOpen,
   onMenuClose
 }: StaggeredMenuProps) => {
-  const [open, setOpen] = useState(false);
-  const openRef = useRef(false);
+  const [open, setOpen] = useState(defaultOpen);
+  const openRef = useRef(defaultOpen);
+  const initialOpenHandledRef = useRef(false);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
   const preLayersRef = useRef<HTMLDivElement | null>(null);
@@ -101,8 +104,9 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 
       if (toggleBtnRef.current) gsap.set(toggleBtnRef.current, { color: menuButtonColor });
     });
+
     return () => ctx.revert();
-  }, [menuButtonColor, position]);
+  }, [position]);
 
   const buildOpenTimeline = useCallback(() => {
     const panel = panelRef.current;
@@ -345,6 +349,19 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
     animateText(target);
   }, [playOpen, playClose, animateIcon, animateColor, animateText, onMenuOpen, onMenuClose]);
 
+  useEffect(() => {
+    if (defaultOpen && !initialOpenHandledRef.current) {
+      initialOpenHandledRef.current = true;
+      openRef.current = true;
+      setOpen(true);
+      onMenuOpen?.();
+      playOpen();
+      animateIcon(true);
+      animateColor(true);
+      animateText(true);
+    }
+  }, [defaultOpen, onMenuOpen, playOpen, animateIcon, animateColor, animateText]);
+
   return (
     <div
       className={`sm-scope z-40 ${isFixed ? 'fixed top-0 left-0 w-screen h-screen overflow-hidden pointer-events-none' : 'w-full h-full'}`}
@@ -396,9 +413,10 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 
           <button
             ref={toggleBtnRef}
-            className={`sm-toggle relative inline-flex items-center gap-[0.3rem] bg-transparent border-0 cursor-pointer font-medium leading-none overflow-visible pointer-events-auto ${
-              open ? 'text-black' : 'text-[#e9e9ef]'
+            className={`sm-toggle relative inline-flex items-center gap-[0.4rem] border-2 cursor-pointer font-medium leading-none overflow-visible pointer-events-auto px-4 py-2 rounded-full shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-[background-color,box-shadow,border-color] duration-300 ${
+              open ? 'bg-[#F4DE7C] border-[#7A5A12]' : 'bg-white/95 border-[#B59F6A]'
             }`}
+            style={{ boxShadow: '0 12px 30px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.08)' }}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             aria-controls="staggered-menu-panel"

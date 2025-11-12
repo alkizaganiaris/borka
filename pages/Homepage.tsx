@@ -86,7 +86,7 @@ export function Homepage({ isDarkMode }: HomepageProps) {
               className={`p-8 rounded-2xl border-2 transition-all duration-300 hover:scale-105 cursor-pointer ${
                 isDarkMode 
                   ? 'bg-zinc-800/50 border-zinc-700 hover:border-zinc-500' 
-                  : 'bg-white/50 border-zinc-200 hover:border-zinc-400'
+                  : 'bg-white/50 border-zinc-200 hoverborder-zinc-400'
               }`}
               whileHover={{ y: -5 }}
               whileTap={{ scale: 0.95 }}

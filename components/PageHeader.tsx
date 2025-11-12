@@ -22,7 +22,7 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
 
   return (
     <motion.header
-      className="w-full py-16 px-8 text-black"
+      className="w-full pt-16 px-8 text-black"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
@@ -99,14 +99,18 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                    </div>
 
                    {/* Coffee/Tea image - center viewport */}
-                   <div className="fixed top-1/2 left-1/2 z-1" style={{ transform: 'translate(-50%, -35%)' }}>
+                   <div
+                    className="fixed top-1/2 left-1/2 pointer-events-auto"
+                    style={{ transform: 'translate(-50%, -35%)', zIndex: 60 }}
+                  >
                      <motion.img 
                        src={isDarkMode ? "/media/tea.png" : "/media/coffee.png"} 
                        alt={isDarkMode ? "Tea" : "Coffee"} 
                        className="h-auto cursor-pointer"
                        style={{ 
                          width: '400px',
-                         opacity: 1
+                         opacity: 1,
+                         pointerEvents: 'auto'
                        }}
                        whileHover={{ 
                          rotate: 58,
