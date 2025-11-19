@@ -94,7 +94,7 @@ export function CeramicProjectsGallery({
   }, [projects, activeStatuses]);
 
   return (
-    <div className="flex flex-col gap-8 md:gap-10 w-full mx-auto max-w-[1200px]">
+    <div className="flex flex-col gap-8 md:gap-10 w-full mx-auto max-w-[1200px]" style={{ fontFamily: 'Montserrat, sans-serif' }}>
       <div
         className={clsx(
           "relative flex flex-col gap-3 rounded-2xl border px-5 py-4",

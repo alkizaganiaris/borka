@@ -119,7 +119,7 @@ export function PhotoStackPreview({
           >
             {/* BOKU stamp in bottom left */}
             <motion.img
-              src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
+              src={isDarkMode ? "/media/boku_home.svg" : "/media/boku_home.svg"}
               alt="BOKU"
               className="absolute bottom-1 left-1"
               style={{

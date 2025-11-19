@@ -17,6 +17,7 @@ function AppContent() {
   const [wasCaught, setWasCaught] = useState(false);
   const [showHoverIcon, setShowHoverIcon] = useState(false);
   const [hoverDisabled, setHoverDisabled] = useState(false);
+  const [showBlastBackground, setShowBlastBackground] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -76,7 +77,7 @@ function AppContent() {
     <div 
       className="min-h-screen relative overflow-hidden transition-colors duration-500"
       style={{
-        backgroundColor: isDarkMode ? '#a8b4d9' : '#fffef0'
+        backgroundColor: isDarkMode ? 'teal-dark' : '#fffef0'
       }}
     >
 
@@ -89,7 +90,7 @@ function AppContent() {
           socialItems={socialItems}
           displaySocials={true}
           displayItemNumbering={true}
-          menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
+          menuButtonColor="#1C1C1C"
           openMenuButtonColor="#1C1C1C"
           changeMenuColorOnOpen={true}
           colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
@@ -288,15 +289,17 @@ function AppContent() {
       </motion.div>
 
         {/* Interactive dot grid background */}
-        <div className="fixed inset-0 z-0">
-          <DotGrid 
-            dotSize={4}
-            gap={40}
-            baseColor={isDarkMode ? "#FFFFFF" : "#D3D3D3"}
-            activeColor={isDarkMode ? "#FFFFFF" : "#A0A0A0"}
-            proximity={50}
-          />
-        </div>
+        {showBlastBackground && (
+          <div className="fixed inset-0 z-0">
+            <DotGrid 
+              dotSize={4}
+              gap={40}
+              baseColor={isDarkMode ? "#FFFFFF" : "#D3D3D3"}
+              activeColor={isDarkMode ? "#FFFFFF" : "#A0A0A0"}
+              proximity={50}
+            />
+          </div>
+        )}
         
         {/* Subtle neutral vignette */}
         <div 
