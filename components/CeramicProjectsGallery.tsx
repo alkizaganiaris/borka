@@ -97,13 +97,23 @@ export function CeramicProjectsGallery({
     <div className="flex flex-col gap-8 md:gap-10 w-full mx-auto max-w-[1200px]">
       <div
         className={clsx(
-          "flex flex-col gap-3 rounded-2xl border px-5 py-4",
+          "relative flex flex-col gap-3 rounded-2xl border px-5 py-4",
           isDarkMode
             ? "border-zinc-700/60 bg-zinc-900/70 text-zinc-100"
             : "border-zinc-200 bg-white text-zinc-800 shadow-sm"
         )}
         style={{ marginTop: 40 }}
       >
+        {/* BOKU stamp on the right */}
+        <img
+          src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
+          alt="BOKU"
+          className="absolute top-1 right-1 pointer-events-none opacity-60"
+          style={{
+            width: '120px',
+            height: 'auto',
+          }}
+        />
         <span className="text-sm font-semibold uppercase tracking-[0.4em]">
           Filter By Status
         </span>
@@ -887,6 +897,16 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                   onPause={() => setIsHeroVideoPlaying(false)}
                 />
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/30 via-transparent to-black/5" />
+                {/* BOKU stamp in bottom left */}
+                <img
+                  src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
+                  alt="BOKU"
+                  className="absolute bottom-1 left-1 pointer-events-none"
+                  style={{
+                    width: '120px',
+                    height: 'auto',
+                  }}
+                />
                 <div
                   className={clsx(
                     "absolute bottom-4 right-4 flex items-center gap-3 rounded-full px-4 py-2 backdrop-blur-sm border",
@@ -1180,7 +1200,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
               >
                 <motion.div
                   className={clsx(
-                    "relative w-full max-w-5xl rounded-[28px] shadow-2xl",
+                    "relative w-full max-w-5xl max-h-[95vh] rounded-[28px] shadow-2xl overflow-hidden flex flex-col",
                     isDarkMode ? "bg-zinc-900 border border-zinc-700/60" : "bg-white border border-white/60"
                   )}
                   initial={{ opacity: 0, scale: 0.96, y: 20 }}
@@ -1192,11 +1212,21 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                   aria-label={`${project.title} gallery`}
                   onClick={(event) => event.stopPropagation()}
                 >
+                  {/* BOKU stamp in top left of modal */}
+                  <img
+                    src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
+                    alt="BOKU"
+                    className="absolute top-4 left-4 pointer-events-none z-20"
+                    style={{
+                      width: '120px',
+                      height: 'auto',
+                    }}
+                  />
                   <button
                     type="button"
                     onClick={closeModal}
                     className={clsx(
-                      "absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold transition",
+                      "absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full border text-sm font-semibold transition z-30",
                       isDarkMode
                         ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
                         : "border-black/10 bg-white text-zinc-800 hover:bg-zinc-100"
@@ -1206,7 +1236,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                     ✕
                   </button>
 
-                  <div className="flex flex-col gap-6 px-6 pb-8 pt-12 sm:px-8 sm:pt-14">
+                  <div className="flex flex-col gap-6 px-6 pb-4 pt-4 sm:px-8 sm:pt-4 overflow-y-auto min-h-0">
                     <div className="text-center">
                       <p
                         className={clsx(
@@ -1232,7 +1262,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                     )}
 
                     <div className="relative flex items-center justify-center">
-                      <div className="relative w-full max-h-[70vh] rounded-[20px] bg-zinc-950/50 flex items-center justify-center overflow-hidden">
+                      <div className="relative w-full max-h-[60vh] rounded-[20px] bg-zinc-950/50 flex items-center justify-center overflow-hidden">
                         {isModalHeroVideo && heroVideoUrl ? (
                           <>
                             <video
@@ -1240,7 +1270,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                               ref={modalHeroVideoRef}
                               src={heroVideoUrl}
                               poster={heroVideoPoster}
-                              className="max-h-[70vh] w-full object-contain"
+                              className="max-h-[60vh] w-full object-contain"
                               loop
                               playsInline
                               preload="metadata"
@@ -1369,7 +1399,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                               key={modalImage.src}
                               src={modalImage.src}
                               alt={modalImage.alt}
-                              className="max-h-[70vh] w-full object-contain"
+                              className="max-h-[60vh] w-full object-contain"
                               loading={isModalImageDecoded ? "eager" : "lazy"}
                               initial={{ opacity: isModalImageDecoded ? 0.3 : 0, scale: 0.99 }}
                               animate={{ opacity: 1, scale: 1 }}

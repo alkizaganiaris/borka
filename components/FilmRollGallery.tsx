@@ -313,6 +313,7 @@ export function FilmRollGallery({
           subtitle={subtitle}
           filmUsed={filmUsed}
           description={description}
+          isDarkMode={isDarkMode}
         />
       </div>
 

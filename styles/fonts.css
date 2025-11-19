@@ -27,6 +27,15 @@
   font-display: swap;
 }
 
+/* Montserrat font */
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* To use your fonts in the project: */
 /* Use with style={{ fontFamily: 'Caveat' }} or 'Indie Flower' or 'Patrick Hand SC' */
 

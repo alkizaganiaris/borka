@@ -39,6 +39,14 @@ export function Typography({ isDarkMode }: TypographyProps) {
       webFont: null,
       isCustom: true
     },
+    {
+      name: "Montserrat",
+      family: "Montserrat",
+      fallback: "sans-serif",
+      description: "Modern sans-serif font with a clean, geometric design",
+      webFont: null,
+      isCustom: true
+    },
     // Google Fonts - Monospace
     {
       name: "JetBrains Mono",
