@@ -26,6 +26,7 @@ export function Journal({ isDarkMode }: JournalProps) {
   const [isEntryListHovered, setIsEntryListHovered] = useState(false);
   const [hoveredEntryId, setHoveredEntryId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isInitialDelayComplete, setIsInitialDelayComplete] = useState(false);
   const [readEntries, setReadEntries] = useState<Set<string>>(new Set());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
@@ -80,6 +81,12 @@ export function Journal({ isDarkMode }: JournalProps) {
     const timer = setTimeout(() => {
       setIsLoaded(true);
     }, 300); // 300ms delay before showing content
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Small additional delay so layout is ready before revealing
+  useEffect(() => {
+    const timer = setTimeout(() => setIsInitialDelayComplete(true), 500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -164,9 +171,12 @@ export function Journal({ isDarkMode }: JournalProps) {
   return (
     <motion.div 
       className="fixed inset-0 overflow-hidden" 
-      style={{ fontFamily: '"Indie Flower", cursive' }}
+      style={{
+        fontFamily: '"Indie Flower", cursive',
+        pointerEvents: isInitialDelayComplete ? 'auto' : 'none'
+      }}
       initial={{ opacity: 0, y: 30, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
+      animate={{ opacity: isInitialDelayComplete ? 1 : 0, y: isInitialDelayComplete ? 0 : 30, scale: isInitialDelayComplete ? 1 : 0.98 }}
       exit={{ opacity: 0, y: -30, scale: 1.02 }}
       transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
     >
@@ -259,7 +269,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                 fontFamily: '"Indie Flower", cursive'
               }}
             >
-              Need more thoughts...
+              Thoughts...
             </div>
             <div className="space-y-0 pb-12" 
             style={{ 

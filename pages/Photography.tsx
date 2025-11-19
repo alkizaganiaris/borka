@@ -54,6 +54,17 @@ export function Photography({ isDarkMode }: PhotographyProps) {
   return (
     <div className="relative">
       <PageHeader title="Photography" isDarkMode={isDarkMode} />
+      <p
+        className={`mt-6 text-center text-base tracking-tight transition-colors duration-500 ${
+          isDarkMode ? 'text-white/80' : 'text-zinc-700'
+        }`}
+        style={{
+          fontFamily:
+            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+        }}
+      >
+        Every photograph is a question the world once asked of itself
+      </p>
       <StaggeredMenu
         position="left"
         items={menuItems}

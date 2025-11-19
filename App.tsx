@@ -15,18 +15,20 @@ function AppContent() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [wasCaught, setWasCaught] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showHoverIcon, setShowHoverIcon] = useState(false);
   const [hoverDisabled, setHoverDisabled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
   const isHomePage = location.pathname === '/';
+  const [isMenuOpen, setIsMenuOpen] = useState(() => isHomePage);
 
 
-  // Close menu when navigating to a different page
+  // Close menu when navigating away from the homepage
   useEffect(() => {
-    setIsMenuOpen(false);
+    if (location.pathname !== '/') {
+      setIsMenuOpen(false);
+    }
   }, [location.pathname]);
 
 
@@ -78,126 +80,6 @@ function AppContent() {
       }}
     >
 
-      {/* Decorative Shapes - Behind Menu */}
-      {isHomePage && (
-        <>
-          {/* Cobalt Blue Circle */}
-          <div 
-            className="fixed"
-            style={{
-              left: '21%',
-              top: '30%',
-              zIndex: 5
-            }}
-          >
-            <Magnet magnetStrength={-10} padding={100}>
-              <motion.div
-                className="group"
-                initial={{ x: '-200%', opacity: 0 }}
-                animate={{
-                  x: isMenuOpen ? '0%' : '-200%',
-                  opacity: isMenuOpen ? 1 : 0,
-                  rotate: 0
-                }}
-                transition={{ 
-                  duration: isMenuOpen ? 0.5 : 0.25,
-                  ease: [0.4, 0, 0.2, 1],
-                  delay: isMenuOpen ? 0 : 0
-                }}
-                style={{
-                  transform: 'translate(-50%, -50%)',
-                  width: '28vw',
-                  height: '28vw',
-                  borderRadius: '50%',
-                  backgroundColor: '#3E4BAA',
-                  border: '1px solid #1C1C1C',
-                  pointerEvents: 'auto',
-                  cursor: 'pointer'
-                }}
-                whileHover={{
-                  borderColor: 'transparent'
-                }}
-              />
-            </Magnet>
-          </div>
-
-          {/* Bubblegum Pink Rectangle */}
-          <div 
-            className="fixed"
-            style={{
-              left: '10%',
-              top: '85%',
-              zIndex: 5
-            }}
-          >
-            <Magnet magnetStrength={10} padding={100}>
-              <motion.div
-                className="group"
-                initial={{ x: '-200%', opacity: 0 }}
-                animate={{
-                  x: isMenuOpen ? '0%' : '-200%',
-                  opacity: isMenuOpen ? 1 : 0,
-                  rotate: 360
-                }}
-                transition={{ 
-                  duration: isMenuOpen ? 0.5 : 0.25,
-                  ease: [0.4, 0, 0.2, 1],
-                  delay: isMenuOpen ? 0.15 : 0
-                }}
-                style={{
-                  transform: 'translate(-50%, -50%)',
-                  width: '30vw',
-                  height: '7vw',
-                  borderRadius: '1rem',
-                  backgroundColor: '#E875A8',
-                  border: '1px solid #1C1C1C',
-                  pointerEvents: 'auto',
-                  cursor: 'pointer'
-                }}
-                whileHover={{
-                  borderColor: 'transparent'
-                }}
-              />
-            </Magnet>
-          </div>
-
-          {/* Black Triangle */}
-          <div 
-            className="fixed"
-            style={{
-              left: '29%',
-              top: '9%',
-              zIndex: 6
-            }}
-          >
-            <Magnet magnetStrength={-10} padding={100}>
-              <motion.div
-                initial={{ x: '-200%', opacity: 0 }}
-                animate={{
-                  x: isMenuOpen ? '0%' : '-200%',
-                  opacity: isMenuOpen ? 1 : 0,
-                  rotate: 90
-                }}
-                transition={{ 
-                  duration: isMenuOpen ? 0.5 : 0.25,
-                  ease: [0.4, 0, 0.2, 1],
-                  delay: isMenuOpen ? 0.3 : 0
-                }}
-                style={{
-                  transform: 'translate(-50%, 0)',
-                  width: '0',
-                  height: '0',
-                  borderLeft: '6vw solid transparent',
-                  borderRight: '6vw solid transparent',
-                  borderBottom: '10vw solid #1C1C1C',
-                  pointerEvents: 'auto',
-                  cursor: 'pointer'
-                }}
-              />
-            </Magnet>
-          </div>
-        </>
-      )}
 
       {/* StaggeredMenu Navigation - only on home page */}
       {isHomePage && (
@@ -214,6 +96,7 @@ function AppContent() {
           logoUrl=""
           accentColor="#1e5a55"
           isFixed={true}
+          defaultOpen={true}
           onMenuOpen={() => setIsMenuOpen(true)}
           onMenuClose={() => setIsMenuOpen(false)}
         />
@@ -407,11 +290,11 @@ function AppContent() {
         {/* Interactive dot grid background */}
         <div className="fixed inset-0 z-0">
           <DotGrid 
-            dotSize={2}
-            gap={15}
+            dotSize={4}
+            gap={40}
             baseColor={isDarkMode ? "#FFFFFF" : "#D3D3D3"}
             activeColor={isDarkMode ? "#FFFFFF" : "#A0A0A0"}
-            proximity={60}
+            proximity={50}
           />
         </div>
         

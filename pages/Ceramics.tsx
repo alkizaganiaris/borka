@@ -123,9 +123,49 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
     { label: 'Email', link: 'mailto:hello@borka.com' }
   ];
 
+  const processSteps = [
+    {
+      title: 'Inspiration',
+      description: 'Sketches, playlists, heirloom ceramics, and seaside walks fuel the idea pool.',
+      accent: 'from-emerald-300 to-teal-500',
+      icon: '✨'
+    },
+    {
+      title: 'Material Play',
+      description: 'Clay bodies get wedged with pigments, grog, and unexpected inclusions for texture.',
+      accent: 'from-sky-300 to-indigo-500',
+      icon: '🌀'
+    },
+    {
+      title: 'Wheel Ritual',
+      description: 'Slow throws, purposeful trimming, and rhythm loops keep forms loose and lyrical.',
+      accent: 'from-amber-300 to-orange-500',
+      icon: '🎶'
+    },
+    {
+      title: 'Alchemy Lab',
+      description: 'Test tiles, kiln gods, and layered glazes harmonise into luminous finishes.',
+      accent: 'from-rose-300 to-fuchsia-500',
+      icon: '🧪'
+    },
+    {
+      title: 'Implementation',
+      description: 'Pieces are fired, finished, documented, and invited into homes and galleries.',
+      accent: 'from-lime-300 to-emerald-500',
+      icon: '🌿'
+    }
+  ];
+
   return (
     <div>
       <PageHeader title="Ceramics" isDarkMode={isDarkMode} />
+      <p
+        className={`mt-6 text-center text-base tracking-tight transition-colors duration-500 ${
+          isDarkMode ? 'text-white/80' : 'text-zinc-600'
+        }`}
+      >
+        Ceramics are not made; they are persuaded — a quiet negotiation between earth, water, and will.
+      </p>
       <StaggeredMenu
         position="left"
         items={menuItems}
@@ -160,14 +200,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
-          <div className="text-center mb-16">
-            <p className={`text-lg mb-8 transition-colors duration-500 ${
-              isDarkMode ? 'text-zinc-300' : 'text-zinc-600'
-            }`}>
-              Handcrafted pottery and ceramic art, each piece unique and made with care.
-            </p>
 
-        </div>
 
         {/* Scroll-Controlled Video */}
 
@@ -262,6 +295,101 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
               All pieces are food-safe and dishwasher-friendly, making them perfect for everyday use while maintaining 
               their artistic beauty.
             </p>
+          </div>
+
+          <div className="mt-12 relative">
+            <div
+              className="relative overflow-x-auto py-4 px-2 bg-transparent"
+              style={{ background: 'transparent' }}
+            >
+              <div className="absolute inset-y-0 left-0 right-0 pointer-events-none flex items-center">
+                <motion.svg
+                  className="h-16 w-full text-zinc-400/40"
+                  viewBox="0 0 1200 160"
+                  preserveAspectRatio="none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                >
+                  <motion.path
+                    d="M0 80 C 80 20, 200 140, 320 60 S 520 10, 640 100 S 880 140, 1020 60 S 1160 20, 1200 80"
+                    fill="transparent"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeDasharray="10 14"
+                    animate={{ strokeDashoffset: [0, -60] }}
+                    transition={{ repeat: Infinity, duration: 6, ease: 'linear' }}
+                  />
+                </motion.svg>
+              </div>
+              <div className="relative flex gap-6 md:gap-8 min-w-max items-center">
+                {processSteps.map((step, index) => (
+                  <div key={step.title} className="relative flex items-center">
+                    <motion.div
+                      whileHover={{ y: -6, scale: 1.05, rotate: index % 2 === 0 ? -2 : 2 }}
+                      transition={{ type: 'spring', stiffness: 220, damping: 16 }}
+                      className={`group relative flex h-[220px] w-[220px] flex-col items-center justify-center overflow-hidden rounded-full border-2 ${
+                        isDarkMode ? 'border-zinc-300' : 'border-[#1E5A55]'
+                      } shadow-[0_18px_36px_-24px_rgba(0,0,0,0.4)]`}
+                      style={{ backgroundColor: isDarkMode ? '#1E5A55' : '#F4DE7C' }}
+                    >
+                       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center gap-4 px-6 text-center">
+                         <div className="flex flex-col items-center gap-2 py-2">
+                           <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                             {step.title}
+                           </h3>
+                          <p className={`text-sm leading-relaxed max-w-[180px] ${
+                            isDarkMode ? 'text-white' : 'text-zinc-900/85'
+                          }`}>
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {index < processSteps.length - 1 && (
+                      <motion.div
+                        className="relative flex h-[140px] w-[120px] items-center justify-center"
+                        aria-hidden="true"
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        viewport={{ once: true, amount: 0.3 }}
+                        transition={{ duration: 0.6, delay: index * 0.1 }}
+                      >
+                        <motion.svg
+                          className="absolute h-full w-full text-zinc-400/80"
+                          viewBox="0 0 120 140"
+                          preserveAspectRatio="none"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.6, delay: 0.2 }}
+                        >
+                          <motion.path
+                            d="M10 70 C 45 20, 75 120, 110 70"
+                            fill="transparent"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                            strokeLinecap="round"
+                            strokeDasharray="6 12"
+                            animate={{ strokeDashoffset: [0, -24] }}
+                            transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+                          />
+                          <motion.circle
+                            cx="110"
+                            cy="70"
+                            r="4"
+                            fill="currentColor"
+                            animate={{ opacity: [0.2, 1, 0.2] }}
+                            transition={{ repeat: Infinity, duration: 1.2, ease: 'easeInOut' }}
+                          />
+                        </motion.svg>
+                      </motion.div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <motion.button

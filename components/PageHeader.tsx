@@ -12,17 +12,25 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
   const isCeramicsPage = title === "Ceramics";
   const isJournalPage = title === "Journal";
   const isPhotographyPage = title === "Photography";
+  const [journalHeaderIndex, setJournalHeaderIndex] = useState(0);
+
+  const handleJournalHeaderClick = () => {
+    if (isJournalPage && journalHeaderIndex < 7) {
+      setJournalHeaderIndex(prev => Math.min(prev + 1, 7));
+    }
+  };
+
   const ceramicsImageSrc = isCeramicsPage
     ? isDarkMode
       ? "/media/ceramics_unglazed.png"
       : "/media/ceramics_glazed.png"
     : null;
-  const journalImageSrc = isJournalPage ? "/media/journal_header.png" : null;
+  const journalImageSrc = isJournalPage ? `/media/journal_header_${journalHeaderIndex}.png` : null;
   const photographyImageSrc = isPhotographyPage ? "/media/photography_header.png" : null;
 
   return (
     <motion.header
-      className="w-full py-16 px-8 text-black"
+      className="w-full pt-16 px-8 text-black"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
@@ -61,10 +69,15 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
               src={journalImageSrc}
               alt="Journal title"
               className="h-auto max-w-full"
-              style={{ width: "min(680px, 82vw)" }}
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
+              style={{
+                width: "min(680px, 82vw)",
+                cursor: journalHeaderIndex >= 7 ? "default" : "pointer",
+                pointerEvents: journalHeaderIndex >= 7 ? "none" : "auto"
+              }}
+              onClick={handleJournalHeaderClick}
+              initial={false}
+              animate={{}}
+              transition={{ duration: 0 }}
             />
           ) : isPhotographyPage && photographyImageSrc ? (
             <motion.img
@@ -87,7 +100,7 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                    
                    {/* Shavings image - bottom right */}
                    <div className="fixed bottom-[-20px] right-4 z-1">
-                     <img 
+                     <motion.img 
                        src="/media/shavings_1.png" 
                        alt="Pencil shavings" 
                        className="h-auto"
@@ -95,19 +108,29 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                          width: '300px',
                          opacity: 0.8
                        }}
+                       initial={{ opacity: 0, y: 25, rotate: -4 }}
+                       animate={{ opacity: 1, y: 0, rotate: 0 }}
+                       transition={{ duration: 0.6, ease: "easeOut", delay: 0.25 }}
                      />
                    </div>
 
                    {/* Coffee/Tea image - center viewport */}
-                   <div className="fixed top-1/2 left-1/2 z-1" style={{ transform: 'translate(-50%, -35%)' }}>
+                   <div
+                    className="fixed top-1/2 left-1/2 pointer-events-auto"
+                    style={{ transform: 'translate(-50%, -35%)', zIndex: 1  }}
+                  >
                      <motion.img 
                        src={isDarkMode ? "/media/tea.png" : "/media/coffee.png"} 
                        alt={isDarkMode ? "Tea" : "Coffee"} 
                        className="h-auto cursor-pointer"
                        style={{ 
                          width: '400px',
-                         opacity: 1
+                         opacity: 1,
+                         pointerEvents: 'auto'
                        }}
+                       initial={{ opacity: 0, scale: 0.85, y: -20 }}
+                       animate={{ opacity: 1, scale: 1, y: 0 }}
+                       transition={{ duration: 0.55, ease: "easeOut", delay: 0.15 }}
                        whileHover={{ 
                          rotate: 58,
                          transition: { duration: 0.3, ease: "easeOut" }

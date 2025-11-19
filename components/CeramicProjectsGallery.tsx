@@ -214,12 +214,14 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
   const heroVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isHeroVideoPlaying, setIsHeroVideoPlaying] = useState(false);
   const [isHeroVideoMuted, setIsHeroVideoMuted] = useState(true);
+  const heroMuteStateRef = useRef(isHeroVideoMuted);
   const heroDirectionalRafRef = useRef<number | null>(null);
   const heroDirectionalDirectionRef = useRef<"forward" | "backward" | null>(null);
   const [isModalHeroVideo, setIsModalHeroVideo] = useState(false);
   const modalHeroVideoRef = useRef<HTMLVideoElement | null>(null);
   const [isModalHeroVideoPlaying, setIsModalHeroVideoPlaying] = useState(false);
   const [isModalHeroVideoMuted, setIsModalHeroVideoMuted] = useState(true);
+  const modalHeroMuteStateRef = useRef(isModalHeroVideoMuted);
   const modalHeroDirectionalRafRef = useRef<number | null>(null);
   const modalHeroDirectionalDirectionRef = useRef<"forward" | "backward" | null>(null);
   const heroVideoUrl = project.heroImage.mediaType === "video" ? project.heroImage.src : null;
@@ -280,6 +282,22 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     [totalImages]
   );
 
+  useEffect(() => {
+    heroMuteStateRef.current = isHeroVideoMuted;
+    const video = heroVideoRef.current;
+    if (video) {
+      video.muted = isHeroVideoMuted;
+    }
+  }, [isHeroVideoMuted]);
+
+  useEffect(() => {
+    modalHeroMuteStateRef.current = isModalHeroVideoMuted;
+    const video = modalHeroVideoRef.current;
+    if (video) {
+      video.muted = isModalHeroVideoMuted;
+    }
+  }, [isModalHeroVideoMuted]);
+
   const handleHeroVideoLoaded = useCallback(() => {
     const video = heroVideoRef.current;
     if (video) {
@@ -289,9 +307,9 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         // ignore seek errors
       }
       video.pause();
-      video.muted = isHeroVideoMuted;
+      video.muted = heroMuteStateRef.current;
     }
-  }, [isHeroVideoMuted]);
+  }, []);
 
   const handleModalHeroVideoLoaded = useCallback(() => {
     const video = modalHeroVideoRef.current;
@@ -302,9 +320,9 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         // ignore seek errors
       }
       video.pause();
-      video.muted = isModalHeroVideoMuted;
+      video.muted = modalHeroMuteStateRef.current;
     }
-  }, [isModalHeroVideoMuted]);
+  }, []);
 
   useEffect(() => {
     if (project.heroImage.mediaType === "video") {
@@ -863,7 +881,6 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                   loop
                   playsInline
                   preload="metadata"
-                  muted={isHeroVideoMuted}
                   onLoadedMetadata={handleHeroVideoLoaded}
                   onLoadedData={handleHeroVideoLoaded}
                   onPlay={() => setIsHeroVideoPlaying(true)}
@@ -966,14 +983,17 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                     data-hero-control="true"
                     onClick={(event) => {
                       event.stopPropagation();
-                      setIsHeroVideoMuted((prev) => {
-                        const next = !prev;
-                        const video = heroVideoRef.current;
-                        if (video) {
-                          video.muted = next;
-                        }
-                        return next;
-                      });
+                      const video = heroVideoRef.current;
+                      if (!video) {
+                        const next = !isHeroVideoMuted;
+                        heroMuteStateRef.current = next;
+                        setIsHeroVideoMuted(next);
+                        return;
+                      }
+                      const next = !isHeroVideoMuted;
+                      heroMuteStateRef.current = next;
+                      video.muted = next;
+                      setIsHeroVideoMuted(next);
                     }}
                     aria-label={isHeroVideoMuted ? "Unmute hero video" : "Mute hero video"}
                   >
@@ -1228,7 +1248,6 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                               onLoadedData={handleModalHeroVideoLoaded}
                               onPlay={() => setIsModalHeroVideoPlaying(true)}
                               onPause={() => setIsModalHeroVideoPlaying(false)}
-                              muted={isModalHeroVideoMuted}
                             />
                             <div
                               className={clsx(
@@ -1326,14 +1345,17 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                                 data-hero-control="true"
                                 onClick={(event) => {
                                   event.stopPropagation();
-                                  setIsModalHeroVideoMuted((prev) => {
-                                    const next = !prev;
-                                    const video = modalHeroVideoRef.current;
-                                    if (video) {
-                                      video.muted = next;
-                                    }
-                                    return next;
-                                  });
+                                  const video = modalHeroVideoRef.current;
+                                  if (!video) {
+                                    const next = !isModalHeroVideoMuted;
+                                    modalHeroMuteStateRef.current = next;
+                                    setIsModalHeroVideoMuted(next);
+                                    return;
+                                  }
+                                  const next = !isModalHeroVideoMuted;
+                                  modalHeroMuteStateRef.current = next;
+                                  video.muted = next;
+                                  setIsModalHeroVideoMuted(next);
                                 }}
                                 aria-label={isModalHeroVideoMuted ? "Unmute hero video" : "Mute hero video"}
                               >
