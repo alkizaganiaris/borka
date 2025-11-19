@@ -74,7 +74,7 @@ export function Navigation({ isDarkMode, onVisibilityChange }: NavigationProps) 
             <span className={`text-xl font-bold transition-colors duration-500 ${
               isDarkMode ? 'text-white' : 'text-black'
             }`}>
-              BORKA
+              BOKU
             </span>
           </Link>
 

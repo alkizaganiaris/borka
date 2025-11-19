@@ -269,7 +269,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                 fontFamily: '"Indie Flower", cursive'
               }}
             >
-              Need more thoughts...
+              Thoughts...
             </div>
             <div className="space-y-0 pb-12" 
             style={{ 
