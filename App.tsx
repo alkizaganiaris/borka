@@ -7,11 +7,15 @@ import { Photography } from "./pages/Photography";
 import { Journal } from "./pages/Journal";
 import { Ceramics } from "./pages/Ceramics";
 import { Typography } from "./pages/Typography";
+import { PageHeader } from "./components/PageHeader";
 import DotGrid from "./components/BlastBackground";
 import { motion, AnimatePresence } from "motion/react";
 import Magnet from "./components/MagnetButton";
+import { useTabletOrientationLock } from "./components/ui/use-tablet-orientation-lock";
 
 function AppContent() {
+  // Lock tablet orientation to landscape
+  const showOrientationMessage = useTabletOrientationLock();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isButtonHovered, setIsButtonHovered] = useState(false);
   const [wasCaught, setWasCaught] = useState(false);
@@ -22,7 +26,16 @@ function AppContent() {
   const navigate = useNavigate();
 
   const isHomePage = location.pathname === '/';
-  const [isMenuOpen, setIsMenuOpen] = useState(() => isHomePage);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Get page title based on current route
+  const getPageTitle = () => {
+    if (location.pathname === '/photography') return 'Photography';
+    if (location.pathname === '/journal') return 'Journal';
+    if (location.pathname === '/ceramics') return 'Ceramics';
+    if (location.pathname === '/typography') return 'Typography';
+    return null;
+  };
 
 
   // Close menu when navigating away from the homepage
@@ -84,44 +97,60 @@ function AppContent() {
 
       {/* StaggeredMenu Navigation - only on home page */}
       {isHomePage && (
-        <StaggeredMenu
-          position="left"
-          items={menuItems}
-          socialItems={socialItems}
-          displaySocials={true}
-          displayItemNumbering={true}
-          menuButtonColor="#1C1C1C"
-          openMenuButtonColor="#1C1C1C"
-          changeMenuColorOnOpen={true}
-          colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
-          logoUrl=""
-          accentColor="#1e5a55"
-          isFixed={true}
-          defaultOpen={true}
-          onMenuOpen={() => setIsMenuOpen(true)}
-          onMenuClose={() => setIsMenuOpen(false)}
-        />
+        <>
+          <StaggeredMenu
+            position="left"
+            items={menuItems}
+            socialItems={socialItems}
+            displaySocials={true}
+            displayItemNumbering={true}
+            menuButtonColor="#1C1C1C"
+            openMenuButtonColor="#1C1C1C"
+            changeMenuColorOnOpen={true}
+            colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
+            logoUrl=""
+            accentColor="#1e5a55"
+            isFixed={true}
+            defaultOpen={false}
+            onMenuOpen={() => setIsMenuOpen(true)}
+            onMenuClose={() => setIsMenuOpen(false)}
+          />
+          {/* Overlay to block interactions underneath when menu is open */}
+          {isMenuOpen && (
+            <div 
+              className="fixed inset-0 z-[35] pointer-events-auto"
+              style={{ 
+                backgroundColor: 'transparent',
+              }}
+              onClick={() => {
+                // Close menu when clicking outside (optional)
+                // Can be removed if you don't want this behavior
+              }}
+            />
+          )}
+        </>
       )}
 
-      {/* Dark mode toggle button with playful text */}
-      <motion.div 
-        className="fixed right-4 z-50"
-        initial={{ opacity: 1, y: 0 }}
-        animate={{ 
-          top: "1rem",
-          opacity: isMenuOpen ? 0 : 1,
-          y: isMenuOpen ? -20 : 0
-        }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        style={{ pointerEvents: isMenuOpen ? 'none' : 'auto' }}
-      >
+      {/* Dark mode toggle button with playful text - hide when orientation message is shown */}
+      {!showOrientationMessage && (
+        <motion.div 
+          className="fixed right-[2em] z-50"
+          initial={{ opacity: 1, y: 0 }}
+          animate={{ 
+            top: "2em",
+            opacity: isMenuOpen ? 0 : 1,
+            y: isMenuOpen ? -20 : 0
+          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          style={{ pointerEvents: isMenuOpen ? 'none' : 'auto' }}
+        >
         <Magnet padding={50} magnetStrength={10}>
           <div className="relative">
             <motion.button
               onClick={handleDarkModeClick}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
-              className="relative w-16 h-16 rounded-full transition-all duration-500 overflow-hidden"
+              className="relative w-11 h-11 rounded-full transition-all duration-500 overflow-hidden"
               initial={{ opacity: 0.5 }}
               animate={{ 
                 opacity: isButtonHovered ? 1 : 0.5,
@@ -287,9 +316,56 @@ function AppContent() {
           </div>
         </Magnet>
       </motion.div>
+      )}
 
-        {/* Interactive dot grid background */}
-        {showBlastBackground && (
+      {/* PageHeader or Homepage logo - show when orientation message is shown (keep page title/image visible) */}
+      {showOrientationMessage && (
+        <>
+          {isHomePage && (
+            <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[90] flex items-center justify-center">
+              <img 
+                src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"} 
+                alt="BOKU" 
+                className="max-h-[120px] max-w-[120px] object-contain"
+              />
+            </div>
+          )}
+          {!isHomePage && getPageTitle() && (
+            <div className="relative z-[90]">
+              <PageHeader title={getPageTitle()!} isDarkMode={isDarkMode} />
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Orientation message for tablets in portrait */}
+      {showOrientationMessage && (
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, x: '-50%', y: '-50%' }}
+            animate={{ opacity: 1, scale: 1, x: '-50%', y: '-50%' }}
+            exit={{ opacity: 0, scale: 0.9, x: '-50%', y: '-50%' }}
+            className="fixed z-[100] px-8 py-4 rounded-lg shadow-2xl border border-black/20"
+            style={{
+              backgroundColor: '#F4DE7C', // Ochre yellow background
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace",
+              top: '50%',
+              left: '50%',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <p className="text-base font-semibold text-center m-0 text-black whitespace-nowrap">
+              Please rotate your device to landscape mode
+            </p>
+          </motion.div>
+        </AnimatePresence>
+      )}
+
+        {/* Interactive dot grid background - hide when orientation message is shown */}
+        {showBlastBackground && !showOrientationMessage && (
           <div className="fixed inset-0 z-0">
             <DotGrid 
               dotSize={4}
@@ -301,32 +377,36 @@ function AppContent() {
           </div>
         )}
         
-        {/* Subtle neutral vignette */}
-        <div 
-          className="fixed inset-0 z-[1] pointer-events-none transition-colors duration-500"
-          style={{
-            background: isDarkMode 
-              ? 'radial-gradient(circle, transparent 0%, rgba(168, 180, 217, 0.6) 50%, #a8b4d9 100%)'
-              : 'radial-gradient(circle, transparent 0%, rgba(255, 254, 240, 0.6) 50%, #fffef0 100%)'
-          }}
-        />
+        {/* Subtle neutral vignette - hide when orientation message is shown */}
+        {!showOrientationMessage && (
+          <div 
+            className="fixed inset-0 z-[1] pointer-events-none transition-colors duration-500"
+            style={{
+              background: isDarkMode 
+                ? 'radial-gradient(circle, transparent 0%, rgba(168, 180, 217, 0.6) 50%, #a8b4d9 100%)'
+                : 'radial-gradient(circle, transparent 0%, rgba(255, 254, 240, 0.6) 50%, #fffef0 100%)'
+            }}
+          />
+        )}
 
-        {/* Main content */}
-        <motion.div 
-          className="relative z-10"
-          animate={{
-            marginLeft: isHomePage && isMenuOpen ? "35vw" : "0vw", // Move content to start after menu
-            width: isHomePage && isMenuOpen ? "65vw" : "100vw", // Constrain width to remaining viewport
-            borderLeft: isHomePage && isMenuOpen ? "4px solid #1C1C1C" : "0px solid transparent"
-          }}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center", // Center content horizontally within the container
-            justifyContent: "flex-start", // Align content to top
-          }}
-        >
+        {/* Main content - hide when orientation message is shown */}
+        {!showOrientationMessage && (
+          <motion.div 
+            className="relative z-10"
+            animate={{
+              marginLeft: isHomePage && isMenuOpen ? "35vw" : "0vw", // Move content to start after menu
+              width: isHomePage && isMenuOpen ? "65vw" : "100vw", // Constrain width to remaining viewport
+              borderLeft: isHomePage && isMenuOpen ? "4px solid #1C1C1C" : "0px solid transparent"
+            }}
+            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center", // Center content horizontally within the container
+              justifyContent: "flex-start", // Align content to top
+              pointerEvents: isHomePage && isMenuOpen ? 'none' : 'auto', // Disable interactions when menu is open on homepage
+            }}
+          >
           <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={
@@ -355,6 +435,7 @@ function AppContent() {
             </Routes>
           </AnimatePresence>
         </motion.div>
+        )}
       </div>
   );
 }

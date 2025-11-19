@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useLayoutEffect } from "react";
-import { motion, useScroll } from "motion/react";
+import { motion, useScroll, AnimatePresence } from "motion/react";
 import { FilmFrame } from "./FilmFrame";
 import { PhotoStackPreview, type StackItem } from "./PhotoStackPreview";
 import DecryptedText from "./DecryptedText";
+import { useTabletLandscape } from "./ui/use-tablet-landscape";
 
 interface FilmRollGalleryProps {
   images: string[];
@@ -19,6 +20,10 @@ interface FilmRollGalleryProps {
   onPreviewPositionChange?: (top: number, height: number) => void; // Callback to report preview position
   showBubbleVideo?: boolean; // Whether to show the bubble video for this gallery (defaults to true)
   isDarkMode?: boolean;
+  currentGalleryIndex?: number; // Current gallery index for tablet landscape
+  totalGalleries?: number; // Total number of galleries for tablet landscape
+  onNavigateGallery?: (direction: 'next' | 'prev') => void; // Navigation callback for tablet landscape
+  isMenuOpen?: boolean; // Whether the menu is open (to disable hover effects)
 }
 
 
@@ -156,11 +161,31 @@ export function FilmRollGallery({
   previewScrollOffset = 180, // Negative = scroll higher up
   onPreviewPositionChange,
   isDarkMode = false,
+  currentGalleryIndex = 0,
+  totalGalleries: _totalGalleries = 1, // Available for future use (e.g., gallery counter)
+  onNavigateGallery,
+  isMenuOpen = false,
 }: FilmRollGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [stack, setStack] = useState<StackItem[]>([]);
   const [internalRolledOut, setInternalRolledOut] = useState(false);
   const [isCanisterHovered, setIsCanisterHovered] = useState(false);
+  const [ribbonPulled, setRibbonPulled] = useState(false); // For tablet landscape ribbon interaction
+
+  // Reset hover state when menu opens
+  useEffect(() => {
+    if (isMenuOpen) {
+      setIsCanisterHovered(false);
+    }
+  }, [isMenuOpen]);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false); // Simple preview modal for tablet landscape
+  const [previewImageIndex, setPreviewImageIndex] = useState(0); // Current image in preview
+  const [tabletLandscapeHeight, setTabletLandscapeHeight] = useState<string>('60vh'); // Dynamic height for tablet landscape
+  const [gallerySpacing, setGallerySpacing] = useState<number>(0); // Dynamic spacing between gallery items
+  const [isSwipeGesture, setIsSwipeGesture] = useState(false); // Track if canister was swiped (not clicked)
+  const [canisterDragX, setCanisterDragX] = useState(0); // Track canister drag position
+  
+  const isTabletLandscape = useTabletLandscape();
   
   // Use controlled state if provided, otherwise use internal state
   const rolledOut = isOpen !== undefined ? isOpen : internalRolledOut;
@@ -184,6 +209,7 @@ export function FilmRollGallery({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const tabletLandscapeRef = useRef<HTMLDivElement>(null);
   const { scrollXProgress } = useScroll({
     container: scrollRef,
   });
@@ -271,6 +297,132 @@ export function FilmRollGallery({
     }
   }, [rolledOut, images.length]);
 
+  // Reset ribbon state when gallery closes
+  useEffect(() => {
+    if (!rolledOut) {
+      setRibbonPulled(false);
+    }
+  }, [rolledOut]);
+
+  // Reset preview when gallery changes (tablet landscape)
+  useEffect(() => {
+    if (isTabletLandscape && onNavigateGallery) {
+      setIsPreviewOpen(false);
+      setPreviewImageIndex(0);
+      setIsSwipeGesture(false);
+      setCanisterDragX(0);
+    }
+  }, [currentGalleryIndex, isTabletLandscape, onNavigateGallery]);
+
+  // Keyboard navigation for tablet landscape preview
+  useEffect(() => {
+    if (!isTabletLandscape || !isPreviewOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        setPreviewImageIndex((prev) => 
+          prev > 0 ? prev - 1 : images.length - 1
+        );
+      } else if (e.key === 'ArrowRight') {
+        setPreviewImageIndex((prev) => 
+          prev < images.length - 1 ? prev + 1 : 0
+        );
+      } else if (e.key === 'Escape') {
+        setIsPreviewOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isTabletLandscape, isPreviewOpen, images.length]);
+
+  // Dynamically calculate height for tablet landscape layout
+  useEffect(() => {
+    if (!isTabletLandscape) {
+      setTabletLandscapeHeight('60vh');
+      return;
+    }
+
+    const calculateHeight = () => {
+      const viewportHeight = window.innerHeight;
+      // Account for header/page title area (approximately 120px-150px)
+      const headerOffset = 140;
+      // Calculate available height and use 85-90% of it for better fit
+      const availableHeight = viewportHeight - headerOffset;
+      const calculatedHeight = Math.max(availableHeight * 0.85, 400); // Minimum 400px
+      setTabletLandscapeHeight(`${calculatedHeight}px`);
+    };
+
+    // Calculate on mount and resize
+    calculateHeight();
+    window.addEventListener('resize', calculateHeight);
+    window.addEventListener('orientationchange', calculateHeight);
+
+    return () => {
+      window.removeEventListener('resize', calculateHeight);
+      window.removeEventListener('orientationchange', calculateHeight);
+    };
+  }, [isTabletLandscape]);
+
+  // Calculate dynamic spacing between gallery items based on content height
+  useLayoutEffect(() => {
+    if (!isTabletLandscape || !tabletLandscapeRef.current) {
+      setGallerySpacing(0);
+      return;
+    }
+
+    const calculateSpacing = () => {
+      if (!tabletLandscapeRef.current) return;
+
+      const container = tabletLandscapeRef.current;
+      const innerContainer = container.querySelector('.tablet-landscape-inner') as HTMLElement;
+      
+      if (!innerContainer) return;
+
+      // Get the actual rendered heights
+      const descriptionElement = innerContainer.querySelector('.tablet-landscape-description') as HTMLElement;
+      const titleElement = innerContainer.querySelector('.tablet-landscape-title') as HTMLElement;
+      const canisterElement = innerContainer.querySelector('.tablet-landscape-canister-button') as HTMLElement;
+
+      let maxContentHeight = 0;
+
+      // Measure description height
+      if (descriptionElement) {
+        maxContentHeight = Math.max(maxContentHeight, descriptionElement.offsetHeight);
+      }
+
+      // Measure title area height
+      if (titleElement) {
+        maxContentHeight = Math.max(maxContentHeight, titleElement.offsetHeight);
+      }
+
+      // Canister height (160px = 40 * 4rem = h-40)
+      const canisterHeight = canisterElement ? canisterElement.offsetHeight : 160;
+      maxContentHeight = Math.max(maxContentHeight, canisterHeight);
+
+      // Calculate spacing: use a small percentage of content height (8-10%)
+      // Minimum spacing of 15px, maximum of 50px for tighter spacing
+      const spacing = Math.min(Math.max(maxContentHeight * 0.08, 15), 50);
+      setGallerySpacing(spacing);
+    };
+
+    // Use ResizeObserver for more accurate measurements
+    const resizeObserver = new ResizeObserver(() => {
+      calculateSpacing();
+    });
+
+    if (tabletLandscapeRef.current) {
+      resizeObserver.observe(tabletLandscapeRef.current);
+    }
+
+    // Initial calculation
+    calculateSpacing();
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [isTabletLandscape, description, title, subtitle, filmUsed, year, images.length]);
+
   // Scroll to preview when rolled out
   useEffect(() => {
     if (rolledOut && scrollToPreview && previewRef.current) {
@@ -304,26 +456,212 @@ export function FilmRollGallery({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Preview box (stack of chosen photos) */}
-      <div ref={previewRef}>
-        <PhotoStackPreview 
-          stack={stack} 
-          rolledOut={rolledOut} 
-          title={title}
-          subtitle={subtitle}
-          filmUsed={filmUsed}
-          description={description}
-          isDarkMode={isDarkMode}
-        />
-      </div>
+      {/* Desktop: Preview box (stack of chosen photos) */}
+      {!isTabletLandscape && (
+        <div ref={previewRef}>
+          <PhotoStackPreview 
+            stack={stack} 
+            rolledOut={rolledOut} 
+            title={title}
+            subtitle={subtitle}
+            filmUsed={filmUsed}
+            description={description}
+            isDarkMode={isDarkMode}
+          />
+          {/* Logo in bottom right when gallery is rolled out */}
+          {rolledOut && (
+            <img
+              src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
+              alt="BOKU"
+              className="fixed bottom-4 right-4 w-24 h-auto opacity-60 z-50 pointer-events-none"
+            />
+          )}
+        </div>
+      )}
 
-      {/* Reel section */}
-      <div className="relative w-full px-4 pb-10">
+      {/* Tablet Landscape: Simplified centered layout */}
+      {isTabletLandscape && (
+        <div 
+          ref={tabletLandscapeRef}
+          className="relative w-full flex items-start justify-center px-8"
+          style={{ 
+            minHeight: tabletLandscapeHeight, 
+            height: tabletLandscapeHeight
+          }}
+        >
+          <div className="tablet-landscape-inner flex items-center justify-center gap-8 max-w-6xl w-full border border-black p-8 pt-6 mt-8">
+            {/* Left side: Description */}
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={`description-${currentGalleryIndex}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 flex flex-col items-end text-right"
+              >
+                {description && (
+                  <div 
+                    className="tablet-landscape-description text-sm leading-relaxed font-mono text-black max-w-md"
+                    style={{
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+                    }}
+                  >
+                    {description}
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Center: Canister with navigation buttons */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-4">
+              {/* Canister - Swipeable left/right, click to open preview */}
+              <motion.button
+                aria-label="View photos"
+                onClick={() => {
+                  // Only open preview if it wasn't a swipe gesture
+                  // For tablet landscape with navigation, check swipe flag
+                  // For desktop/tablet without navigation, always open
+                  if (onNavigateGallery) {
+                    if (!isSwipeGesture) {
+                      setIsPreviewOpen(true);
+                      setPreviewImageIndex(0);
+                    }
+                    // Reset swipe flag after a short delay
+                    setTimeout(() => setIsSwipeGesture(false), 100);
+                  } else {
+                    // No navigation available, always open preview
+                    setIsPreviewOpen(true);
+                    setPreviewImageIndex(0);
+                  }
+                }}
+                drag={onNavigateGallery ? "x" : false}
+                dragConstraints={onNavigateGallery ? { left: 0, right: 0 } : undefined}
+                dragElastic={onNavigateGallery ? 0.2 : undefined}
+                onDrag={onNavigateGallery ? (_, info) => {
+                  setCanisterDragX(info.offset.x);
+                } : undefined}
+                onDragEnd={onNavigateGallery ? (_, info) => {
+                  const threshold = 80; // Minimum swipe distance to trigger navigation
+                  const absOffset = Math.abs(info.offset.x);
+                  
+                  if (absOffset > threshold && onNavigateGallery) {
+                    setIsSwipeGesture(true);
+                    if (info.offset.x < -threshold) {
+                      // Swiped left - next gallery
+                      onNavigateGallery('next');
+                    } else if (info.offset.x > threshold) {
+                      // Swiped right - previous gallery
+                      onNavigateGallery('prev');
+                    }
+                  }
+                  setCanisterDragX(0);
+                } : undefined}
+                initial={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                whileDrag={onNavigateGallery ? { 
+                  scale: 1.1,
+                  cursor: 'grabbing'
+                } : undefined}
+                animate={onNavigateGallery ? {
+                  x: canisterDragX
+                } : {}}
+                className={`tablet-landscape-canister-button z-30 w-32 h-40 flex items-center justify-center ${onNavigateGallery ? 'cursor-grab active:cursor-grabbing' : ''}`}
+              >
+                <div className="relative w-full h-full">
+                  <img
+                    src="/media/film-canister.png"
+                    alt="Film Roll"
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </motion.button>
+
+              {/* Navigation buttons - only show when onNavigateGallery is provided */}
+              {onNavigateGallery && (
+                <div className="flex items-center justify-center gap-4">
+                  {/* Previous button */}
+                  <motion.button
+                    onClick={() => {
+                      if (onNavigateGallery) {
+                        onNavigateGallery('prev');
+                      }
+                    }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="px-4 py-2 bg-black/10 hover:bg-black/20 text-black rounded-lg transition-colors font-mono text-xs font-semibold"
+                    style={{
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+                    }}
+                    aria-label="Previous gallery"
+                  >
+                    ← Prev
+                  </motion.button>
+
+                  {/* Next button */}
+                  <motion.button
+                    onClick={() => {
+                      if (onNavigateGallery) {
+                        onNavigateGallery('next');
+                      }
+                    }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="px-4 py-2 bg-black/10 hover:bg-black/20 text-black rounded-lg transition-colors font-mono text-xs font-semibold"
+                    style={{
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+                    }}
+                    aria-label="Next gallery"
+                  >
+                    Next →
+                  </motion.button>
+                </div>
+              )}
+            </div>
+
+            {/* Right side: Title, subtitle, film, year, photos */}
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={`title-${currentGalleryIndex}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="tablet-landscape-title flex-1 flex flex-col items-start text-left"
+              >
+                <NotesContent 
+                  compact={true}
+                  title={title || "Untitled"}
+                  subtitle={subtitle}
+                  filmUsed={filmUsed}
+                  year={year}
+                  photos={images.length}
+                  isDarkMode={isDarkMode}
+                  isCanisterHovered={false}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop: Reel section */}
+      {!isTabletLandscape && (
+      <div className="relative w-full px-4 pb-10 tablet-landscape:px-6 tablet-landscape:pb-12">
         <div className="max-w-7xl mx-auto relative">
           {/* Canister (toggle rollout) */}
           <motion.button
             aria-label="Toggle film"
             onClick={() => {
+              // On tablet landscape, open simple preview instead of film roll
+              if (isTabletLandscape) {
+                setIsPreviewOpen(true);
+                setPreviewImageIndex(0);
+                return;
+              }
+
+              // Desktop behavior: toggle film roll
               const next = !rolledOut;
 
               if (!next) {
@@ -340,13 +678,21 @@ export function FilmRollGallery({
 
               toggleRolledOut(next);
             }}
-            onMouseEnter={() => setIsCanisterHovered(true)}
-            onMouseLeave={() => setIsCanisterHovered(false)}
+            onMouseEnter={() => {
+              if (!isMenuOpen) {
+                setIsCanisterHovered(true);
+              }
+            }}
+            onMouseLeave={() => {
+              if (!isMenuOpen) {
+                setIsCanisterHovered(false);
+              }
+            }}
             initial={{ opacity: 1, scale: 1 }}
             whileHover={{ scale: 1.04 }}
-            className="absolute left-0 top-[7.5%] z-30 w-40 h-48 flex items-center justify-center"
+            className="tablet-landscape-canister absolute left-0 top-[7.5%] z-30 w-40 h-48 tablet-landscape:w-32 tablet-landscape:h-[9.5rem] flex items-center justify-center"
           >
-            <div className="relative w-40 h-70">
+            <div className="relative w-40 h-70 tablet-landscape:w-32 tablet-landscape:h-56">
               <img
                 src="/media/film-canister.png"
                 alt="Film Roll"
@@ -375,7 +721,7 @@ export function FilmRollGallery({
           {/* Scroll container (reel lane) */}
           <div
             ref={scrollRef}
-            className="relative overflow-x-auto overflow-y-hidden scrollbar-hide pl-44 pr-8 flex items-center mt-8"
+            className="tablet-landscape-reel-scroll relative overflow-x-auto overflow-y-hidden scrollbar-hide pl-44 pr-8 tablet-landscape:pl-36 tablet-landscape:pr-10 flex items-center mt-8 tablet-landscape:mt-10"
             style={{
               scrollbarWidth: "none",
               msOverflowStyle: "none",
@@ -432,10 +778,11 @@ export function FilmRollGallery({
             >
               <motion.div
                 initial={{ x: 0, opacity: 1 }}
-                animate={animationsEnabled ? (rolledOut ? "off" : "on") : false}
+                animate={animationsEnabled ? (rolledOut ? "off" : ribbonPulled ? "ribbon-pulled" : "on") : false}
                 variants={{
                   on: { x: 0, opacity: 1 },
                   off: { x: "40vw", opacity: 0 },
+                  "ribbon-pulled": { x: "-15rem", opacity: 0.3 }, // Move left behind canister
                 }}
                 transition={{
                   duration: 0.3,
@@ -470,8 +817,8 @@ export function FilmRollGallery({
               <motion.div
                 initial={{ x: "100%", opacity: 0 }}
                 animate={{
-                  x: (isCanisterHovered && !rolledOut) ? "0%" : "100%",
-                  opacity: (isCanisterHovered && !rolledOut) ? 1 : 0,
+                  x: ribbonPulled ? "calc(50vw - 40vh)" : (isCanisterHovered && !rolledOut && !isMenuOpen) ? "0%" : "100%",
+                  opacity: ribbonPulled ? 1 : (isCanisterHovered && !rolledOut && !isMenuOpen) ? 1 : 0,
                 }}
                 transition={{
                   duration: 0.8,
@@ -496,8 +843,14 @@ export function FilmRollGallery({
                       justifyContent: "center",
                     }}
                   >
-                    {/* White background - 50% opacity */}
-                    <div className="absolute inset-0 bg-white opacity-0" />
+                    {/* White background - visible when ribbon is pulled */}
+                    <motion.div 
+                      className="absolute inset-0 bg-white/95 backdrop-blur-sm" 
+                      animate={{
+                        opacity: ribbonPulled ? 1 : 0,
+                      }}
+                      transition={{ duration: 0.3 }}
+                    />
                     {/* Content - centered in fixed container */}
                     <div className="relative z-10 text-center">
                       {description}
@@ -507,6 +860,50 @@ export function FilmRollGallery({
               </motion.div>
             </div>
           </div>
+
+          {/* Ribbon for tablet landscape - pull to reveal description (specific to this gallery) */}
+          {description && !rolledOut && (
+            <motion.div
+              className="tablet-landscape-ribbon absolute right-0 top-1/2 -translate-y-1/2 z-40 cursor-grab active:cursor-grabbing"
+              style={{
+                display: 'none', // Hidden by default, shown via CSS for tablet landscape
+              }}
+              drag="x"
+              dragConstraints={{ left: -200, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                // If dragged left more than 100px, pull the ribbon
+                if (info.offset.x < -100) {
+                  setRibbonPulled(true);
+                } else {
+                  setRibbonPulled(false);
+                }
+              }}
+              onClick={() => {
+                // Toggle ribbon on click
+                setRibbonPulled(!ribbonPulled);
+              }}
+              whileDrag={{ scale: 1.05 }}
+              whileHover={{ scale: 1.1 }}
+              animate={{
+                x: ribbonPulled ? -200 : 0,
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 30,
+              }}
+            >
+              <div className="relative w-12 h-32 bg-gradient-to-l from-buttery to-buttery/80 border-l-2 border-black shadow-lg flex items-center justify-center">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-1 h-8 bg-black/60 rounded-full" />
+                  <div className="w-1 h-8 bg-black/60 rounded-full" />
+                  <div className="w-1 h-8 bg-black/60 rounded-full" />
+                </div>
+                <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[8px] border-t-transparent border-b-[8px] border-b-transparent border-l-[8px] border-l-black" />
+              </div>
+            </motion.div>
+          )}
 
           {/* Progress indicator only when rolled out */}
           {rolledOut && (
@@ -556,11 +953,127 @@ export function FilmRollGallery({
           )}
         </div>
       </div>
+      )}
 
-      {/* Hide scrollbar */}
+      {/* Simple Preview Modal for Tablet Landscape */}
+      <AnimatePresence>
+        {isTabletLandscape && isPreviewOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-8"
+            onClick={() => setIsPreviewOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="relative w-full max-w-5xl max-h-[90vh] flex flex-col items-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setIsPreviewOpen(false)}
+                className="absolute -top-12 right-0 text-white text-xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors z-10"
+                aria-label="Close preview"
+              >
+                ×
+              </button>
+
+              {/* Image - Swipeable */}
+              <motion.div 
+                className="relative w-full h-[70vh] flex items-center justify-center bg-black rounded-lg overflow-hidden cursor-grab active:cursor-grabbing"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(_, info) => {
+                  const threshold = 100; // Minimum swipe distance
+                  if (info.offset.x > threshold) {
+                    // Swiped right - go to previous
+                    setPreviewImageIndex((prev) => 
+                      prev > 0 ? prev - 1 : images.length - 1
+                    );
+                  } else if (info.offset.x < -threshold) {
+                    // Swiped left - go to next
+                    setPreviewImageIndex((prev) => 
+                      prev < images.length - 1 ? prev + 1 : 0
+                    );
+                  }
+                }}
+              >
+                <motion.img
+                  key={previewImageIndex}
+                  src={images[previewImageIndex]}
+                  alt={`Photo ${previewImageIndex + 1}`}
+                  className="max-w-full max-h-full object-contain pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                />
+              </motion.div>
+
+              {/* Image counter only - no navigation buttons */}
+              <div className="mt-6 flex items-center justify-center">
+                <span 
+                  className="text-black font-mono text-sm font-semibold bg-white/80 px-4 py-2 rounded-lg"
+                  style={{
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+                  }}
+                >
+                  {previewImageIndex + 1} / {images.length}
+                </span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Logo in bottom right of viewport - only when tablet preview is open */}
+      {isTabletLandscape && isPreviewOpen && (
+        <img
+          src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
+          alt="BOKU"
+          className="fixed bottom-4 right-4 w-24 h-auto opacity-60 z-[101] pointer-events-none"
+        />
+      )}
+
+
+      {/* Hide scrollbar and tablet landscape styles */}
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        /* Tablet landscape: 768px-1024px width, landscape orientation (includes iPad Mini 1024x768) */
+        @media (min-width: 768px) and (max-width: 1025px) and (orientation: landscape) {
+          .tablet-landscape-canister {
+            width: 8rem !important; /* 32 = 8rem */
+            height: 9.5rem !important; /* 38 = 9.5rem */
+          }
+          .tablet-landscape-reel-scroll {
+            padding-left: 9rem !important; /* 36 = 9rem, adjusted for smaller canister */
+            min-height: 38px !important; /* Match smaller canister height */
+          }
+          .tablet-landscape-ribbon {
+            display: block !important;
+          }
+        }
+        /* Ensure desktop/laptop (> 1025px) doesn't get tablet styles */
+        @media (min-width: 1025px) {
+          .tablet-landscape-canister {
+            width: 10rem !important; /* Restore desktop size */
+            height: 12rem !important; /* Restore desktop size */
+          }
+          .tablet-landscape-reel-scroll {
+            padding-left: 11rem !important; /* Restore desktop padding */
+            min-height: 48px !important; /* Restore desktop min-height */
+          }
+          .tablet-landscape-ribbon {
+            display: none !important;
+          }
         }
       `}</style>
     </div>

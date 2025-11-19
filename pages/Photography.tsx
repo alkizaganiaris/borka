@@ -3,6 +3,7 @@ import { FilmRollGallery } from "../components/FilmRollGallery";
 import { PageHeader } from "../components/PageHeader";
 import StaggeredMenu from "../components/StaggeredMenu";
 import { getPhotographyGalleries } from "../src/lib/sanityQueries";
+import { useTabletLandscape } from "../components/ui/use-tablet-landscape";
 
 interface PhotographyProps {
   isDarkMode: boolean;
@@ -13,6 +14,8 @@ export function Photography({ isDarkMode }: PhotographyProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [galleries, setGalleries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0); // For tablet landscape single gallery view
+  const isTabletLandscape = useTabletLandscape();
 
   // Fetch galleries from Sanity
   useEffect(() => {
@@ -55,7 +58,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
     <div className="relative">
       <PageHeader title="Photography" isDarkMode={isDarkMode} />
       <p
-        className={`mt-6 text-center text-base tracking-tight transition-colors duration-500 ${
+        className={`mt-6 tablet-landscape:mt-8 text-center text-base tablet-landscape:text-lg tracking-tight transition-colors duration-500 ${
           isDarkMode ? 'text-white/80' : 'text-zinc-700'
         }`}
         style={{
@@ -97,7 +100,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
       {/* Opacity overlay when menu is open */}
       {isMenuOpen && (
         <div 
-          className="fixed inset-0 pointer-events-none"
+          className="fixed inset-0 pointer-events-auto"
           style={{ 
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             zIndex: 35
@@ -114,8 +117,34 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         <div className="flex items-center justify-center py-20">
           <p className="text-xl">No galleries found. Add some in Sanity Studio!</p>
         </div>
+      ) : isTabletLandscape ? (
+        /* Tablet Landscape: Single gallery with swipe navigation */
+        galleries.length > 0 && currentGalleryIndex < galleries.length && (
+          <FilmRollGallery 
+            key={galleries[currentGalleryIndex]._id}
+            images={galleries[currentGalleryIndex].images.map((img: any) => img.asset.url)} 
+            title={galleries[currentGalleryIndex].title}
+            subtitle={galleries[currentGalleryIndex].subtitle || ''}
+            filmUsed={galleries[currentGalleryIndex].filmUsed || ''}
+            year={galleries[currentGalleryIndex].year || ''}
+            description={galleries[currentGalleryIndex].description || ''}
+            isOpen={openGalleryId === galleries[currentGalleryIndex]._id}
+            onToggle={handleGalleryToggle(galleries[currentGalleryIndex]._id)}
+            isDarkMode={isDarkMode}
+            currentGalleryIndex={currentGalleryIndex}
+            totalGalleries={galleries.length}
+            onNavigateGallery={(direction: 'next' | 'prev') => {
+              if (direction === 'next') {
+                setCurrentGalleryIndex((prev) => (prev + 1) % galleries.length);
+              } else {
+                setCurrentGalleryIndex((prev) => (prev - 1 + galleries.length) % galleries.length);
+              }
+            }}
+            isMenuOpen={isMenuOpen}
+          />
+        )
       ) : (
-        /* Gallery Instances from Sanity */
+        /* Desktop: All galleries */
         galleries.map((gallery) => (
           <FilmRollGallery 
             key={gallery._id}
@@ -128,6 +157,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
             isOpen={openGalleryId === gallery._id}
             onToggle={handleGalleryToggle(gallery._id)}
             isDarkMode={isDarkMode}
+            isMenuOpen={isMenuOpen}
           />
         ))
       )}

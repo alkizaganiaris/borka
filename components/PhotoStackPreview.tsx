@@ -74,7 +74,7 @@ export function PhotoStackPreview({
           opacity: { duration: 0.5, ease: "easeOut" },
           scale: { duration: 0.8, ease: [0.34, 1.56, 0.64, 1] }, // Extra bounce for scale
         }}
-        className={`px-4 ${className}`}
+        className={`photo-stack-preview-container px-4 tablet-landscape:px-6 tablet-landscape:w-[92vw] ${className}`}
         style={{ 
           marginBottom: rolledOut ? "2rem" : "0",
           overflow: rolledOut ? "visible" : "hidden",
@@ -84,7 +84,7 @@ export function PhotoStackPreview({
         }}
       >
       <motion.div 
-        className="relative overflow-visible flex items-center justify-center p-8 border border-black"
+        className="photo-stack-preview-inner relative overflow-visible flex items-center justify-center p-8 tablet-landscape:p-10 tablet-landscape:h-[70vh] border border-black"
         style={{ 
           borderWidth: '0.5px',
           height: '63vh' // Adjust this value to control height
@@ -243,6 +243,27 @@ export function PhotoStackPreview({
         </div>
       </motion.div>
       </motion.div>
+      {/* Tablet landscape styles */}
+      <style>{`
+        /* Tablet landscape: 768px-1024px width, landscape orientation (includes iPad Mini 1024x768) */
+        @media (min-width: 768px) and (max-width: 1025px) and (orientation: landscape) {
+          .photo-stack-preview-container {
+            width: 92vw !important;
+          }
+          .photo-stack-preview-inner {
+            height: 70vh !important;
+          }
+        }
+        /* Ensure desktop/laptop (> 1025px) doesn't get tablet styles */
+        @media (min-width: 1025px) {
+          .photo-stack-preview-container {
+            width: 87vw !important;
+          }
+          .photo-stack-preview-inner {
+            height: 63vh !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

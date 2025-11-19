@@ -30,7 +30,7 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
 
   return (
     <motion.header
-      className="w-full pt-16 px-8 text-black"
+      className="w-full px-8 text-black pt-[calc(4rem+5vh)] lg:pt-16"
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}

@@ -9,6 +9,11 @@ export default {
   ],
   theme: {
   	extend: {
+  		screens: {
+  			'tablet-landscape': {
+  				'raw': '(min-width: 768px) and (max-width: 1025px) and (orientation: landscape)'
+  			}
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
