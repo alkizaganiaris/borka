@@ -181,22 +181,24 @@ export function Journal({ isDarkMode }: JournalProps) {
       transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
     >
       <PageHeader title="Journal" isDarkMode={isDarkMode} />
-      <StaggeredMenu
-        position="left"
-        items={menuItems}
-        socialItems={socialItems}
-        displaySocials={true}
-        displayItemNumbering={true}
-        menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
-        openMenuButtonColor="#1C1C1C"
-        changeMenuColorOnOpen={true}
-        colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
-        logoUrl=""
-        accentColor="#1e5a55"
-        isFixed={true}
-        onMenuOpen={() => setIsMenuOpen(true)}
-        onMenuClose={() => setIsMenuOpen(false)}
-      />
+      <div style={{ fontFamily: 'Montserrat, sans-serif' }}>
+        <StaggeredMenu
+          position="left"
+          items={menuItems}
+          socialItems={socialItems}
+          displaySocials={true}
+          displayItemNumbering={true}
+          menuButtonColor="#1C1C1C"
+          openMenuButtonColor="#1C1C1C"
+          changeMenuColorOnOpen={true}
+          colors={['#E875A8', '#3E4BAA', '#3CB4AC']}
+          logoUrl=""
+          accentColor="#1e5a55"
+          isFixed={true}
+          onMenuOpen={() => setIsMenuOpen(true)}
+          onMenuClose={() => setIsMenuOpen(false)}
+        />
+      </div>
       
       {/* Opacity overlay when menu is open */}
       {isMenuOpen && (

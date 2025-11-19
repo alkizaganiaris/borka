@@ -18,6 +18,7 @@ interface PhotoStackPreviewProps {
   subtitle?: string;
   filmUsed?: string;
   description?: string;
+  isDarkMode?: boolean;
 }
 
 export function PhotoStackPreview({
@@ -27,6 +28,7 @@ export function PhotoStackPreview({
   title,
   subtitle,
   filmUsed,
+  isDarkMode = false,
 }: PhotoStackPreviewProps) {
   const [isTopHovered, setIsTopHovered] = useState(false);
   const [lastStackLength, setLastStackLength] = useState(0);
@@ -114,7 +116,20 @@ export function PhotoStackPreview({
               opacity: isTopHovered ? 0.3 : 1
             }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-          ></motion.div>
+          >
+            {/* BOKU stamp in bottom left */}
+            <motion.img
+              src={isDarkMode ? "/media/boku_home.svg" : "/media/boku_home.svg"}
+              alt="BOKU"
+              className="absolute bottom-1 left-1"
+              style={{
+                width: '120px',
+                height: 'auto',
+                opacity: isTopHovered ? 0.5 : 1
+              }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+            />
+          </motion.div>
 
           {/* Visual notes overlay */}
           <motion.div 

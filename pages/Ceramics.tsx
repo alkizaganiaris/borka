@@ -157,7 +157,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
   ];
 
   return (
-    <div>
+    <div style={{ fontFamily: 'Montserrat, sans-serif' }}>
       <PageHeader title="Ceramics" isDarkMode={isDarkMode} />
       <p
         className={`mt-6 text-center text-base tracking-tight transition-colors duration-500 ${
@@ -172,7 +172,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
         socialItems={socialItems}
         displaySocials={true}
         displayItemNumbering={true}
-        menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
+        menuButtonColor="#1C1C1C"
         openMenuButtonColor="#1C1C1C"
         changeMenuColorOnOpen={true}
         colors={['#E875A8', '#3E4BAA', '#3CB4AC']}

@@ -71,7 +71,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         socialItems={socialItems}
         displaySocials={true}
         displayItemNumbering={true}
-        menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
+        menuButtonColor="#1C1C1C"
         openMenuButtonColor="#1C1C1C"
         changeMenuColorOnOpen={true}
         colors={['#E875A8', '#3E4BAA', '#3CB4AC']}

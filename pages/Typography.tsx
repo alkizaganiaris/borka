@@ -39,6 +39,14 @@ export function Typography({ isDarkMode }: TypographyProps) {
       webFont: null,
       isCustom: true
     },
+    {
+      name: "Montserrat",
+      family: "Montserrat",
+      fallback: "sans-serif",
+      description: "Modern sans-serif font with a clean, geometric design",
+      webFont: null,
+      isCustom: true
+    },
     // Google Fonts - Monospace
     {
       name: "JetBrains Mono",
@@ -272,7 +280,7 @@ Pack my box with five dozen liquor jugs`;
         socialItems={socialItems}
         displaySocials={true}
         displayItemNumbering={true}
-        menuButtonColor={isDarkMode ? "#ffffff" : "#1C1C1C"}
+        menuButtonColor="#1C1C1C"
         openMenuButtonColor="#1C1C1C"
         changeMenuColorOnOpen={true}
         colors={['#E875A8', '#3E4BAA', '#3CB4AC']}

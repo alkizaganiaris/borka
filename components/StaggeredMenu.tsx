@@ -40,7 +40,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   className,
   logoUrl = '/src/assets/logos/reactbits-gh-white.svg',
   menuButtonColor = '#fff',
-  openMenuButtonColor = '#fff',
+  openMenuButtonColor: _openMenuButtonColor = '#F4DE7C',
   changeMenuColorOnOpen = true,
   accentColor = '#5227FF',
   isFixed = false,
@@ -279,25 +279,25 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
       if (!btn) return;
       colorTweenRef.current?.kill();
       if (changeMenuColorOnOpen) {
-        const targetColor = opening ? openMenuButtonColor : menuButtonColor;
+        const targetColor = opening ? '#F4DE7C' : menuButtonColor;
         colorTweenRef.current = gsap.to(btn, { color: targetColor, delay: 0.18, duration: 0.3, ease: 'power2.out' });
       } else {
         gsap.set(btn, { color: menuButtonColor });
       }
     },
-    [openMenuButtonColor, menuButtonColor, changeMenuColorOnOpen]
+    [menuButtonColor, changeMenuColorOnOpen]
   );
 
   React.useEffect(() => {
     if (toggleBtnRef.current) {
       if (changeMenuColorOnOpen) {
-        const targetColor = openRef.current ? openMenuButtonColor : menuButtonColor;
+        const targetColor = openRef.current ? '#F4DE7C' : menuButtonColor;
         gsap.set(toggleBtnRef.current, { color: targetColor });
       } else {
         gsap.set(toggleBtnRef.current, { color: menuButtonColor });
       }
     }
-  }, [changeMenuColorOnOpen, menuButtonColor, openMenuButtonColor]);
+  }, [changeMenuColorOnOpen, menuButtonColor]);
 
   const animateText = useCallback((opening: boolean) => {
     const inner = textInnerRef.current;
@@ -414,9 +414,13 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
           <button
             ref={toggleBtnRef}
             className={`sm-toggle relative inline-flex items-center gap-[0.4rem] border-2 cursor-pointer font-medium leading-none overflow-visible pointer-events-auto px-4 py-2 rounded-full shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-[background-color,box-shadow,border-color] duration-300 ${
-              open ? 'bg-[#F4DE7C] border-[#7A5A12]' : 'bg-white/95 border-[#B59F6A]'
+              open ? 'border-[#000000]' : 'bg-[#F4DE7C]'
             }`}
-            style={{ boxShadow: '0 12px 30px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.08)' }}
+            style={{ 
+              boxShadow: '0 12px 30px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(0,0,0,0.08)',
+              backgroundColor: open ? accentColor : undefined,
+              color: open ? '#F4DE7C' : undefined
+            }}
             aria-label={open ? 'Close menu' : 'Open menu'}
             aria-expanded={open}
             aria-controls="staggered-menu-panel"
@@ -525,7 +529,7 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 .sm-scope .staggered-menu-header > * { pointer-events: auto; }
 .sm-scope .sm-logo { display: flex; align-items: center; user-select: none; }
 .sm-scope .sm-logo-img { display: block; height: 32px; width: auto; object-fit: contain; }
-.sm-scope .sm-toggle { position: relative; display: inline-flex; align-items: center; gap: 0.3rem; background: transparent; border: none; cursor: pointer; color: #e9e9ef; font-weight: 500; line-height: 1; overflow: visible; }
+.sm-scope .sm-toggle { position: relative; display: inline-flex; align-items: center; gap: 0.3rem; cursor: pointer; color: #e9e9ef; font-weight: 500; line-height: 1; overflow: visible; font-family: 'Montserrat', sans-serif; }
 .sm-scope .sm-toggle:focus-visible { outline: 2px solid #ffffffaa; outline-offset: 4px; border-radius: 4px; }
 .sm-scope .sm-line:last-of-type { margin-top: 6px; }
 .sm-scope .sm-toggle-textWrap { position: relative; margin-right: 0.5em; display: inline-block; height: 1em; overflow: hidden; white-space: nowrap; width: var(--sm-toggle-width, auto); min-width: var(--sm-toggle-width, auto); }
@@ -535,9 +539,9 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
 .sm-scope .sm-panel-itemWrap { position: relative; overflow: hidden; line-height: 1; }
 .sm-scope .sm-icon-line { position: absolute; left: 50%; top: 50%; width: 100%; height: 2px; background: currentColor; border-radius: 2px; transform: translate(-50%, -50%); will-change: transform; }
 .sm-scope .sm-line { display: none !important; }
-.sm-scope .staggered-menu-panel { position: absolute; top: 0; right: 0; width: clamp(320px, 35vw, 550px); height: 100%; background: #F4DE7C; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; flex-direction: column; padding: 6em 2em 2em 2em; overflow-y: auto; z-index: 10; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace; border-left: 1px solid #1C1C1C; }
+.sm-scope .staggered-menu-panel { position: absolute; top: 0; right: 0; width: clamp(368px, 40.25vw, 633px); height: 100%; background: #F4DE7C; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); display: flex; flex-direction: column; padding: 6em 2em 2em 2em; overflow-y: auto; z-index: 10; font-family: 'Montserrat', sans-serif; border-left: 1px solid #1C1C1C; }
 .sm-scope [data-position='left'] .staggered-menu-panel { right: auto; left: 0; }
-.sm-scope .sm-prelayers { position: absolute; top: 0; right: 0; bottom: 0; width: clamp(320px, 35vw, 550px); pointer-events: none; z-index: 5; }
+.sm-scope .sm-prelayers { position: absolute; top: 0; right: 0; bottom: 0; width: clamp(368px, 40.25vw, 633px); pointer-events: none; z-index: 5; }
 .sm-scope [data-position='left'] .sm-prelayers { right: auto; left: 0; }
 .sm-scope .sm-prelayer { position: absolute; top: 0; right: 0; height: 100%; width: 100%; transform: translateX(0); }
 .sm-scope .sm-panel-inner { flex: 1; display: flex; flex-direction: column; gap: 1.25rem; }
