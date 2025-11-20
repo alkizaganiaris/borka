@@ -898,7 +898,17 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
   useEffect(() => {
     if (!isModalOpen) {
       if (typeof document !== "undefined") {
+        // Restore scroll position and remove lock
+        const scrollY = document.body.style.top;
         document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("position");
+        document.body.style.removeProperty("top");
+        document.body.style.removeProperty("width");
+        document.body.style.removeProperty("height");
+        document.body.style.removeProperty("touch-action");
+        if (scrollY) {
+          window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        }
       }
       stopModalHeroDirectionalSeek();
       return;
@@ -914,19 +924,74 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
+    // Prevent scrolling when modal is open - especially important for hero video modal
     if (typeof document !== "undefined") {
+      // Save scroll position
+      const scrollY = window.scrollY;
+      
+      // Lock body scroll
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.height = "100%";
       document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+      
+      // Also prevent scrolling on html element
+      document.documentElement.style.overflow = "hidden";
+      document.documentElement.style.touchAction = "none";
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("wheel", handleScrollPrevent, { passive: false });
+    window.addEventListener("touchmove", handleScrollPrevent, { passive: false });
+
+    function handleScrollPrevent(e: Event) {
+      if (isModalOpen) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("wheel", handleScrollPrevent);
+      window.removeEventListener("touchmove", handleScrollPrevent);
+      
       if (typeof document !== "undefined") {
+        // Restore scroll position
+        const scrollY = document.body.style.top;
         document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("position");
+        document.body.style.removeProperty("top");
+        document.body.style.removeProperty("width");
+        document.body.style.removeProperty("height");
+        document.body.style.removeProperty("touch-action");
+        document.documentElement.style.removeProperty("overflow");
+        document.documentElement.style.removeProperty("touch-action");
+        if (scrollY) {
+          window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        }
       }
       stopModalHeroDirectionalSeek();
     };
   }, [isModalOpen, isModalHeroVideo, handleModalNavigate, closeModal, stopModalHeroDirectionalSeek]);
+
+  // Add/remove body class when hero modal is open to hide UI elements in App.tsx
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (isModalOpen && isModalHeroVideo) {
+        document.body.classList.add("hero-modal-open");
+      } else {
+        document.body.classList.remove("hero-modal-open");
+      }
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.classList.remove("hero-modal-open");
+      }
+    };
+  }, [isModalOpen, isModalHeroVideo]);
 
   useEffect(() => {
     if (!isModalOpen || !isModalHeroVideo) return;
@@ -1423,19 +1488,23 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
               <motion.div
                 className={clsx(
                   "fixed inset-0 z-[2000] flex items-center justify-center",
-                  isModalHeroVideo ? "p-0 bg-white" : "px-4 sm:px-8 py-8 bg-black/50"
+                  isModalHeroVideo ? "p-0 bg-white overflow-hidden" : "px-4 sm:px-8 py-8 bg-black/50"
                 )}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={closeModal}
+                style={{
+                  touchAction: isModalHeroVideo ? "none" : "auto",
+                  overscrollBehavior: "none"
+                }}
               >
                 <motion.div
                   className={clsx(
                     "relative overflow-hidden flex flex-col",
                     isModalHeroVideo 
-                      ? "w-full h-full rounded-none shadow-none bg-white"
+                      ? "w-full h-full rounded-none shadow-none bg-white overflow-hidden"
                       : "w-full max-w-5xl max-h-[95vh] rounded-[28px] shadow-2xl",
                     !isModalHeroVideo && (isDarkMode ? "bg-zinc-900 border border-zinc-700/60" : "bg-white border border-white/60")
                   )}
@@ -1447,6 +1516,10 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                   aria-modal="true"
                   aria-label={`${project.title} gallery`}
                   onClick={(event) => event.stopPropagation()}
+                  style={{
+                    touchAction: isModalHeroVideo ? "none" : "auto",
+                    overscrollBehavior: "none"
+                  }}
                 >
                   {/* Header (logo + title) in hero fullscreen */}
                   {isModalHeroVideo && (

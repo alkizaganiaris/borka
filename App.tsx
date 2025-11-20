@@ -29,6 +29,23 @@ function AppContent() {
 
   const isHomePage = location.pathname === '/';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isHeroModalOpen, setIsHeroModalOpen] = useState(false);
+
+  // Check for hero modal being open (via body class)
+  useEffect(() => {
+    const checkHeroModal = () => {
+      setIsHeroModalOpen(document.body.classList.contains('hero-modal-open'));
+    };
+    
+    // Check initially
+    checkHeroModal();
+    
+    // Watch for class changes
+    const observer = new MutationObserver(checkHeroModal);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    
+    return () => observer.disconnect();
+  }, []);
 
   // Get page title based on current route
   const getPageTitle = () => {
@@ -98,7 +115,7 @@ function AppContent() {
 
 
       {/* StaggeredMenu Navigation - only on home page */}
-      {isHomePage && (
+      {isHomePage && !isHeroModalOpen && (
         <>
           <StaggeredMenu
             position="left"
@@ -133,8 +150,8 @@ function AppContent() {
         </>
       )}
 
-      {/* Dark mode toggle button with playful text - hide when orientation message is shown */}
-      {!showOrientationMessage && (
+      {/* Dark mode toggle button with playful text - hide when orientation message is shown or hero modal is open */}
+      {!showOrientationMessage && !isHeroModalOpen && (
         <motion.div 
           className="fixed right-[2em] z-50"
           initial={{ opacity: 1, y: 0 }}
