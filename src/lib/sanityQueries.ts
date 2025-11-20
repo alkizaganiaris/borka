@@ -15,7 +15,7 @@ export async function getJournalEntries() {
 
 // Fetch all published photography galleries
 export async function getPhotographyGalleries() {
-  const query = `*[_type == "photographyGallery"] | order(order asc) {
+  const query = `*[_type == "photographyGallery" && published == true] | order(order asc) {
     _id,
     title,
     subtitle,
@@ -35,7 +35,7 @@ export async function getPhotographyGalleries() {
 
 // Fetch all ceramic projects
 export async function getCeramicProjects() {
-  const query = `*[_type == "ceramicProject"] | order(_createdAt desc) {
+  const query = `*[_type == "ceramicProject" && published == true] | order(_createdAt desc) {
     _id,
     title,
     subtitle,
