@@ -121,7 +121,8 @@ export function CeramicProjectsGallery({
         paddingLeft: isMobile ? '1rem' : undefined,
         paddingRight: isMobile ? '1rem' : undefined,
         boxSizing: 'border-box',
-        overflowX: 'hidden'
+        overflowX: 'hidden',
+        overflowY: 'visible'
       }}
     >
       <div
@@ -1092,7 +1093,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         )}
       >
         <motion.section
-          className="flex flex-col gap-2 md:gap-2 md:h-[95vh] md:max-h-[95vh]"
+          className="flex flex-col gap-2 md:gap-2 md:h-[95vh] md:max-h-[95vh] md:overflow-hidden"
           initial={{ opacity: 0, y: 48 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.35 }}
@@ -1101,7 +1102,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         <div
           className={clsx(
             "flex flex-col gap-2 md:gap-2",
-            "md:flex-row md:items-stretch md:h-full"
+            "md:flex-row md:items-stretch md:h-full md:overflow-hidden"
           )}
         >
           {/* Hero image column - hidden on mobile */}
@@ -1360,7 +1361,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                 )}
               >
               <div className="pointer-events-none absolute inset-0 rounded-[20px] bg-gradient-to-br from-black/15 via-transparent to-black/10 mix-blend-multiply" />
-              <div className="relative flex flex-col gap-5 p-0 md:p-0 md:flex-1 md:min-h-0 ">
+              <div className="relative flex flex-col gap-5 p-0 md:p-0 md:flex-1 md:min-h-0 md:overflow-hidden">
                 {currentImage ? (
                   <>
                     <div
@@ -1523,7 +1524,14 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                 >
                   {/* Header (logo + title) in hero fullscreen */}
                   {isModalHeroVideo && (
-                    <div className="absolute top-0 left-0 z-40 flex items-center gap-3">
+                    <div 
+                      className={clsx(
+                        "absolute z-40 flex items-center gap-3",
+                        isMobile && !isMobileLandscape 
+                          ? "top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg border bg-white" 
+                          : "top-0 left-0"
+                      )}
+                    >
                       <img
                         src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
                         alt="BOKU"

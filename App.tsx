@@ -161,7 +161,13 @@ function AppContent() {
             y: isMenuOpen ? -20 : 0
           }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          style={{ pointerEvents: isMenuOpen ? 'none' : 'auto' }}
+          style={{ 
+            pointerEvents: isMenuOpen ? 'none' : 'auto',
+            position: 'fixed',
+            top: '2em',
+            right: '2em',
+            willChange: 'transform'
+          }}
         >
         <Magnet padding={50} magnetStrength={10}>
           <div className="relative">
