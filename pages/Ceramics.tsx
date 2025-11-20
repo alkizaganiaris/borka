@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
+import clsx from "clsx";
 import { PageHeader } from "../components/PageHeader";
 import StaggeredMenu from "../components/StaggeredMenu";
 import {
@@ -7,6 +8,7 @@ import {
   CeramicProject
 } from "../components/CeramicProjectsGallery";
 import { getCeramicProjects } from "../src/lib/sanityQueries";
+import { useIsMobile } from "../components/ui/use-mobile";
 
 interface CeramicsProps {
   isDarkMode: boolean;
@@ -17,6 +19,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
   const [ceramicProjects, setCeramicProjects] = useState<CeramicProject[]>([]);
   const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const [projectsError, setProjectsError] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     async function fetchCeramics() {
@@ -159,13 +162,29 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
   return (
     <div style={{ fontFamily: 'Montserrat, sans-serif' }}>
       <PageHeader title="Ceramics" isDarkMode={isDarkMode} />
-      <p
-        className={`mt-6 text-center text-base tracking-tight transition-colors duration-500 ${
-          isDarkMode ? 'text-white/80' : 'text-zinc-600'
-        }`}
-      >
-        Ceramics are not made; they are persuaded — a quiet negotiation between earth, water, and will.
-      </p>
+      <div className="w-full px-4">
+        <p
+          className={`mt-6 text-center tracking-tight transition-colors duration-500 ${
+            isDarkMode ? 'text-white/80' : 'text-zinc-600'
+          }`}
+          style={{
+            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+            maxWidth: 'min(90vw, 800px)',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            paddingLeft: 'clamp(0.5rem, 3vw, 2rem)',
+            paddingRight: 'clamp(0.5rem, 3vw, 2rem)',
+            wordWrap: 'break-word',
+            overflowWrap: 'break-word',
+            hyphens: 'auto',
+            whiteSpace: 'normal',
+            lineHeight: '1.5',
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+          }}
+        >
+          Ceramics are not made; they are persuaded — a quiet negotiation between earth, water, and will.
+        </p>
+      </div>
       <StaggeredMenu
         position="left"
         items={menuItems}
@@ -194,7 +213,17 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
         />
       )}
       
-      <div className="w-full px-10 py-8">
+      <div 
+        className={clsx("w-full py-8", isMobile ? "" : "px-10")}
+        style={{
+          width: '100%',
+          maxWidth: '100vw',
+          boxSizing: 'border-box',
+          paddingLeft: isMobile ? '0' : undefined,
+          paddingRight: isMobile ? '0' : undefined,
+          overflowX: 'hidden'
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
