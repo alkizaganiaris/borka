@@ -11,10 +11,15 @@ export function useIsMobile() {
 
   React.useEffect(() => {
     const checkMobile = () => {
-      // Check if viewport width is within mobile phone range
-      // iPhone 12-16 Pro are ~390-402px wide in portrait
+      // Check if viewport dimensions indicate a mobile phone
+      // Mobile phones have at least one dimension ≤ 600px
+      // iPhone 12-16 Pro are ~390-402px wide in portrait, ~844-896px tall
+      // When rotated to landscape, width becomes ~844-896px but height becomes ~390-402px
+      // So we check both dimensions to maintain mobile detection during rotation
       const width = window.innerWidth;
-      setIsMobile(width <= MOBILE_PHONE_BREAKPOINT);
+      const height = window.innerHeight;
+      const isMobilePhone = width <= MOBILE_PHONE_BREAKPOINT || height <= MOBILE_PHONE_BREAKPOINT;
+      setIsMobile(isMobilePhone);
     };
 
     const mql = window.matchMedia(`(max-width: ${MOBILE_PHONE_BREAKPOINT}px)`);

@@ -598,6 +598,14 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   .sm-scope [data-position='left'] .sm-prelayers { left: 0 !important; right: 0 !important; }
   .sm-scope .staggered-menu-wrapper[data-open] .sm-logo-img { filter: invert(100%); } 
 }
+/* Mobile phones in landscape - full screen */
+@media (max-width: 767px) and (orientation: landscape) { 
+  .sm-scope .staggered-menu-panel { width: 100% !important; left: 0 !important; right: 0 !important; border-left: none !important; border-right: none !important; } 
+  .sm-scope [data-position='left'] .staggered-menu-panel { left: 0 !important; right: 0 !important; }
+  .sm-scope .sm-prelayers { width: 100% !important; left: 0 !important; right: 0 !important; } 
+  .sm-scope [data-position='left'] .sm-prelayers { left: 0 !important; right: 0 !important; }
+  .sm-scope .staggered-menu-wrapper[data-open] .sm-logo-img { filter: invert(100%); } 
+}
       `}</style>
     </div>
   );

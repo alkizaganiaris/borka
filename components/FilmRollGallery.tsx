@@ -310,13 +310,21 @@ export function FilmRollGallery({
     }
   }, [rolledOut]);
 
+         // Track previous gallery index to prevent reset on orientation change
+         const prevGalleryIndexRef = useRef(currentGalleryIndex);
+
          // Reset preview when gallery changes (tablet landscape and mobile)
+         // Don't reset when orientation changes - only when gallery index actually changes
          useEffect(() => {
            if ((isTabletLandscape || isMobileDevice) && onNavigateGallery) {
-             setIsPreviewOpen(false);
-             setPreviewImageIndex(0);
-             setIsSwipeGesture(false);
-             setCanisterDragX(0);
+             // Only reset if the gallery actually changed, not on orientation change
+             if (prevGalleryIndexRef.current !== currentGalleryIndex) {
+               setIsPreviewOpen(false);
+               setPreviewImageIndex(0);
+               setIsSwipeGesture(false);
+               setCanisterDragX(0);
+               prevGalleryIndexRef.current = currentGalleryIndex;
+             }
            }
          }, [currentGalleryIndex, isTabletLandscape, isMobileDevice, onNavigateGallery]);
 
@@ -1148,7 +1156,19 @@ export function FilmRollGallery({
             className={`fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center ${
               isMobileDevice && isLandscape ? 'p-0' : 'p-8'
             }`}
-            onClick={() => setIsPreviewOpen(false)}
+            onClick={(e) => {
+              // Close when clicking on the backdrop or empty space
+              // Don't close if clicking on the image container or its children
+              const target = e.target as HTMLElement;
+              const imageContainer = target.closest('.relative.flex.items-center.justify-center.bg-black');
+              const closeButton = target.closest('button[aria-label="Close preview"]');
+              const counter = target.closest('.text-black');
+              
+              // Only close if not clicking on image container, close button, or counter
+              if (!imageContainer && !closeButton && !counter) {
+                setIsPreviewOpen(false);
+              }
+            }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -1160,7 +1180,19 @@ export function FilmRollGallery({
                   ? 'w-full h-full' 
                   : 'w-full max-w-5xl max-h-[90vh]'
               }`}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                // Close when clicking on empty space within the container
+                // Don't close if clicking on image container, close button, or counter
+                const target = e.target as HTMLElement;
+                const imageContainer = target.closest('.relative.flex.items-center.justify-center.bg-black');
+                const closeButton = target.closest('button[aria-label="Close preview"]');
+                const counter = target.closest('.text-black');
+                
+                // Close if clicking on empty space (container itself) and not on image/counter/button
+                if (target === e.currentTarget || (!imageContainer && !closeButton && !counter)) {
+                  setIsPreviewOpen(false);
+                }
+              }}
             >
               {/* Close button */}
               <button
@@ -1225,9 +1257,11 @@ export function FilmRollGallery({
               </motion.div>
 
               {/* Image counter - adjust position for landscape */}
-              <div className={`flex items-center justify-center ${
-                isMobileDevice && isLandscape ? 'absolute bottom-4 left-1/2 -translate-x-1/2' : 'mt-6'
-              }`}>
+              <div 
+                className={`flex items-center justify-center ${
+                  isMobileDevice && isLandscape ? 'absolute bottom-4 left-1/2 -translate-x-1/2' : 'mt-6'
+                }`}
+              >
                 <span 
                   className="text-black font-mono text-sm font-semibold bg-white/80 px-4 py-2 rounded-lg"
                   style={{
