@@ -187,6 +187,7 @@ export function FilmRollGallery({
   const [gallerySpacing, setGallerySpacing] = useState<number>(0); // Dynamic spacing between gallery items
   const [isSwipeGesture, setIsSwipeGesture] = useState(false); // Track if canister was swiped (not clicked)
   const [canisterDragX, setCanisterDragX] = useState(0); // Track canister drag position
+  const [isLandscape, setIsLandscape] = useState(false); // Track orientation for mobile preview
   
   const isTabletLandscape = useTabletLandscape();
   const isMobileHook = useIsMobile();
@@ -339,7 +340,43 @@ export function FilmRollGallery({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isTabletLandscape, isPreviewOpen, images.length]);
+  }, [isTabletLandscape, isMobileDevice, isPreviewOpen, images.length]);
+
+  // Track orientation for mobile preview to maximize space in landscape
+  useEffect(() => {
+    if (!isMobileDevice || !isPreviewOpen) {
+      setIsLandscape(false);
+      return;
+    }
+
+    const checkOrientation = () => {
+      const isLandscapeMode = window.matchMedia('(orientation: landscape)').matches;
+      setIsLandscape(isLandscapeMode);
+    };
+
+    // Initial check
+    checkOrientation();
+
+    // Listen for orientation changes
+    const portraitMediaQuery = window.matchMedia('(orientation: portrait)');
+    const landscapeMediaQuery = window.matchMedia('(orientation: landscape)');
+    
+    const handleOrientationChange = () => {
+      checkOrientation();
+    };
+
+    portraitMediaQuery.addEventListener('change', handleOrientationChange);
+    landscapeMediaQuery.addEventListener('change', handleOrientationChange);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleOrientationChange);
+
+    return () => {
+      portraitMediaQuery.removeEventListener('change', handleOrientationChange);
+      landscapeMediaQuery.removeEventListener('change', handleOrientationChange);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', handleOrientationChange);
+    };
+  }, [isMobileDevice, isPreviewOpen]);
 
   // Dynamically calculate height for tablet landscape layout
   useEffect(() => {
@@ -473,14 +510,7 @@ export function FilmRollGallery({
             description={description}
             isDarkMode={isDarkMode}
           />
-          {/* Logo in bottom right when gallery is rolled out */}
-          {rolledOut && (
-            <img
-              src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
-              alt="BOKU"
-              className="fixed bottom-4 right-4 w-24 h-auto opacity-60 z-50 pointer-events-none"
-            />
-          )}
+          {/* Logo in bottom right - removed for desktop/laptop, only shown for tablet/mobile */}
         </div>
       )}
 
@@ -1115,7 +1145,9 @@ export function FilmRollGallery({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-8"
+            className={`fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center ${
+              isMobileDevice && isLandscape ? 'p-0' : 'p-8'
+            }`}
             onClick={() => setIsPreviewOpen(false)}
           >
             <motion.div
@@ -1123,13 +1155,21 @@ export function FilmRollGallery({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full max-w-5xl max-h-[90vh] flex flex-col items-center"
+              className={`relative flex flex-col items-center ${
+                isMobileDevice && isLandscape 
+                  ? 'w-full h-full' 
+                  : 'w-full max-w-5xl max-h-[90vh]'
+              }`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Close button */}
               <button
                 onClick={() => setIsPreviewOpen(false)}
-                className="absolute -top-12 right-0 text-white text-xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors z-10"
+                className={`absolute text-white text-xl font-bold w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 active:bg-white/20 transition-colors z-10 ${
+                  isMobileDevice && isLandscape 
+                    ? 'top-4 right-4' 
+                    : '-top-12 right-0'
+                }`}
                 aria-label="Close preview"
               >
                 ×
@@ -1137,7 +1177,11 @@ export function FilmRollGallery({
 
               {/* Image - Swipeable */}
               <motion.div 
-                className="relative w-full h-[70vh] flex items-center justify-center bg-black rounded-lg overflow-hidden cursor-grab active:cursor-grabbing"
+                className={`relative flex items-center justify-center bg-black overflow-hidden cursor-grab active:cursor-grabbing ${
+                  isMobileDevice && isLandscape 
+                    ? 'w-full h-full' 
+                    : 'w-full h-[70vh] rounded-lg'
+                }`}
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.2}
@@ -1160,16 +1204,30 @@ export function FilmRollGallery({
                   key={previewImageIndex}
                   src={images[previewImageIndex]}
                   alt={`Photo ${previewImageIndex + 1}`}
-                  className="max-w-full max-h-full object-contain pointer-events-none"
+                  className={`pointer-events-none ${
+                    isMobileDevice && isLandscape
+                      ? 'w-full h-full object-contain'
+                      : 'max-w-full max-h-full object-contain'
+                  }`}
                   initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  animate={{ 
+                    opacity: 1,
+                  }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.3 }}
+                  style={{
+                    maxWidth: isMobileDevice && isLandscape ? '100vw' : undefined,
+                    maxHeight: isMobileDevice && isLandscape ? '100vh' : undefined,
+                    width: isMobileDevice && isLandscape ? 'auto' : undefined,
+                    height: isMobileDevice && isLandscape ? '100%' : undefined,
+                  }}
                 />
               </motion.div>
 
-              {/* Image counter only - no navigation buttons */}
-              <div className="mt-6 flex items-center justify-center">
+              {/* Image counter - adjust position for landscape */}
+              <div className={`flex items-center justify-center ${
+                isMobileDevice && isLandscape ? 'absolute bottom-4 left-1/2 -translate-x-1/2' : 'mt-6'
+              }`}>
                 <span 
                   className="text-black font-mono text-sm font-semibold bg-white/80 px-4 py-2 rounded-lg"
                   style={{
