@@ -5,6 +5,13 @@ export function useTabletOrientationLock() {
 
   useEffect(() => {
     const checkOrientation = () => {
+      // Exclude mobile phones (≤600px) - they should work in portrait mode
+      const isMobilePhone = window.innerWidth <= 600;
+      if (isMobilePhone) {
+        setShowOrientationMessage(false);
+        return;
+      }
+
       // Check if device is a tablet based on dimensions
       // Tablets typically have width between 768-1025px OR height between 768-1025px
       // (accounting for both portrait and landscape orientations)
@@ -28,6 +35,13 @@ export function useTabletOrientationLock() {
     // Monitor orientation changes
     const portraitMediaQuery = window.matchMedia('(orientation: portrait)');
     const handleOrientationChange = (e: MediaQueryListEvent) => {
+      // Exclude mobile phones (≤600px) - they should work in portrait mode
+      const isMobilePhone = window.innerWidth <= 600;
+      if (isMobilePhone) {
+        setShowOrientationMessage(false);
+        return;
+      }
+
       const isTabletWidth = window.innerWidth >= 768 && window.innerWidth <= 1025;
       const isTabletHeight = window.innerHeight >= 768 && window.innerHeight <= 1025;
       const isTablet = isTabletWidth || isTabletHeight;

@@ -4,6 +4,7 @@ import { PageHeader } from "../components/PageHeader";
 import StaggeredMenu from "../components/StaggeredMenu";
 import { getPhotographyGalleries } from "../src/lib/sanityQueries";
 import { useTabletLandscape } from "../components/ui/use-tablet-landscape";
+import { useIsMobile } from "../components/ui/use-mobile";
 
 interface PhotographyProps {
   isDarkMode: boolean;
@@ -14,8 +15,9 @@ export function Photography({ isDarkMode }: PhotographyProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [galleries, setGalleries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0); // For tablet landscape single gallery view
+  const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0); // For tablet landscape and mobile single gallery view
   const isTabletLandscape = useTabletLandscape();
+  const isMobile = useIsMobile();
 
   // Fetch galleries from Sanity
   useEffect(() => {
@@ -58,12 +60,22 @@ export function Photography({ isDarkMode }: PhotographyProps) {
     <div className="relative">
       <PageHeader title="Photography" isDarkMode={isDarkMode} />
       <p
-        className={`mt-6 tablet-landscape:mt-8 text-center text-base tablet-landscape:text-lg tracking-tight transition-colors duration-500 ${
+        className={`mt-6 tablet-landscape:mt-8 text-center tracking-tight transition-colors duration-500 ${
           isDarkMode ? 'text-white/80' : 'text-zinc-700'
         }`}
         style={{
           fontFamily:
-            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace",
+          fontSize: 'clamp(0.875rem, 2.5vw, 1.125rem)', // Responsive font size
+          lineHeight: '1.5',
+          maxWidth: 'min(90vw, 800px)',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          paddingLeft: 'clamp(1rem, 5vw, 2rem)',
+          paddingRight: 'clamp(1rem, 5vw, 2rem)',
+          wordWrap: 'break-word',
+          overflowWrap: 'break-word',
+          hyphens: 'auto',
         }}
       >
         Every photograph is a question the world once asked of itself
@@ -117,8 +129,8 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         <div className="flex items-center justify-center py-20">
           <p className="text-xl">No galleries found. Add some in Sanity Studio!</p>
         </div>
-      ) : isTabletLandscape ? (
-        /* Tablet Landscape: Single gallery with swipe navigation */
+      ) : isTabletLandscape || isMobile ? (
+        /* Tablet Landscape or Mobile: Single gallery with swipe navigation */
         galleries.length > 0 && currentGalleryIndex < galleries.length && (
           <FilmRollGallery 
             key={galleries[currentGalleryIndex]._id}
@@ -141,6 +153,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
               }
             }}
             isMenuOpen={isMenuOpen}
+            isMobile={isMobile}
           />
         )
       ) : (
