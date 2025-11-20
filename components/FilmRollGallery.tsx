@@ -4,6 +4,7 @@ import { FilmFrame } from "./FilmFrame";
 import { PhotoStackPreview, type StackItem } from "./PhotoStackPreview";
 import DecryptedText from "./DecryptedText";
 import { useTabletLandscape } from "./ui/use-tablet-landscape";
+import { useIsMobile } from "./ui/use-mobile";
 
 interface FilmRollGalleryProps {
   images: string[];
@@ -20,10 +21,11 @@ interface FilmRollGalleryProps {
   onPreviewPositionChange?: (top: number, height: number) => void; // Callback to report preview position
   showBubbleVideo?: boolean; // Whether to show the bubble video for this gallery (defaults to true)
   isDarkMode?: boolean;
-  currentGalleryIndex?: number; // Current gallery index for tablet landscape
-  totalGalleries?: number; // Total number of galleries for tablet landscape
-  onNavigateGallery?: (direction: 'next' | 'prev') => void; // Navigation callback for tablet landscape
+  currentGalleryIndex?: number; // Current gallery index for tablet landscape and mobile
+  totalGalleries?: number; // Total number of galleries for tablet landscape and mobile
+  onNavigateGallery?: (direction: 'next' | 'prev') => void; // Navigation callback for tablet landscape and mobile
   isMenuOpen?: boolean; // Whether the menu is open (to disable hover effects)
+  isMobile?: boolean; // Whether the device is a mobile phone
 }
 
 
@@ -165,6 +167,7 @@ export function FilmRollGallery({
   totalGalleries: _totalGalleries = 1, // Available for future use (e.g., gallery counter)
   onNavigateGallery,
   isMenuOpen = false,
+  isMobile: isMobileProp = false,
 }: FilmRollGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [stack, setStack] = useState<StackItem[]>([]);
@@ -186,6 +189,8 @@ export function FilmRollGallery({
   const [canisterDragX, setCanisterDragX] = useState(0); // Track canister drag position
   
   const isTabletLandscape = useTabletLandscape();
+  const isMobileHook = useIsMobile();
+  const isMobileDevice = isMobileProp || isMobileHook; // Use prop if provided, otherwise use hook
   
   // Use controlled state if provided, otherwise use internal state
   const rolledOut = isOpen !== undefined ? isOpen : internalRolledOut;
@@ -304,19 +309,19 @@ export function FilmRollGallery({
     }
   }, [rolledOut]);
 
-  // Reset preview when gallery changes (tablet landscape)
-  useEffect(() => {
-    if (isTabletLandscape && onNavigateGallery) {
-      setIsPreviewOpen(false);
-      setPreviewImageIndex(0);
-      setIsSwipeGesture(false);
-      setCanisterDragX(0);
-    }
-  }, [currentGalleryIndex, isTabletLandscape, onNavigateGallery]);
+         // Reset preview when gallery changes (tablet landscape and mobile)
+         useEffect(() => {
+           if ((isTabletLandscape || isMobileDevice) && onNavigateGallery) {
+             setIsPreviewOpen(false);
+             setPreviewImageIndex(0);
+             setIsSwipeGesture(false);
+             setCanisterDragX(0);
+           }
+         }, [currentGalleryIndex, isTabletLandscape, isMobileDevice, onNavigateGallery]);
 
-  // Keyboard navigation for tablet landscape preview
-  useEffect(() => {
-    if (!isTabletLandscape || !isPreviewOpen) return;
+         // Keyboard navigation for tablet landscape and mobile preview
+         useEffect(() => {
+           if ((!isTabletLandscape && !isMobileDevice) || !isPreviewOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
@@ -457,7 +462,7 @@ export function FilmRollGallery({
   return (
     <div className={`w-full ${className}`}>
       {/* Desktop: Preview box (stack of chosen photos) */}
-      {!isTabletLandscape && (
+      {!isTabletLandscape && !isMobileDevice && (
         <div ref={previewRef}>
           <PhotoStackPreview 
             stack={stack} 
@@ -646,8 +651,155 @@ export function FilmRollGallery({
         </div>
       )}
 
+      {/* Mobile Portrait: Simplified layout with canister + title/subtitle in one row, description below */}
+      {isMobileDevice && !isTabletLandscape && (
+        <div 
+          className="relative w-full flex flex-col items-center justify-start px-4 py-6"
+        >
+          <div className="mobile-portrait-inner w-full max-w-lg border border-black p-4 flex flex-col gap-4">
+            {/* Top row: Canister + Title/Subtitle/Metadata */}
+            <div className="flex items-center gap-4">
+              {/* Canister */}
+              <div className="flex-shrink-0">
+                <motion.button
+                  aria-label="View photos"
+                  onClick={() => {
+                    if (!isSwipeGesture && onNavigateGallery) {
+                      setIsPreviewOpen(true);
+                      setPreviewImageIndex(0);
+                    }
+                    setTimeout(() => setIsSwipeGesture(false), 100);
+                  }}
+                  drag={onNavigateGallery ? "x" : false}
+                  dragConstraints={onNavigateGallery ? { left: 0, right: 0 } : undefined}
+                  dragElastic={onNavigateGallery ? 0.2 : undefined}
+                  onDrag={onNavigateGallery ? (_, info) => {
+                    setCanisterDragX(info.offset.x);
+                  } : undefined}
+                  onDragEnd={onNavigateGallery ? (_, info) => {
+                    const threshold = 80;
+                    const absOffset = Math.abs(info.offset.x);
+                    
+                    if (absOffset > threshold && onNavigateGallery) {
+                      setIsSwipeGesture(true);
+                      if (info.offset.x < -threshold) {
+                        onNavigateGallery('next');
+                      } else if (info.offset.x > threshold) {
+                        onNavigateGallery('prev');
+                      }
+                    }
+                    setCanisterDragX(0);
+                  } : undefined}
+                  initial={{ opacity: 1, scale: 1 }}
+                  whileTap={{ scale: 0.95 }}
+                  whileDrag={onNavigateGallery ? { 
+                    scale: 1.1,
+                    cursor: 'grabbing'
+                  } : undefined}
+                  animate={onNavigateGallery ? {
+                    x: canisterDragX
+                  } : {}}
+                  className={`mobile-canister-button z-30 w-24 h-32 flex items-center justify-center ${onNavigateGallery ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                >
+                  <div className="relative w-full h-full">
+                    <img
+                      src="/media/film-canister.png"
+                      alt="Film Roll"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </motion.button>
+              </div>
+
+              {/* Title/Subtitle/Metadata */}
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={`title-${currentGalleryIndex}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-1 flex flex-col items-start text-left"
+                >
+                  <NotesContent 
+                    compact={true}
+                    title={title || "Untitled"}
+                    subtitle={subtitle}
+                    filmUsed={filmUsed}
+                    year={year}
+                    photos={images.length}
+                    isDarkMode={isDarkMode}
+                    isCanisterHovered={false}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Description below */}
+            {description && (
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={`description-${currentGalleryIndex}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full pt-4 border-t border-black/20"
+                >
+                  <div 
+                    className="text-sm leading-relaxed font-mono text-black"
+                    style={{
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+                    }}
+                  >
+                    {description}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            )}
+
+            {/* Navigation buttons */}
+            {onNavigateGallery && (
+              <div className="flex items-center justify-center gap-4 pt-2">
+                <motion.button
+                  onClick={() => {
+                    if (onNavigateGallery) {
+                      onNavigateGallery('prev');
+                    }
+                  }}
+                  whileTap={{ scale: 0.9 }}
+                  className="px-4 py-2 bg-black/10 active:bg-black/20 text-black rounded-lg transition-colors font-mono text-xs font-semibold"
+                  style={{
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+                  }}
+                  aria-label="Previous gallery"
+                >
+                  ← Prev
+                </motion.button>
+
+                <motion.button
+                  onClick={() => {
+                    if (onNavigateGallery) {
+                      onNavigateGallery('next');
+                    }
+                  }}
+                  whileTap={{ scale: 0.9 }}
+                  className="px-4 py-2 bg-black/10 active:bg-black/20 text-black rounded-lg transition-colors font-mono text-xs font-semibold"
+                  style={{
+                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
+                  }}
+                  aria-label="Next gallery"
+                >
+                  Next →
+                </motion.button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Desktop: Reel section */}
-      {!isTabletLandscape && (
+      {!isTabletLandscape && !isMobileDevice && (
       <div className="relative w-full px-4 pb-10 tablet-landscape:px-6 tablet-landscape:pb-12">
         <div className="max-w-7xl mx-auto relative">
           {/* Canister (toggle rollout) */}
@@ -955,9 +1107,9 @@ export function FilmRollGallery({
       </div>
       )}
 
-      {/* Simple Preview Modal for Tablet Landscape */}
+      {/* Simple Preview Modal for Tablet Landscape and Mobile */}
       <AnimatePresence>
-        {isTabletLandscape && isPreviewOpen && (
+        {(isTabletLandscape || isMobileDevice) && isPreviewOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1032,8 +1184,8 @@ export function FilmRollGallery({
         )}
       </AnimatePresence>
 
-      {/* Logo in bottom right of viewport - only when tablet preview is open */}
-      {isTabletLandscape && isPreviewOpen && (
+      {/* Logo in bottom right of viewport - only when tablet or mobile preview is open */}
+      {(isTabletLandscape || isMobileDevice) && isPreviewOpen && (
         <img
           src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
           alt="BOKU"
