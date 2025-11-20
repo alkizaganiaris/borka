@@ -1,6 +1,7 @@
 import clsx from "clsx";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { useIsMobile } from "./ui/use-mobile";
 
 interface PageHeaderProps {
   title: string;
@@ -13,6 +14,7 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
   const isJournalPage = title === "Journal";
   const isPhotographyPage = title === "Photography";
   const [journalHeaderIndex, setJournalHeaderIndex] = useState(0);
+  const isMobile = useIsMobile();
 
   const handleJournalHeaderClick = () => {
     if (isJournalPage && journalHeaderIndex < 7) {
@@ -94,11 +96,11 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
             title
           )}
         </h1>
-               {title === "Journal" && (
+               {title === "Journal" && !isMobile && (
                  <>
 
                    
-                   {/* Shavings image - bottom right */}
+                   {/* Shavings image - bottom right - Hidden on mobile */}
                    <div className="fixed bottom-[-20px] right-4 z-1">
                      <motion.img 
                        src="/media/shavings_1.png" 
@@ -114,7 +116,7 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                      />
                    </div>
 
-                   {/* Coffee/Tea image - center viewport */}
+                   {/* Coffee/Tea image - center viewport - Hidden on mobile */}
                    <div
                     className="fixed top-1/2 left-1/2 pointer-events-auto"
                     style={{ transform: 'translate(-50%, -35%)', zIndex: 1  }}

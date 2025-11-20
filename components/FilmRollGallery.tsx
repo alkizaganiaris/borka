@@ -532,7 +532,40 @@ export function FilmRollGallery({
             height: tabletLandscapeHeight
           }}
         >
-          <div className="tablet-landscape-inner flex items-center justify-center gap-8 max-w-6xl w-full border border-black p-8 pt-6 mt-8">
+          <motion.div 
+            className="tablet-landscape-inner flex items-center justify-center gap-8 max-w-6xl w-full border border-black p-8 pt-6 mt-8"
+            drag={onNavigateGallery ? "x" : false}
+            dragConstraints={onNavigateGallery ? { left: 0, right: 0 } : undefined}
+            dragElastic={onNavigateGallery ? 0.2 : undefined}
+            onDrag={onNavigateGallery ? (_, info) => {
+              setCanisterDragX(info.offset.x);
+            } : undefined}
+            onDragEnd={onNavigateGallery ? (_, info) => {
+              const threshold = 80; // Minimum swipe distance to trigger navigation
+              const absOffset = Math.abs(info.offset.x);
+              
+              if (absOffset > threshold && onNavigateGallery) {
+                setIsSwipeGesture(true);
+                if (info.offset.x < -threshold) {
+                  // Swiped left - next gallery
+                  onNavigateGallery('next');
+                } else if (info.offset.x > threshold) {
+                  // Swiped right - previous gallery
+                  onNavigateGallery('prev');
+                }
+              }
+              setCanisterDragX(0);
+            } : undefined}
+            whileDrag={onNavigateGallery ? { 
+              cursor: 'grabbing'
+            } : undefined}
+            animate={onNavigateGallery ? {
+              x: canisterDragX
+            } : {}}
+            style={onNavigateGallery ? {
+              cursor: 'grab'
+            } : {}}
+          >
             {/* Left side: Description */}
             <AnimatePresence mode="wait">
               <motion.div 
@@ -558,7 +591,7 @@ export function FilmRollGallery({
 
             {/* Center: Canister with navigation buttons */}
             <div className="flex-shrink-0 flex flex-col items-center gap-4">
-              {/* Canister - Swipeable left/right, click to open preview */}
+              {/* Canister - Click to open preview (no longer swipeable) */}
               <motion.button
                 aria-label="View photos"
                 onClick={() => {
@@ -578,39 +611,10 @@ export function FilmRollGallery({
                     setPreviewImageIndex(0);
                   }
                 }}
-                drag={onNavigateGallery ? "x" : false}
-                dragConstraints={onNavigateGallery ? { left: 0, right: 0 } : undefined}
-                dragElastic={onNavigateGallery ? 0.2 : undefined}
-                onDrag={onNavigateGallery ? (_, info) => {
-                  setCanisterDragX(info.offset.x);
-                } : undefined}
-                onDragEnd={onNavigateGallery ? (_, info) => {
-                  const threshold = 80; // Minimum swipe distance to trigger navigation
-                  const absOffset = Math.abs(info.offset.x);
-                  
-                  if (absOffset > threshold && onNavigateGallery) {
-                    setIsSwipeGesture(true);
-                    if (info.offset.x < -threshold) {
-                      // Swiped left - next gallery
-                      onNavigateGallery('next');
-                    } else if (info.offset.x > threshold) {
-                      // Swiped right - previous gallery
-                      onNavigateGallery('prev');
-                    }
-                  }
-                  setCanisterDragX(0);
-                } : undefined}
                 initial={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                whileDrag={onNavigateGallery ? { 
-                  scale: 1.1,
-                  cursor: 'grabbing'
-                } : undefined}
-                animate={onNavigateGallery ? {
-                  x: canisterDragX
-                } : {}}
-                className={`tablet-landscape-canister-button z-30 w-32 h-40 flex items-center justify-center ${onNavigateGallery ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                className="tablet-landscape-canister-button z-30 w-32 h-40 flex items-center justify-center"
               >
                 <div className="relative w-full h-full">
                   <img
@@ -685,7 +689,7 @@ export function FilmRollGallery({
                 />
               </motion.div>
             </AnimatePresence>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -694,7 +698,38 @@ export function FilmRollGallery({
         <div 
           className="relative w-full flex flex-col items-center justify-start px-4 py-6"
         >
-          <div className="mobile-portrait-inner w-full max-w-lg border border-black p-4 flex flex-col gap-4">
+          <motion.div 
+            className="mobile-portrait-inner w-full max-w-lg border border-black p-4 flex flex-col gap-4"
+            drag={onNavigateGallery ? "x" : false}
+            dragConstraints={onNavigateGallery ? { left: 0, right: 0 } : undefined}
+            dragElastic={onNavigateGallery ? 0.2 : undefined}
+            onDrag={onNavigateGallery ? (_, info) => {
+              setCanisterDragX(info.offset.x);
+            } : undefined}
+            onDragEnd={onNavigateGallery ? (_, info) => {
+              const threshold = 80;
+              const absOffset = Math.abs(info.offset.x);
+              
+              if (absOffset > threshold && onNavigateGallery) {
+                setIsSwipeGesture(true);
+                if (info.offset.x < -threshold) {
+                  onNavigateGallery('next');
+                } else if (info.offset.x > threshold) {
+                  onNavigateGallery('prev');
+                }
+              }
+              setCanisterDragX(0);
+            } : undefined}
+            whileDrag={onNavigateGallery ? { 
+              cursor: 'grabbing'
+            } : undefined}
+            animate={onNavigateGallery ? {
+              x: canisterDragX
+            } : {}}
+            style={onNavigateGallery ? {
+              cursor: 'grab'
+            } : {}}
+          >
             {/* Top row: Canister + Title/Subtitle/Metadata */}
             <div className="flex items-center gap-4">
               {/* Canister */}
@@ -708,36 +743,9 @@ export function FilmRollGallery({
                     }
                     setTimeout(() => setIsSwipeGesture(false), 100);
                   }}
-                  drag={onNavigateGallery ? "x" : false}
-                  dragConstraints={onNavigateGallery ? { left: 0, right: 0 } : undefined}
-                  dragElastic={onNavigateGallery ? 0.2 : undefined}
-                  onDrag={onNavigateGallery ? (_, info) => {
-                    setCanisterDragX(info.offset.x);
-                  } : undefined}
-                  onDragEnd={onNavigateGallery ? (_, info) => {
-                    const threshold = 80;
-                    const absOffset = Math.abs(info.offset.x);
-                    
-                    if (absOffset > threshold && onNavigateGallery) {
-                      setIsSwipeGesture(true);
-                      if (info.offset.x < -threshold) {
-                        onNavigateGallery('next');
-                      } else if (info.offset.x > threshold) {
-                        onNavigateGallery('prev');
-                      }
-                    }
-                    setCanisterDragX(0);
-                  } : undefined}
                   initial={{ opacity: 1, scale: 1 }}
                   whileTap={{ scale: 0.95 }}
-                  whileDrag={onNavigateGallery ? { 
-                    scale: 1.1,
-                    cursor: 'grabbing'
-                  } : undefined}
-                  animate={onNavigateGallery ? {
-                    x: canisterDragX
-                  } : {}}
-                  className={`mobile-canister-button z-30 w-24 h-32 flex items-center justify-center ${onNavigateGallery ? 'cursor-grab active:cursor-grabbing' : ''}`}
+                  className="mobile-canister-button z-30 w-24 h-32 flex items-center justify-center"
                 >
                   <div className="relative w-full h-full">
                     <img
@@ -832,7 +840,7 @@ export function FilmRollGallery({
                 </motion.button>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       )}
 

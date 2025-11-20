@@ -12,6 +12,7 @@ import DotGrid from "./components/BlastBackground";
 import { motion, AnimatePresence } from "motion/react";
 import Magnet from "./components/MagnetButton";
 import { useTabletOrientationLock } from "./components/ui/use-tablet-orientation-lock";
+import { useIsMobile } from "./components/ui/use-mobile";
 
 function AppContent() {
   // Lock tablet orientation to landscape
@@ -24,6 +25,7 @@ function AppContent() {
   const [showBlastBackground, setShowBlastBackground] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const isHomePage = location.pathname === '/';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -295,7 +297,9 @@ function AppContent() {
             
             {/* Playful text */}
             <motion.div
-              className={`absolute right-full mr-4 top-1/3 -translate-y-1/2 font-mono text-xs whitespace-nowrap ${
+              className={`absolute right-full top-1/3 -translate-y-1/2 font-mono ${
+                isMobile ? 'text-[10px] max-w-[120px] mr-2' : 'text-xs mr-6 whitespace-nowrap'
+              } ${
                 isDarkMode ? 'text-black' : 'text-zinc-700'
               }`}
               initial={{ opacity: 0, x: 10 }}
@@ -304,12 +308,18 @@ function AppContent() {
                 x: (isButtonHovered || wasCaught) ? 0 : 10,
               }}
               transition={{ duration: 0.3, ease: "easeInOut" }}
+              style={{
+                wordWrap: isMobile ? 'break-word' : 'normal',
+                lineHeight: isMobile ? '1.2' : '1',
+              }}
             >
               {wasCaught 
                 ? "'click'" 
                 : isButtonHovered && !wasCaught
                   ? location.pathname === '/journal'
-                    ? (isDarkMode ? "Grab a coffee while you're at it" : "Stop doomscrolling! Read a journal entry instead")
+                    ? (isDarkMode 
+                        ? (isMobile ? "Grab a coffee!" : "Grab a coffee while you're at it")
+                        : (isMobile ? "Stop doomscrolling!" : "Stop doomscrolling! Read a journal entry instead"))
                     : (isDarkMode ? "Lights on?" : "Lights off?")
                   : ""}
             </motion.div>
