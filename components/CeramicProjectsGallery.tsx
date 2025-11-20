@@ -1381,7 +1381,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                           key={currentImage.src}
                           src={currentImage.src}
                           alt={currentImage.alt}
-                          className="absolute inset-0 h-full w-full object-fill md:object-cover"
+                          className="absolute inset-0 h-full w-full object-contain md:object-cover"
                           loading={isCurrentImageDecoded ? "eager" : "lazy"}
                           initial={{ opacity: isCurrentImageDecoded ? 0.4 : 0, scale: 1.01 }}
                           animate={{ opacity: 1, scale: 1 }}
