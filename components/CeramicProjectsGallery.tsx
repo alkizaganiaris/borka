@@ -1093,7 +1093,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         )}
       >
         <motion.section
-          className="flex flex-col gap-2 md:gap-2 md:h-[95vh] md:max-h-[95vh] md:overflow-hidden"
+          className="flex flex-col gap-2 md:gap-2 md:min-h-[95vh] md:overflow-visible"
           initial={{ opacity: 0, y: 48 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.35 }}
@@ -1102,14 +1102,14 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         <div
           className={clsx(
             "flex flex-col gap-2 md:gap-2",
-            "md:flex-row md:items-stretch md:h-full md:overflow-hidden"
+            "md:flex-row md:items-stretch"
           )}
         >
           {/* Hero image column - hidden on mobile */}
           {!isMobile && (
             <motion.figure
               className={clsx(
-                "w-full h-[320px] md:h-full md:w-[40%] lg:w-[40%] flex-shrink-0 rounded-[20px] overflow-hidden border relative shadow-xl shadow-black/5 md:min-h-[360px]",
+                "w-full h-[320px] md:h-[95vh] md:w-[40%] lg:w-[40%] flex-shrink-0 rounded-[20px] overflow-hidden border relative shadow-xl shadow-black/5 md:min-h-[360px] md:max-h-[95vh]",
                 accentBorder,
                 heroOrder
               )}
@@ -1300,7 +1300,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
               "w-full md:flex-1 rounded-[20px] border shadow-lg shadow-black/5 backdrop-blur-sm",
               accentBorder,
               bgSurface,
-              "px-8 py-8 md:px-9 md:py-9 flex flex-col gap-8 md:h-full",
+              "px-8 py-8 md:px-9 md:py-9 flex flex-col gap-8 md:h-[95vh] md:max-h-[95vh]",
               contentOrder
             )}
             initial={{ opacity: 0, y: 24 }}
@@ -1361,7 +1361,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                 )}
               >
               <div className="pointer-events-none absolute inset-0 rounded-[20px] bg-gradient-to-br from-black/15 via-transparent to-black/10 mix-blend-multiply" />
-              <div className="relative flex flex-col gap-5 p-0 md:p-0 md:flex-1 md:min-h-0 md:overflow-hidden">
+              <div className="relative flex flex-col gap-5 p-0 md:p-0 md:flex-1 md:min-h-0">
                 {currentImage ? (
                   <>
                     <div

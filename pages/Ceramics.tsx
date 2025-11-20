@@ -144,7 +144,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
             fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
           }}
         >
-          Ceramics are not made; they are persuaded — a quiet negotiation between earth, water, and will.
+          Every form holds a question. Every surface, a resistance. Every fire, a transformation that cannot be undone.
         </p>
       </div>
       <StaggeredMenu
