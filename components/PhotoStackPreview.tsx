@@ -34,6 +34,8 @@ export function PhotoStackPreview({
   const [lastStackLength, setLastStackLength] = useState(0);
   const [newlyAddedItem, setNewlyAddedItem] = useState<string | null>(null);
   const [mouseMoved, setMouseMoved] = useState(false);
+  const [hoveredImageDimensions, setHoveredImageDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [isLaptop, setIsLaptop] = useState(false);
 
   // Track when new items are added to the stack
   useEffect(() => {
@@ -58,6 +60,65 @@ export function PhotoStackPreview({
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [newlyAddedItem]);
+
+  // Detect if we're on a laptop (not tablet/mobile)
+  useEffect(() => {
+    const checkIsLaptop = () => {
+      const width = window.innerWidth;
+      // Consider laptop if width > 1025px (above tablet landscape breakpoint)
+      setIsLaptop(width > 1025);
+    };
+
+    checkIsLaptop();
+    window.addEventListener('resize', checkIsLaptop);
+    return () => window.removeEventListener('resize', checkIsLaptop);
+  }, []);
+
+  // Load image dimensions when hovering starts (laptop only)
+  useEffect(() => {
+    if (!isTopHovered || !isLaptop || stack.length === 0) {
+      setHoveredImageDimensions(null);
+      return;
+    }
+
+    const topItem = stack[stack.length - 1];
+    if (!topItem) return;
+
+    const img = new Image();
+    img.onload = () => {
+      // Get original dimensions
+      const originalWidth = img.naturalWidth;
+      const originalHeight = img.naturalHeight;
+      
+      // Calculate max dimensions to prevent overflow (80% of viewport)
+      const maxWidth = window.innerWidth * 0.8;
+      const maxHeight = window.innerHeight * 0.8;
+      
+      // Calculate aspect ratio
+      const aspectRatio = originalWidth / originalHeight;
+      
+      // Scale to fit within max dimensions while maintaining aspect ratio
+      let displayWidth = originalWidth;
+      let displayHeight = originalHeight;
+      
+      if (displayWidth > maxWidth) {
+        displayWidth = maxWidth;
+        displayHeight = displayWidth / aspectRatio;
+      }
+      
+      if (displayHeight > maxHeight) {
+        displayHeight = maxHeight;
+        displayWidth = displayHeight * aspectRatio;
+      }
+      
+      setHoveredImageDimensions({ width: displayWidth, height: displayHeight });
+    };
+    img.onerror = () => {
+      // If image fails to load, don't set dimensions
+      setHoveredImageDimensions(null);
+    };
+    img.src = topItem.src;
+  }, [isTopHovered, isLaptop, stack]);
 
   return (
     <div className="relative">
@@ -160,24 +221,38 @@ export function PhotoStackPreview({
         <div
           className="absolute"
           style={{ 
-            width: "500px", 
-            height: "333px",
+            width: isTopHovered && isLaptop && hoveredImageDimensions 
+              ? `${hoveredImageDimensions.width}px` 
+              : "500px", 
+            height: isTopHovered && isLaptop && hoveredImageDimensions 
+              ? `${hoveredImageDimensions.height}px` 
+              : "333px",
             // Position controls - adjust these values:
             left: '70%',      // Horizontal position: 'left', 'center', 'right', or percentage/px
             top: '50%',       // Vertical position: 'top', 'center', 'bottom', or percentage/px
             transform: 'translate(-50%, -50%)', // Centers when using percentages
+            transition: 'width 0.3s ease-out, height 0.3s ease-out', // Smooth transition
           }}
           onMouseEnter={() => setIsTopHovered(true)}
-          onMouseLeave={() => setIsTopHovered(false)}
+          onMouseLeave={() => {
+            setIsTopHovered(false);
+            setHoveredImageDimensions(null);
+          }}
         >
           {stack.map((item, i) => {
             const isTop = i === stack.length - 1;
             const isNewlyAdded = newlyAddedItem === item.key;
             const hoverActive = isTop && isTopHovered && !isNewlyAdded; // Don't hover if newly added
             
-            // Calculate scale - newly added items are zoomed, hovered items are zoomed, top items are slightly scaled
+            // Calculate scale - newly added items are zoomed, hovered items use original dimensions (no scale needed on laptop), top items are slightly scaled
             const hoverScale = 1.35; // Adjust this value to control hover zoom
-            const scaleToFit = isNewlyAdded ? hoverScale : (hoverActive ? hoverScale : (isTop ? 1.02 : 1));
+            // On laptop with hover, we're using original dimensions, so no scale needed
+            // Otherwise, use the hover scale or default scaling
+            const scaleToFit = isNewlyAdded 
+              ? hoverScale 
+              : (hoverActive && isLaptop && hoveredImageDimensions) 
+                ? 1 // No scale when using original dimensions on laptop
+                : (hoverActive ? hoverScale : (isTop ? 1.02 : 1));
             
             return (
               <motion.div
