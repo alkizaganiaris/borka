@@ -122,9 +122,23 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
   ];
 
   return (
-    <div style={{ fontFamily: 'Montserrat, sans-serif' }}>
+    <div style={{ 
+      fontFamily: 'Montserrat, sans-serif',
+      width: '100%',
+      minHeight: '100vh',
+      position: 'relative',
+      overflowX: 'hidden',
+      overflowY: 'visible'
+    }}>
       <PageHeader title="Ceramics" isDarkMode={isDarkMode} />
-      <div className="w-full px-4">
+      <div 
+        className="w-full px-4"
+        style={{
+          position: 'relative',
+          zIndex: 1,
+          backgroundColor: isDarkMode ? 'transparent' : 'transparent'
+        }}
+      >
         <p
           className={`mt-6 text-center tracking-tight transition-colors duration-500 ${
             isDarkMode ? 'text-white/80' : 'text-zinc-600'
@@ -183,13 +197,14 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           boxSizing: 'border-box',
           paddingLeft: isMobile ? '0' : undefined,
           paddingRight: isMobile ? '0' : undefined,
-          overflowX: 'hidden'
+          touchAction: 'pan-y'
         }}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
+          style={{ touchAction: 'pan-y' }}
         >
 
 
@@ -222,9 +237,9 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
           </div>
         </motion.div> */}
 
-        <div className="mb-24 w-full px-10">
+        <div className="mb-24 w-full px-10" style={{ minHeight: isMobile ? '400px' : '600px' }}>
           {isLoadingProjects ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="flex flex-col items-center justify-center py-16 text-center" style={{ minHeight: isMobile ? '300px' : '500px' }}>
               <p className="text-xl font-semibold text-zinc-500">Loading projects…</p>
             </div>
           ) : projectsError ? (

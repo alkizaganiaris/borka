@@ -32,7 +32,7 @@ export async function getPhotographyGalleries() {
   }`
   return await sanityClient.fetch(query)
 }
-
+i
 // Fetch all ceramic projects
 export async function getCeramicProjects() {
   const query = `*[_type == "ceramicProject" && published == true] | order(_createdAt desc) {

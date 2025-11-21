@@ -122,7 +122,9 @@ export function CeramicProjectsGallery({
         paddingRight: isMobile ? '1rem' : undefined,
         boxSizing: 'border-box',
         overflowX: 'hidden',
-        overflowY: 'visible'
+        overflowY: 'visible',
+        minHeight: isMobile ? '300px' : '400px',
+        touchAction: 'pan-y'
       }}
     >
       <div
@@ -139,8 +141,8 @@ export function CeramicProjectsGallery({
           maxWidth: '100%',
           boxSizing: 'border-box',
           overflow: 'visible',
-          zIndex: isMobile ? 100 : 'auto',
-          position: 'relative'
+          zIndex: (isMobile && isMobileDropdownOpen) ? 1 : 'auto',
+          position: isMobile ? 'static' : 'relative'
         }}
       >
         {/* BOKU stamp on the right - hidden on mobile */}
@@ -221,7 +223,7 @@ export function CeramicProjectsGallery({
                     boxSizing: 'border-box',
                     overflowY: 'auto',
                     overflowX: 'hidden',
-                    zIndex: 100
+                    zIndex: 1
                   }}
                 >
                   <div className="p-2 space-y-1">
@@ -1094,16 +1096,19 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       >
         <motion.section
           className="flex flex-col gap-2 md:gap-2 md:min-h-[95vh] md:overflow-visible"
-          initial={{ opacity: 0, y: 48 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.35 }}
+          initial={index === 0 ? false : { opacity: 0 }}
+          animate={index === 0 ? { opacity: 1 } : undefined}
+          whileInView={index === 0 ? undefined : { opacity: 1 }}
+          viewport={index === 0 ? undefined : { once: true, amount: 0.35 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          style={{ touchAction: 'pan-y', minHeight: isMobile ? '400px' : undefined }}
         >
         <div
           className={clsx(
             "flex flex-col gap-2 md:gap-2",
             "md:flex-row md:items-stretch"
           )}
+          style={{ touchAction: 'pan-y' }}
         >
           {/* Hero image column - hidden on mobile */}
           {!isMobile && (
@@ -1303,10 +1308,15 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
               "px-8 py-8 md:px-9 md:py-9 flex flex-col gap-8 md:h-[95vh] md:max-h-[95vh]",
               contentOrder
             )}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
+            initial={index === 0 ? false : { opacity: 0 }}
+            animate={index === 0 ? { opacity: 1 } : undefined}
+            whileInView={index === 0 ? undefined : { opacity: 1 }}
+            viewport={index === 0 ? undefined : { once: true, amount: 0.4 }}
+            transition={{ duration: 0.6, delay: index === 0 ? 0 : 0.1 }}
+            style={{ 
+              touchAction: 'pan-y',
+              minHeight: isMobile ? '300px' : undefined
+            }}
           >
             <div className="flex flex-col gap-6">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-8">
@@ -1700,13 +1710,13 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                     ) : (
                       /* Regular modal with title and images */
                       <>
-                        {/* BOKU stamp in top left of modal - only for non-hero */}
+                        {/* BOKU stamp in modal - top left */}
                         <img
                           src={isDarkMode ? "/media/boku_home_white.svg" : "/media/boku_home.svg"}
                           alt="BOKU"
-                          className="absolute top-4 left-4 pointer-events-none z-20"
+                          className="absolute top-2 left-2 pointer-events-none z-20"
                           style={{
-                            width: isMobile && !isMobileLandscape ? '72px' : (isMobileLandscape ? '80px' : '120px'),
+                            width: isMobile && !isMobileLandscape ? '57.6px' : (isMobileLandscape ? '64px' : '96px'),
                             height: 'auto',
                           }}
                         />

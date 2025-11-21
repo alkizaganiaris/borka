@@ -107,9 +107,10 @@ function AppContent() {
 
   return (
     <div 
-      className="min-h-screen relative overflow-hidden transition-colors duration-500"
+      className="min-h-screen relative transition-colors duration-500"
       style={{
-        backgroundColor: isDarkMode ? 'teal-dark' : '#fffef0'
+        backgroundColor: isDarkMode ? 'teal-dark' : '#fffef0',
+        overflowX: 'hidden'
       }}
     >
 
