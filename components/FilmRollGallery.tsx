@@ -188,6 +188,9 @@ export function FilmRollGallery({
   const [isSwipeGesture, setIsSwipeGesture] = useState(false); // Track if canister was swiped (not clicked)
   const [canisterDragX, setCanisterDragX] = useState(0); // Track canister drag position
   const [isLandscape, setIsLandscape] = useState(false); // Track orientation for mobile preview
+  const [isDragging, setIsDragging] = useState(false); // Track if user is dragging the reel
+  const [dragStartX, setDragStartX] = useState(0); // Starting X position of drag
+  const [dragStartScrollLeft, setDragStartScrollLeft] = useState(0); // Starting scroll position
   
   const isTabletLandscape = useTabletLandscape();
   const isMobileHook = useIsMobile();
@@ -219,6 +222,59 @@ export function FilmRollGallery({
   const { scrollXProgress } = useScroll({
     container: scrollRef,
   });
+
+  // Mouse drag handlers for horizontal scrolling
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!scrollRef.current) return;
+    
+    // Only handle left mouse button
+    if (e.button !== 0) return;
+    
+    setIsDragging(true);
+    const rect = scrollRef.current.getBoundingClientRect();
+    setDragStartX(e.pageX - rect.left);
+    setDragStartScrollLeft(scrollRef.current.scrollLeft);
+    
+    // Prevent text selection during drag
+    e.preventDefault();
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
+  // Global mouseup listener to handle mouse release outside the container
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    window.addEventListener("mouseup", handleGlobalMouseUp);
+    return () => window.removeEventListener("mouseup", handleGlobalMouseUp);
+  }, [isDragging]);
+
+  // Global mousemove listener for smoother dragging
+  useEffect(() => {
+    if (!isDragging || !scrollRef.current) return;
+
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!scrollRef.current) return;
+      
+      const rect = scrollRef.current.getBoundingClientRect();
+      const x = e.pageX - rect.left;
+      const walk = (x - dragStartX) * 0.8; // Slower, less reactive scrolling
+      scrollRef.current.scrollLeft = dragStartScrollLeft - walk;
+    };
+
+    window.addEventListener("mousemove", handleGlobalMouseMove);
+    return () => window.removeEventListener("mousemove", handleGlobalMouseMove);
+  }, [isDragging, dragStartX, dragStartScrollLeft]);
 
   // Helper function to toggle the rolled out state
   const toggleRolledOut = (newState: boolean) => {
@@ -924,7 +980,12 @@ export function FilmRollGallery({
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               minHeight: "48px", // Match canister height
+              cursor: isDragging ? "grabbing" : "grab",
+              userSelect: "none",
             }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
           >
             {/* Reel reveal / rollback (clip-path) */}
             <motion.div
