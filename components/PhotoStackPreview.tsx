@@ -30,14 +30,17 @@ export function PhotoStackPreview({
   filmUsed,
   isDarkMode = false,
 }: PhotoStackPreviewProps) {
-  const [isTopHovered, setIsTopHovered] = useState(false);
+  const [isTopClicked, setIsTopClicked] = useState(false);
   const [lastStackLength, setLastStackLength] = useState(0);
   const [newlyAddedItem, setNewlyAddedItem] = useState<string | null>(null);
   const [mouseMoved, setMouseMoved] = useState(false);
   const [hoveredImageDimensions, setHoveredImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const [isLaptop, setIsLaptop] = useState(false);
   const [centerOffset, setCenterOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [imageDimensions, setImageDimensions] = useState<Map<string, { width: number; height: number }>>(new Map());
   const photoRef = useRef<HTMLDivElement>(null);
+  const loadedImageKeysRef = useRef<Set<string>>(new Set());
+  const imageDimensionsRef = useRef<Map<string, { width: number; height: number }>>(new Map());
 
   // Track when new items are added to the stack
   useEffect(() => {
@@ -76,9 +79,9 @@ export function PhotoStackPreview({
     return () => window.removeEventListener('resize', checkIsLaptop);
   }, []);
 
-  // Calculate center offset when hovering
+  // Calculate center offset when clicking top photo
   useEffect(() => {
-    if (!isTopHovered || !photoRef.current) {
+    if (!isTopClicked || !photoRef.current) {
       setCenterOffset({ x: 0, y: 0 });
       return;
     }
@@ -118,11 +121,64 @@ export function PhotoStackPreview({
       window.removeEventListener('resize', calculateCenterOffset);
       window.removeEventListener('scroll', calculateCenterOffset);
     };
-  }, [isTopHovered]);
+  }, [isTopClicked]);
+
+  // Load original dimensions for all images in stack (laptop only)
+  useEffect(() => {
+    if (!isLaptop || stack.length === 0) {
+      setImageDimensions(new Map());
+      loadedImageKeysRef.current.clear();
+      imageDimensionsRef.current.clear();
+      return;
+    }
+
+    const newDimensions = new Map(imageDimensionsRef.current);
+    let pendingLoads = 0;
+
+    stack.forEach((item) => {
+      if (loadedImageKeysRef.current.has(item.key)) {
+        // Already loaded, keep existing dimensions
+        return;
+      }
+
+      pendingLoads++;
+      const img = new Image();
+      img.onload = () => {
+        const dims = {
+          width: img.naturalWidth,
+          height: img.naturalHeight
+        };
+        newDimensions.set(item.key, dims);
+        imageDimensionsRef.current.set(item.key, dims);
+        loadedImageKeysRef.current.add(item.key);
+        pendingLoads--;
+        if (pendingLoads === 0) {
+          setImageDimensions(new Map(newDimensions));
+        }
+      };
+      img.onerror = () => {
+        // Use default dimensions if image fails to load
+        const defaultDims = { width: 500, height: 333 };
+        newDimensions.set(item.key, defaultDims);
+        imageDimensionsRef.current.set(item.key, defaultDims);
+        loadedImageKeysRef.current.add(item.key);
+        pendingLoads--;
+        if (pendingLoads === 0) {
+          setImageDimensions(new Map(newDimensions));
+        }
+      };
+      img.src = item.src;
+    });
+
+    // If no pending loads, update immediately
+    if (pendingLoads === 0) {
+      setImageDimensions(new Map(newDimensions));
+    }
+  }, [isLaptop, stack]);
 
   // Load image dimensions when hovering starts (laptop only)
   useEffect(() => {
-    if (!isTopHovered || !isLaptop || stack.length === 0) {
+    if (!isTopClicked || !isLaptop || stack.length === 0) {
       setHoveredImageDimensions(null);
       return;
     }
@@ -164,7 +220,7 @@ export function PhotoStackPreview({
       setHoveredImageDimensions(null);
     };
     img.src = topItem.src;
-  }, [isTopHovered, isLaptop, stack]);
+  }, [isTopClicked, isLaptop, stack]);
 
   return (
     <div className="relative">
@@ -188,7 +244,7 @@ export function PhotoStackPreview({
           width: '87vw', // Adjust this value to control width
           marginLeft: 'auto',
           marginRight: 'auto',
-          zIndex: isTopHovered ? 50 : 1, // Higher than film reel (z-30) when hovered
+          zIndex: isTopClicked ? 50 : 1, // Higher than film reel (z-30) when clicked
           position: 'relative'
         }}
       >
@@ -199,7 +255,7 @@ export function PhotoStackPreview({
           height: '63vh' // Adjust this value to control height
         }}
         animate={{
-          borderRadius: isTopHovered ? "8px" : "16px"
+          borderRadius: isTopClicked ? "8px" : "16px"
         }}
         transition={{
           duration: 0.2,
@@ -210,7 +266,7 @@ export function PhotoStackPreview({
         <motion.div 
           className="absolute inset-0 overflow-hidden"
           animate={{
-            borderRadius: isTopHovered ? "8px" : "16px"
+            borderRadius: isTopClicked ? "8px" : "16px"
           }}
           transition={{
             duration: 0.2,
@@ -222,7 +278,7 @@ export function PhotoStackPreview({
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
             style={{ 
               backgroundImage: 'url(/media/wooden_table.jpg)',
-              opacity: isTopHovered ? 0.3 : 1
+              opacity: isTopClicked ? 0.3 : 1
             }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
@@ -234,7 +290,7 @@ export function PhotoStackPreview({
               style={{
                 width: '120px',
                 height: 'auto',
-                opacity: isTopHovered ? 0.5 : 1
+                opacity: isTopClicked ? 0.5 : 1
               }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
             />
@@ -247,7 +303,7 @@ export function PhotoStackPreview({
               fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
             }}
             animate={{
-              opacity: isTopHovered ? 0 : 1
+              opacity: isTopClicked ? 0 : 1
             }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
@@ -269,71 +325,122 @@ export function PhotoStackPreview({
         <div
           className="absolute"
           style={{ 
-            // Use original image dimensions when hovered on laptop, otherwise use base size
-            width: isTopHovered && isLaptop && hoveredImageDimensions 
-              ? `${hoveredImageDimensions.width}px` 
-              : "500px", 
-            height: isTopHovered && isLaptop && hoveredImageDimensions 
-              ? `${hoveredImageDimensions.height}px` 
-              : "333px",
+            // Calculate container size based on top image's original dimensions (laptop only)
+            // Container size stays FIXED - never changes on hover
+            ...(isLaptop && stack.length > 0 && (() => {
+              const topItem = stack[stack.length - 1];
+              const topDimensions = imageDimensions.get(topItem.key);
+              
+              if (topDimensions) {
+                // Scale to fit within 500×333 while maintaining aspect ratio
+                const maxWidth = 500;
+                const maxHeight = 333;
+                const aspectRatio = topDimensions.width / topDimensions.height;
+                
+                let containerWidth = topDimensions.width;
+                let containerHeight = topDimensions.height;
+                
+                // Scale down if needed
+                if (containerWidth > maxWidth) {
+                  containerWidth = maxWidth;
+                  containerHeight = containerWidth / aspectRatio;
+                }
+                if (containerHeight > maxHeight) {
+                  containerHeight = maxHeight;
+                  containerWidth = containerHeight * aspectRatio;
+                }
+                
+                // Always use calculated dimensions - never change on hover
+                return {
+                  width: `${containerWidth}px`,
+                  height: `${containerHeight}px`,
+                };
+              }
+              return {};
+            })()) || {
+              // Default size when not laptop or dimensions not loaded
+              width: "500px",
+              height: "333px",
+            },
             // Position controls - adjust these values:
             left: '70%',      // Horizontal position: 'left', 'center', 'right', or percentage/px
             top: '50%',       // Vertical position: 'top', 'center', 'bottom', or percentage/px
             transform: 'translate(-50%, -50%)', // Centers when using percentages
-            transition: 'width 0.3s ease-out, height 0.3s ease-out', // Smooth transition
-          }}
-          onMouseEnter={() => setIsTopHovered(true)}
-          onMouseLeave={() => {
-            setIsTopHovered(false);
-            setHoveredImageDimensions(null);
           }}
         >
           {stack.map((item, i) => {
             const isTop = i === stack.length - 1;
             const isNewlyAdded = newlyAddedItem === item.key;
-            const hoverActive = isTop && isTopHovered && !isNewlyAdded; // Don't hover if newly added
+            const clickActive = isTop && isTopClicked && !isNewlyAdded; // Don't click if newly added
             
-            // Calculate scale - ONLY the top image should scale on hover
-            // Newly added items are zoomed, hovered top items scale, other top items slightly scaled, rest stay at 1
-            const hoverScale = 1; // Adjust this value to control hover zoom
-            // When hovered, always apply the hover scale to the top image
-            const scaleToFit = isNewlyAdded 
-              ? hoverScale 
-              : hoverActive 
-                ? hoverScale // Always scale when hovered
-                : (isTop ? 1.02 : 1); // Top item slightly scaled when not hovered, others stay at 1
+            // Calculate dimensions for this image (laptop only)
+            const itemDimensions = isLaptop ? imageDimensions.get(item.key) : null;
+            let imageWidth = "100%";
+            let imageHeight = "100%";
+            
+            if (isLaptop && itemDimensions) {
+              // For all images (including top), scale to fit within 500×333
+              const maxWidth = 500;
+              const maxHeight = 333;
+              const aspectRatio = itemDimensions.width / itemDimensions.height;
+              
+              let scaledWidth = itemDimensions.width;
+              let scaledHeight = itemDimensions.height;
+              
+              if (scaledWidth > maxWidth) {
+                scaledWidth = maxWidth;
+                scaledHeight = scaledWidth / aspectRatio;
+              }
+              if (scaledHeight > maxHeight) {
+                scaledHeight = maxHeight;
+                scaledWidth = scaledHeight * aspectRatio;
+              }
+              
+              imageWidth = `${scaledWidth}px`;
+              imageHeight = `${scaledHeight}px`;
+            }
+            
+            // Calculate scale - ONLY the top image should scale on click
+            // Clicked top items scale, other top items slightly scaled, rest stay at 1
+            const clickScale = 2; // Adjust this value to control click zoom
+            // When clicked, always apply the click scale to the top image
+            const scaleToFit = clickActive 
+              ? clickScale // Scale up when clicked
+              : (isTop ? 1.02 : 1); // Top item slightly scaled when not clicked, others stay at 1
             
             return (
               <motion.div
                 key={item.key}
                 ref={isTop ? photoRef : undefined}
-                className={hoverActive ? "fixed" : "absolute"}
+                className={clickActive ? "fixed" : "absolute"}
                 style={{
-                  // Top image uses 100% to scale with container, others use fixed size to prevent scaling
-                  width: isTop ? "100%" : "500px",
-                  height: isTop ? "100%" : "333px",
-                  zIndex: hoverActive ? 999999 : (isTop ? 999 : i), // Extremely high z-index when hovered to be above film reel (z-30) and everything else
+                  // All images use fixed dimensions - top image scales via transform, not size
+                  width: imageWidth,
+                  height: imageHeight,
+                  zIndex: clickActive ? 1000000 : (isTop ? 999 : i), // Extremely high z-index when clicked
                   pointerEvents: isTop ? "auto" : "none",
-                  isolation: hoverActive ? "isolate" : undefined, // Create new stacking context when hovered
+                  isolation: clickActive ? "isolate" : undefined, // Create new stacking context when clicked
+                  cursor: isTop ? "pointer" : "default", // Show pointer cursor on top image
+                  opacity: clickActive ? 1 : undefined, // Explicitly set opacity to 1 when clicked
                 }}
                 initial={{
                   opacity: 0,
                   scale: 0.9,
                   rotate: 0,
-                  x: isNewlyAdded ? (Math.random() - 0.5) * 100 : 0,  // Random horizontal slide (-50 to +50px)
-                  y: isNewlyAdded ? (Math.random() - 0.5) * 80 : 0,   // Random vertical slide (-40 to +40px)
+                  x: isNewlyAdded ? (Math.random() - 0.5) * 100 : 0,  // Random horizontal slide for newly added
+                  y: isNewlyAdded ? (Math.random() - 0.5) * 80 : 0,   // Random vertical slide for newly added
                 }}
                 animate={{
                   opacity: 1,
-                  rotate: (hoverActive || isNewlyAdded) ? 0 : item.rot,
-                  x: hoverActive 
+                  rotate: clickActive ? 0 : (isNewlyAdded ? 0 : item.rot),
+                  x: clickActive 
                     ? centerOffset.x 
                     : (isNewlyAdded ? 0 : item.dx),
-                  y: hoverActive 
+                  y: clickActive 
                     ? centerOffset.y 
                     : (isNewlyAdded ? 0 : item.dy),
                   scale: scaleToFit,
-                  boxShadow: (hoverActive || isNewlyAdded)
+                  boxShadow: clickActive
                     ? "0 16px 48px rgba(0,0,0,0.55)"
                     : isTop
                       ? "0 12px 36px rgba(0,0,0,0.4)"
@@ -344,8 +451,19 @@ export function PhotoStackPreview({
                   stiffness: 320,
                   damping: 24,
                 }}
-                onHoverStart={() => isTop && setIsTopHovered(true)}
-                onHoverEnd={() => isTop && setIsTopHovered(false)}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent container click from firing
+                  if (isTop) {
+                    setIsTopClicked(prev => {
+                      const newValue = !prev;
+                      // Clear dimensions when unclicking (toggling from true to false)
+                      if (prev && !newValue) {
+                        setHoveredImageDimensions(null);
+                      }
+                      return newValue;
+                    });
+                  }
+                }}
               >
                 <div className="relative w-full h-full overflow-hidden">
                   <img
@@ -354,8 +472,10 @@ export function PhotoStackPreview({
                     className="w-full h-full object-cover"
                     style={{
                       borderRadius: 0,
-                      filter:
-                        "contrast(1.05) brightness(0.95) saturate(1.1)",
+                      filter: clickActive
+                        ? "contrast(1.05) brightness(1) saturate(1.1)" // Full brightness when clicked
+                        : "contrast(1.05) brightness(0.95) saturate(1.1)",
+                      opacity: clickActive ? 1 : undefined, // Explicitly 100% opacity when clicked
                     }}
                   />
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_60%,rgba(0,0,0,0.55)_100%)] pointer-events-none" />

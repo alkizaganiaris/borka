@@ -505,10 +505,32 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
       } catch {
         // ignore seek errors
       }
-      video.pause();
-      video.muted = modalHeroMuteStateRef.current;
+      // If modal is open, auto-play with sound; otherwise pause
+      if (isModalOpen && isModalHeroVideo) {
+        video.muted = false;
+        setIsModalHeroVideoMuted(false);
+        const playPromise = video.play();
+        if (playPromise) {
+          playPromise
+            .then(() => {
+              setIsModalHeroVideoPlaying(true);
+              window.dispatchEvent(
+                new CustomEvent(HERO_VIDEO_EVENT, {
+                  detail: { id: project.id, source: "modal" as const }
+                })
+              );
+            })
+            .catch((error) => {
+              console.warn('Auto-play failed:', error);
+              setIsModalHeroVideoPlaying(false);
+            });
+        }
+      } else {
+        video.pause();
+        video.muted = modalHeroMuteStateRef.current;
+      }
     }
-  }, []);
+  }, [isModalOpen, isModalHeroVideo, project.id]);
 
   useEffect(() => {
     if (project.heroImage.mediaType === "video") {
@@ -730,7 +752,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     setIsModalOpen(true);
   }, []);
 
-  const openHeroModal = useCallback((withSound = false) => {
+  const openHeroModal = useCallback(() => {
     if (project.heroImage.mediaType === "video") {
       stopModalHeroDirectionalSeek();
       setIsModalHeroVideoPlaying(false);
@@ -739,15 +761,13 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
         heroVideo.pause();
         setIsHeroVideoPlaying(false);
       }
-      const shouldUnmute = withSound || !isHeroVideoMuted;
-      setIsModalHeroVideoMuted(!shouldUnmute ? isHeroVideoMuted : false);
-      setIsHeroVideoMuted(!shouldUnmute ? isHeroVideoMuted : false);
+      // Always unmute for modal (auto-play with sound)
+      setIsModalHeroVideoMuted(false);
       setIsModalHeroVideo(true);
       const modalVideo = modalHeroVideoRef.current;
       if (modalVideo) {
         modalVideo.currentTime = 0;
-        modalVideo.pause();
-        modalVideo.muted = !shouldUnmute ? isHeroVideoMuted : false;
+        modalVideo.muted = false; // Unmuted by default for auto-play with sound
       }
       setIsModalOpen(true);
     } else if (totalImages > 0) {
@@ -759,8 +779,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
     project.heroImage.mediaType,
     totalImages,
     activeImageIndex,
-    stopModalHeroDirectionalSeek,
-    isHeroVideoMuted
+    stopModalHeroDirectionalSeek
   ]);
 
   const closeModal = useCallback(() => {
@@ -999,9 +1018,13 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
   useEffect(() => {
     if (!isModalOpen || !isModalHeroVideo) return;
 
-    const heroVideo = heroVideoRef.current;
-    const modalVideo = modalHeroVideoRef.current;
-    if (modalVideo) {
+    // Use requestAnimationFrame to ensure video is in DOM
+    requestAnimationFrame(() => {
+      const heroVideo = heroVideoRef.current;
+      const modalVideo = modalHeroVideoRef.current;
+      if (!modalVideo) return;
+
+      // Set up video properties
       if (heroVideo) {
         try {
           modalVideo.currentTime = heroVideo.currentTime;
@@ -1009,12 +1032,96 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
           // ignore sync errors
         }
       }
-      modalVideo.pause();
       modalVideo.loop = true;
-    }
-    setIsModalHeroVideoPlaying(false);
+      modalVideo.muted = false;
+      setIsModalHeroVideoMuted(false);
+
+      // Wait for video to be ready, then auto-play with sound
+      const attemptPlay = () => {
+        if (modalVideo.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+          const playPromise = modalVideo.play();
+          if (playPromise) {
+            playPromise
+              .then(() => {
+                setIsModalHeroVideoPlaying(true);
+                window.dispatchEvent(
+                  new CustomEvent(HERO_VIDEO_EVENT, {
+                    detail: { id: project.id, source: "modal" as const }
+                  })
+                );
+              })
+              .catch((error) => {
+                console.warn('Auto-play failed:', error);
+                setIsModalHeroVideoPlaying(false);
+              });
+          } else {
+            setIsModalHeroVideoPlaying(true);
+            window.dispatchEvent(
+              new CustomEvent(HERO_VIDEO_EVENT, {
+                detail: { id: project.id, source: "modal" as const }
+              })
+            );
+          }
+        } else {
+          // Wait for video to load
+          const onCanPlay = () => {
+            modalVideo.muted = false;
+            setIsModalHeroVideoMuted(false);
+            const playPromise = modalVideo.play();
+            if (playPromise) {
+              playPromise
+                .then(() => {
+                  setIsModalHeroVideoPlaying(true);
+                  window.dispatchEvent(
+                    new CustomEvent(HERO_VIDEO_EVENT, {
+                      detail: { id: project.id, source: "modal" as const }
+                    })
+                  );
+                })
+                .catch((error) => {
+                  console.warn('Auto-play failed:', error);
+                  setIsModalHeroVideoPlaying(false);
+                });
+            }
+            modalVideo.removeEventListener('canplay', onCanPlay);
+          };
+          modalVideo.addEventListener('canplay', onCanPlay);
+          // Also try on loadeddata as fallback
+          const onLoadedData = () => {
+            if (!isModalHeroVideoPlaying) {
+              modalVideo.muted = false;
+              setIsModalHeroVideoMuted(false);
+              const playPromise = modalVideo.play();
+              if (playPromise) {
+                playPromise
+                  .then(() => {
+                    setIsModalHeroVideoPlaying(true);
+                    window.dispatchEvent(
+                      new CustomEvent(HERO_VIDEO_EVENT, {
+                        detail: { id: project.id, source: "modal" as const }
+                      })
+                    );
+                  })
+                  .catch(() => {});
+              }
+            }
+            modalVideo.removeEventListener('loadeddata', onLoadedData);
+          };
+          modalVideo.addEventListener('loadeddata', onLoadedData);
+          
+          return () => {
+            modalVideo.removeEventListener('canplay', onCanPlay);
+            modalVideo.removeEventListener('loadeddata', onLoadedData);
+          };
+        }
+      };
+
+      // Try to play immediately, or wait for video to load
+      attemptPlay();
+    });
+    
     stopModalHeroDirectionalSeek();
-  }, [isModalOpen, isModalHeroVideo, stopModalHeroDirectionalSeek]);
+  }, [isModalOpen, isModalHeroVideo, stopModalHeroDirectionalSeek, project.id, isModalHeroVideoPlaying]);
 
   useEffect(() => {
     if (isModalOpen && !isModalHeroVideo) {
@@ -1468,7 +1575,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
               {isMobile && project.heroImage.mediaType === "video" && (
                 <div className="pb-0 pt-4 mt-auto">
                   <motion.button
-                    onClick={() => openHeroModal(true)}
+                    onClick={() => openHeroModal()}
                     className={clsx(
                       "w-full px-6 py-3 rounded-lg font-semibold text-sm transition-colors",
                       isDarkMode
@@ -1532,14 +1639,12 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                     overscrollBehavior: "none"
                   }}
                 >
-                  {/* Header (logo + title) in hero fullscreen */}
-                  {isModalHeroVideo && (
+                  {/* Header (logo + title) in hero fullscreen - hidden on mobile */}
+                  {isModalHeroVideo && !isMobile && (
                     <div 
                       className={clsx(
                         "absolute z-40 flex items-center gap-3",
-                        isMobile && !isMobileLandscape 
-                          ? "top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg border bg-white" 
-                          : "top-0 left-0"
+                        "top-0 left-0"
                       )}
                     >
                       <img
@@ -1547,7 +1652,7 @@ function ProjectRow({ project, index, isDarkMode }: ProjectRowProps) {
                         alt="BOKU"
                         className="pointer-events-none"
                         style={{
-                          width: isMobile && !isMobileLandscape ? '72px' : (isMobileLandscape ? '80px' : '120px'),
+                          width: '120px',
                           height: 'auto',
                         }}
                       />
