@@ -188,7 +188,8 @@ export function PhotoStackPreview({
           width: '87vw', // Adjust this value to control width
           marginLeft: 'auto',
           marginRight: 'auto',
-          // Don't set z-index on parent to allow fixed child to break out of stacking context
+          zIndex: isTopHovered ? 50 : 1, // Higher than film reel (z-30) when hovered
+          position: 'relative'
         }}
       >
       <motion.div 
@@ -294,7 +295,7 @@ export function PhotoStackPreview({
             
             // Calculate scale - ONLY the top image should scale on hover
             // Newly added items are zoomed, hovered top items scale, other top items slightly scaled, rest stay at 1
-            const hoverScale = 1.2; // Adjust this value to control hover zoom
+            const hoverScale = 1; // Adjust this value to control hover zoom
             // When hovered, always apply the hover scale to the top image
             const scaleToFit = isNewlyAdded 
               ? hoverScale 
@@ -311,7 +312,7 @@ export function PhotoStackPreview({
                   // Top image uses 100% to scale with container, others use fixed size to prevent scaling
                   width: isTop ? "100%" : "500px",
                   height: isTop ? "100%" : "333px",
-                  zIndex: hoverActive ? 99999 : (isTop ? 999 : i), // Very high z-index when hovered to be above film reel (z-30) and everything else
+                  zIndex: hoverActive ? 999999 : (isTop ? 999 : i), // Extremely high z-index when hovered to be above film reel (z-30) and everything else
                   pointerEvents: isTop ? "auto" : "none",
                   isolation: hoverActive ? "isolate" : undefined, // Create new stacking context when hovered
                 }}
