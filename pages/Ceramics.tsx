@@ -111,8 +111,7 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
     { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
     { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
-    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
-    { label: 'Typography', ariaLabel: 'View typography showcase', link: '/typography' }
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' }
   ];
 
   const socialItems = [

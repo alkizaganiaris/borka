@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 
 export type StackItem = {
@@ -36,6 +36,8 @@ export function PhotoStackPreview({
   const [mouseMoved, setMouseMoved] = useState(false);
   const [hoveredImageDimensions, setHoveredImageDimensions] = useState<{ width: number; height: number } | null>(null);
   const [isLaptop, setIsLaptop] = useState(false);
+  const [centerOffset, setCenterOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const photoRef = useRef<HTMLDivElement>(null);
 
   // Track when new items are added to the stack
   useEffect(() => {
@@ -73,6 +75,50 @@ export function PhotoStackPreview({
     window.addEventListener('resize', checkIsLaptop);
     return () => window.removeEventListener('resize', checkIsLaptop);
   }, []);
+
+  // Calculate center offset when hovering
+  useEffect(() => {
+    if (!isTopHovered || !photoRef.current) {
+      setCenterOffset({ x: 0, y: 0 });
+      return;
+    }
+
+    const calculateCenterOffset = () => {
+      if (!photoRef.current) return;
+      
+      requestAnimationFrame(() => {
+        if (!photoRef.current) return;
+        
+        const rect = photoRef.current.getBoundingClientRect();
+        const viewportCenterX = window.innerWidth / 2;
+        const viewportCenterY = window.innerHeight / 2;
+        
+        // Calculate offset needed to center the photo in viewport
+        const offsetX = viewportCenterX - (rect.left + rect.width / 2);
+        const offsetY = viewportCenterY - (rect.top + rect.height / 2);
+        
+        setCenterOffset({ x: offsetX, y: offsetY });
+      });
+    };
+
+    // Calculate continuously during animation (first 500ms)
+    const interval = setInterval(calculateCenterOffset, 16); // ~60fps
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      // Final calculation after animation
+      calculateCenterOffset();
+    }, 500);
+    
+    window.addEventListener('resize', calculateCenterOffset);
+    window.addEventListener('scroll', calculateCenterOffset, { passive: true });
+    
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+      window.removeEventListener('resize', calculateCenterOffset);
+      window.removeEventListener('scroll', calculateCenterOffset);
+    };
+  }, [isTopHovered]);
 
   // Load image dimensions when hovering starts (laptop only)
   useEffect(() => {
@@ -141,7 +187,8 @@ export function PhotoStackPreview({
           overflow: rolledOut ? "visible" : "hidden",
           width: '87vw', // Adjust this value to control width
           marginLeft: 'auto',
-          marginRight: 'auto'
+          marginRight: 'auto',
+          // Don't set z-index on parent to allow fixed child to break out of stacking context
         }}
       >
       <motion.div 
@@ -221,6 +268,7 @@ export function PhotoStackPreview({
         <div
           className="absolute"
           style={{ 
+            // Use original image dimensions when hovered on laptop, otherwise use base size
             width: isTopHovered && isLaptop && hoveredImageDimensions 
               ? `${hoveredImageDimensions.width}px` 
               : "500px", 
@@ -244,25 +292,28 @@ export function PhotoStackPreview({
             const isNewlyAdded = newlyAddedItem === item.key;
             const hoverActive = isTop && isTopHovered && !isNewlyAdded; // Don't hover if newly added
             
-            // Calculate scale - newly added items are zoomed, hovered items use original dimensions (no scale needed on laptop), top items are slightly scaled
-            const hoverScale = 1.35; // Adjust this value to control hover zoom
-            // On laptop with hover, we're using original dimensions, so no scale needed
-            // Otherwise, use the hover scale or default scaling
+            // Calculate scale - ONLY the top image should scale on hover
+            // Newly added items are zoomed, hovered top items scale, other top items slightly scaled, rest stay at 1
+            const hoverScale = 1.2; // Adjust this value to control hover zoom
+            // When hovered, always apply the hover scale to the top image
             const scaleToFit = isNewlyAdded 
               ? hoverScale 
-              : (hoverActive && isLaptop && hoveredImageDimensions) 
-                ? 1 // No scale when using original dimensions on laptop
-                : (hoverActive ? hoverScale : (isTop ? 1.02 : 1));
+              : hoverActive 
+                ? hoverScale // Always scale when hovered
+                : (isTop ? 1.02 : 1); // Top item slightly scaled when not hovered, others stay at 1
             
             return (
               <motion.div
                 key={item.key}
-                className="absolute"
+                ref={isTop ? photoRef : undefined}
+                className={hoverActive ? "fixed" : "absolute"}
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  zIndex: isTop ? 999 : i,
+                  // Top image uses 100% to scale with container, others use fixed size to prevent scaling
+                  width: isTop ? "100%" : "500px",
+                  height: isTop ? "100%" : "333px",
+                  zIndex: hoverActive ? 99999 : (isTop ? 999 : i), // Very high z-index when hovered to be above film reel (z-30) and everything else
                   pointerEvents: isTop ? "auto" : "none",
+                  isolation: hoverActive ? "isolate" : undefined, // Create new stacking context when hovered
                 }}
                 initial={{
                   opacity: 0,
@@ -274,8 +325,12 @@ export function PhotoStackPreview({
                 animate={{
                   opacity: 1,
                   rotate: (hoverActive || isNewlyAdded) ? 0 : item.rot,
-                  x: (hoverActive || isNewlyAdded) ? 0 : item.dx,
-                  y: (hoverActive || isNewlyAdded) ? 0 : item.dy,
+                  x: hoverActive 
+                    ? centerOffset.x 
+                    : (isNewlyAdded ? 0 : item.dx),
+                  y: hoverActive 
+                    ? centerOffset.y 
+                    : (isNewlyAdded ? 0 : item.dy),
                   scale: scaleToFit,
                   boxShadow: (hoverActive || isNewlyAdded)
                     ? "0 16px 48px rgba(0,0,0,0.55)"
