@@ -34,7 +34,7 @@ export async function getPhotographyGalleries() {
   const galleries = await sanityClient.fetch(query)
   
   // Sort by order first, then by _updatedAt desc (newest first) as tiebreaker
-  return galleries.sort((a, b) => {
+  return galleries.sort((a: any, b: any) => {
     // First sort by order
     if (a.order !== b.order) {
       return (a.order || 0) - (b.order || 0)
