@@ -15,7 +15,7 @@ export function Navigation({ isDarkMode, onVisibilityChange }: NavigationProps) 
     { path: "/", label: "Home", icon: "🏠" },
     { path: "/ceramics", label: "Ceramics", icon: "🏺" },
     { path: "/photography", label: "Photography", icon: "📸" },
-    { path: "/journal", label: "Thoughts", icon: "📝" }
+    { path: "/inspiration", label: "Inspiration", icon: "📝" }
   ];
 
   const isActive = (path: string) => {

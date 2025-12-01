@@ -50,7 +50,7 @@ function AppContent() {
   // Get page title based on current route
   const getPageTitle = () => {
     if (location.pathname === '/photography') return 'Photography';
-    if (location.pathname === '/journal') return 'Thoughts';
+    if (location.pathname === '/inspiration') return 'Inspiration';
     if (location.pathname === '/ceramics') return 'Ceramics';
     if (location.pathname === '/typography') return 'Typography';
     return null;
@@ -95,13 +95,11 @@ function AppContent() {
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
     { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
     { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
-    { label: 'Thoughts', ariaLabel: 'Read thoughts', link: '/journal' }
+    { label: 'Inspiration', ariaLabel: 'Read thoughts', link: '/inspiration' }
   ];
 
   const socialItems = [
-    { label: 'Instagram', link: 'https://www.instagram.com/borbalakun/' },
-    { label: 'Twitter', link: 'https://twitter.com' },
-    { label: 'Email', link: 'mailto:hello@borka.com' }
+    { label: 'Instagram', link: 'https://www.instagram.com/borbalakun/' }
   ];
 
   return (
@@ -339,7 +337,7 @@ function AppContent() {
               {wasCaught 
                 ? "'click'" 
                 : isButtonHovered && !wasCaught
-                  ? location.pathname === '/journal'
+                  ? location.pathname === '/inspiration'
                     ? (isDarkMode 
                         ? (isMobile ? "Grab a coffee!" : "Grab a coffee while you're at it")
                         : (isMobile ? "Stop doomscrolling!" : "Stop doomscrolling! Read a journal entry instead"))
@@ -452,7 +450,7 @@ function AppContent() {
                   <Photography isDarkMode={isDarkMode} />
                 </PageTransition>
               } />
-              <Route path="/journal" element={
+              <Route path="/inspiration" element={
                 <Journal isDarkMode={isDarkMode} />
               } />
               <Route path="/ceramics" element={

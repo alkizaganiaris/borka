@@ -111,13 +111,11 @@ export function Ceramics({ isDarkMode }: CeramicsProps) {
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
     { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
     { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
-    { label: 'Thoughts', ariaLabel: 'Read thoughts', link: '/journal' }
+    { label: 'Inspiration', ariaLabel: 'Read thoughts', link: '/inspiration' }
   ];
 
   const socialItems = [
-    { label: 'Instagram', link: 'https://www.instagram.com/borbalakun/' },
-    { label: 'Twitter', link: 'https://twitter.com' },
-    { label: 'Email', link: 'mailto:hello@borka.com' }
+    { label: 'Instagram', link: 'https://www.instagram.com/borbalakun/' }
   ];
 
   return (
