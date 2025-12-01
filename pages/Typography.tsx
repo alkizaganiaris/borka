@@ -259,9 +259,9 @@ Pack my box with five dozen liquor jugs`;
 
   const menuItems = [
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
     { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
-    { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
-    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' }
+    { label: 'Thoughts', ariaLabel: 'Read thoughts', link: '/journal' }
   ];
 
   const socialItems = [

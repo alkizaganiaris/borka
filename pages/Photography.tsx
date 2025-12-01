@@ -44,9 +44,9 @@ export function Photography({ isDarkMode }: PhotographyProps) {
 
   const menuItems = [
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
     { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
-    { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
-    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' }
+    { label: 'Thoughts', ariaLabel: 'Read thoughts', link: '/journal' }
   ];
 
   const socialItems = [
@@ -94,18 +94,6 @@ export function Photography({ isDarkMode }: PhotographyProps) {
         isFixed={true}
         onMenuOpen={() => setIsMenuOpen(true)}
         onMenuClose={() => setIsMenuOpen(false)}
-      />
-      
-      {/* Viewfinder Overlay - Fixed on screen */}
-      <img
-        src="/media/viewfinder_transparent.png"
-        alt=""
-        className="fixed inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ 
-          zIndex: 0,
-          transform: 'scale(1)',
-          opacity: 0.1
-        }}
       />
       
       {/* Opacity overlay when menu is open */}

@@ -25,6 +25,7 @@ export function Journal({ isDarkMode }: JournalProps) {
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [typeKey, setTypeKey] = useState(0);
+  const [isSkipped, setIsSkipped] = useState(false);
   const [isEntryListHovered, setIsEntryListHovered] = useState(false);
   const [hoveredEntryId, setHoveredEntryId] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -32,7 +33,6 @@ export function Journal({ isDarkMode }: JournalProps) {
   const [readEntries, setReadEntries] = useState<Set<string>>(new Set());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [entryFonts, setEntryFonts] = useState<Map<string, string>>(new Map());
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const isMobile = useIsMobile();
@@ -43,9 +43,6 @@ export function Journal({ isDarkMode }: JournalProps) {
   const textTranslateY = 0;
   const fontSize = 1.4;
   const lineHeight = 2.2;
-
-  // Custom fonts array
-  const customFonts = ['Caveat', 'Indie Flower', 'Patrick Hand SC'];
 
   // Fetch journal entries from Sanity
   useEffect(() => {
@@ -66,14 +63,6 @@ export function Journal({ isDarkMode }: JournalProps) {
           timestamp: new Date(entry.date)
         }));
         setJournalEntries(formatted);
-        
-        // Assign random fonts to each entry
-        const fonts = new Map<string, string>();
-        formatted.forEach((entry: JournalEntry) => {
-          const randomFont = customFonts[Math.floor(Math.random() * customFonts.length)];
-          fonts.set(entry.id, randomFont);
-        });
-        setEntryFonts(fonts);
       } catch (error) {
         console.error('Error fetching journal entries:', error);
       }
@@ -151,6 +140,7 @@ export function Journal({ isDarkMode }: JournalProps) {
         }
         setIsTyping(false);
         setSelectedEntry(null);
+        setIsSkipped(false);
         return;
       }
 
@@ -167,6 +157,7 @@ export function Journal({ isDarkMode }: JournalProps) {
       setSelectedEntry(entry);
       setTypeKey(prev => prev + 1); // Force TextType to remount
       setIsTyping(true);
+      setIsSkipped(false); // Reset skip state for new entry
       return;
     }
 
@@ -179,6 +170,7 @@ export function Journal({ isDarkMode }: JournalProps) {
       }
       setIsTyping(false);
       setSelectedEntry(null);
+      setIsSkipped(false);
       return;
     }
 
@@ -199,6 +191,7 @@ export function Journal({ isDarkMode }: JournalProps) {
       setSelectedEntry(entry);
       setTypeKey(prev => prev + 1); // Force TextType to remount
       setIsTyping(true);
+      setIsSkipped(false); // Reset skip state for new entry
     }, 800); // Adjust this delay to match your video duration
   };
 
@@ -209,6 +202,27 @@ export function Journal({ isDarkMode }: JournalProps) {
     setIsTyping(false);
     setSelectedEntry(null);
     setIsPreviewOpen(false);
+    setIsSkipped(false);
+  };
+
+  const handleNotebookClick = () => {
+    if (isSkipped) {
+      // If already skipped, close the entry
+      if (isMobile) {
+        handleClosePreview();
+      } else {
+        // Desktop/tablet: close the entry
+        if (selectedEntry) {
+          setReadEntries(prev => new Set([...prev, selectedEntry.id]));
+        }
+        setIsTyping(false);
+        setSelectedEntry(null);
+        setIsSkipped(false);
+      }
+    } else {
+      // First click: skip the typing animation
+      setIsSkipped(true);
+    }
   };
 
   const handleRandomThought = () => {
@@ -224,9 +238,9 @@ export function Journal({ isDarkMode }: JournalProps) {
 
   const menuItems = [
     { label: 'Home', ariaLabel: 'Go to home page', link: '/' },
+    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' },
     { label: 'Photography', ariaLabel: 'View photography', link: '/photography' },
-    { label: 'Journal', ariaLabel: 'Read journal entries', link: '/journal' },
-    { label: 'Ceramics', ariaLabel: 'View ceramics', link: '/ceramics' }
+    { label: 'Thoughts', ariaLabel: 'Read thoughts', link: '/journal' }
   ];
 
   const socialItems = [
@@ -247,7 +261,7 @@ export function Journal({ isDarkMode }: JournalProps) {
       exit={{ opacity: 0, y: -30, scale: 1.02 }}
       transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
     >
-      <PageHeader title="Journal" isDarkMode={isDarkMode} />
+      <PageHeader title="Thoughts" isDarkMode={isDarkMode} />
       <div style={{ fontFamily: 'Montserrat, sans-serif' }}>
         <StaggeredMenu
           position="left"
@@ -309,17 +323,18 @@ export function Journal({ isDarkMode }: JournalProps) {
           </div>
         )}
 
-        {/* Random thought button - above journal entries on mobile, center bottom on desktop/tablet */}
+        {/* Random thought button - above journal entries on mobile and laptop, center bottom on tablet */}
         {isLoaded && sortedEntries.length > 0 && (
           <>
             {isMobile ? (
               <motion.button
                 onClick={handleRandomThought}
-                className="fixed z-[10] border-2 border-black rounded-lg bg-white hover:bg-black hover:text-white transition-colors font-mono text-sm font-semibold px-4 py-2"
+                className="fixed z-[10] border-2 border-black rounded-lg bg-white hover:bg-black hover:text-white transition-colors text-sm font-semibold px-4 py-2"
                 style={{
                   left: '5vw',
+                  width: '90vw',
                   top: 'calc(8rem + 20vh - 3.5rem)',
-                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace",
+                  fontFamily: '"Patrick Hand SC", cursive',
                   color: 'black'
                 }}
                 whileHover={{ scale: 1.05 }}
@@ -327,20 +342,20 @@ export function Journal({ isDarkMode }: JournalProps) {
               >
                 Pick a random thought
               </motion.button>
-            ) : (
+            ) : isTabletLandscape ? (
               <div 
                 className="fixed z-[10]"
                 style={{ 
-                  left: '50%',
-                  bottom: '2rem',
-                  transform: 'translateX(-50%)'
+                  left: '2rem',
+                  width: '24vw',
+                  bottom: '2rem'
                 }}
               >
                 <motion.button
                   onClick={handleRandomThought}
-                  className="border-2 border-black rounded-lg bg-white hover:bg-black hover:text-white transition-colors font-mono text-sm font-semibold px-3 py-1.5"
+                  className="w-full border-2 border-black rounded-lg bg-white hover:bg-black hover:text-white transition-colors text-sm font-semibold px-3 py-1.5"
                   style={{
-                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace",
+                    fontFamily: '"Patrick Hand SC", cursive',
                     color: 'black'
                   }}
                   whileHover={{ scale: 1.05 }}
@@ -349,6 +364,23 @@ export function Journal({ isDarkMode }: JournalProps) {
                   Pick a random thought
                 </motion.button>
               </div>
+            ) : (
+              // Laptop mode - above journal entries container
+              <motion.button
+                onClick={handleRandomThought}
+                className="fixed z-[10] border-2 border-black rounded-lg bg-white hover:bg-black hover:text-white transition-colors text-sm font-semibold px-3 py-1.5"
+                style={{
+                  left: '2rem',
+                  width: '20vw',
+                  top: 'calc(30vh - 4rem)',
+                  fontFamily: '"Patrick Hand SC", cursive',
+                  color: 'black'
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Pick a random thought
+              </motion.button>
             )}
           </>
         )}
@@ -418,7 +450,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                  style={{
                    paddingLeft: isMobile ? '20%' : '10%',
                    border: selectedEntry?.id === entry.id ? '2px solid black' : 'none',
-                   fontFamily: entryFonts.get(entry.id) || 'Indie Flower',
+                   fontFamily: '"Patrick Hand SC", cursive',
                    ...(readEntries.has(entry.id)
                      ? {
                          backgroundColor: 'transparent',
@@ -482,7 +514,10 @@ export function Journal({ isDarkMode }: JournalProps) {
               msOverflowStyle: 'none'
             }}
           >
-            <div className="text-black">
+            <div 
+              className="text-black cursor-pointer"
+              onClick={handleNotebookClick}
+            >
               {/* Title and Date Header */}
               {isTyping && (
                 <div 
@@ -491,7 +526,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                     fontSize: '1.2rem',
                     fontWeight: 'bold',
                     lineHeight: '1.4',
-                    fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
+                    fontFamily: '"Patrick Hand SC", cursive'
                   }}
                 >
                   {selectedEntry.title} — {selectedEntry.date}
@@ -504,24 +539,30 @@ export function Journal({ isDarkMode }: JournalProps) {
                   style={{
                     fontSize: '0.9rem',
                     lineHeight: '1.6',
-                    fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
+                    fontFamily: '"Patrick Hand SC", cursive'
                   }}
                 >
-                  <TextType
-                    key={typeKey}
-                    text={selectedEntry.content}
-                    typingSpeed={5}
-                    className="text-black"
-                    style={{
-                      fontSize: '0.9rem',
-                      lineHeight: '1.6',
-                      fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
-                    }}
-                    showCursor={false}
-                    cursorCharacter="|"
-                    loop={false}
-                    variableSpeed={{ min: 5, max: 50 }}
-                  />
+                  {isSkipped ? (
+                    <div className="text-black whitespace-pre-wrap">
+                      {selectedEntry.content}
+                    </div>
+                  ) : (
+                    <TextType
+                      key={typeKey}
+                      text={selectedEntry.content}
+                      typingSpeed={5}
+                      className="text-black"
+                      style={{
+                        fontSize: '0.9rem',
+                        lineHeight: '1.6',
+                        fontFamily: '"Patrick Hand SC", cursive'
+                      }}
+                      showCursor={false}
+                      cursorCharacter="|"
+                      loop={false}
+                      variableSpeed={{ min: 5, max: 50 }}
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -544,7 +585,8 @@ export function Journal({ isDarkMode }: JournalProps) {
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
               <div 
-                className="overflow-auto" 
+                className="overflow-auto cursor-pointer" 
+                onClick={handleNotebookClick}
                 style={{ 
                   height: `calc(73vh + ${lineHeight * 2}rem)`,
                   paddingTop: '3rem',
@@ -575,7 +617,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                             fontSize: `${fontSize * 1.2}rem`,
                             fontWeight: 'bold',
                             lineHeight: `${lineHeight}`,
-                            fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
+                            fontFamily: '"Patrick Hand SC", cursive'
                           }}
                         >
                           {selectedEntry.title} — {selectedEntry.date}
@@ -584,21 +626,34 @@ export function Journal({ isDarkMode }: JournalProps) {
                       
                       {/* Typed Content */}
                       {isTyping && (
-                        <TextType
-                          key={typeKey}
-                          text={selectedEntry.content}
-                          typingSpeed={5}
-                          className="text-black"
-                          style={{
-                            fontSize: `${fontSize}rem`,
-                            lineHeight: `${lineHeight}`,
-                            fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
-                          }}
-                          showCursor={false}
-                          cursorCharacter="|"
-                          loop={false}
-                          variableSpeed={{ min: 5, max: 50 }}
-                        />
+                        isSkipped ? (
+                          <div 
+                            className="text-black whitespace-pre-wrap"
+                            style={{
+                              fontSize: `${fontSize}rem`,
+                              lineHeight: `${lineHeight}`,
+                              fontFamily: '"Patrick Hand SC", cursive'
+                            }}
+                          >
+                            {selectedEntry.content}
+                          </div>
+                        ) : (
+                          <TextType
+                            key={typeKey}
+                            text={selectedEntry.content}
+                            typingSpeed={5}
+                            className="text-black"
+                            style={{
+                              fontSize: `${fontSize}rem`,
+                              lineHeight: `${lineHeight}`,
+                              fontFamily: '"Patrick Hand SC", cursive'
+                            }}
+                            showCursor={false}
+                            cursorCharacter="|"
+                            loop={false}
+                            variableSpeed={{ min: 5, max: 50 }}
+                          />
+                        )
                       )}
                     </motion.div>
                   ) : null}
@@ -638,7 +693,10 @@ export function Journal({ isDarkMode }: JournalProps) {
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Modal content */}
-                  <div className="overflow-y-auto p-6 flex-1">
+                  <div 
+                    className="overflow-y-auto p-6 flex-1 cursor-pointer"
+                    onClick={handleNotebookClick}
+                  >
                   <AnimatePresence mode="wait">
                     {selectedEntry && (
                       <motion.div
@@ -657,7 +715,7 @@ export function Journal({ isDarkMode }: JournalProps) {
                               fontSize: '1.5rem',
                               fontWeight: 'bold',
                               lineHeight: '1.4',
-                              fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
+                              fontFamily: '"Patrick Hand SC", cursive'
                             }}
                           >
                             {selectedEntry.title} — {selectedEntry.date}
@@ -670,24 +728,30 @@ export function Journal({ isDarkMode }: JournalProps) {
                             style={{
                               fontSize: '1rem',
                               lineHeight: '1.6',
-                              fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
+                              fontFamily: '"Patrick Hand SC", cursive'
                             }}
                           >
-                            <TextType
-                              key={typeKey}
-                              text={selectedEntry.content}
-                              typingSpeed={5}
-                              className="text-black"
-                              style={{
-                                fontSize: '1rem',
-                                lineHeight: '1.6',
-                                fontFamily: entryFonts.get(selectedEntry.id) || 'Indie Flower'
-                              }}
-                              showCursor={false}
-                              cursorCharacter="|"
-                              loop={false}
-                              variableSpeed={{ min: 5, max: 50 }}
-                            />
+                            {isSkipped ? (
+                              <div className="text-black whitespace-pre-wrap">
+                                {selectedEntry.content}
+                              </div>
+                            ) : (
+                              <TextType
+                                key={typeKey}
+                                text={selectedEntry.content}
+                                typingSpeed={5}
+                                className="text-black"
+                                style={{
+                                  fontSize: '1rem',
+                                  lineHeight: '1.6',
+                                  fontFamily: '"Patrick Hand SC", cursive'
+                                }}
+                                showCursor={false}
+                                cursorCharacter="|"
+                                loop={false}
+                                variableSpeed={{ min: 5, max: 50 }}
+                              />
+                            )}
                           </div>
                         )}
                       </motion.div>

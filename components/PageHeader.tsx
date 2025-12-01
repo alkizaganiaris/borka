@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { motion } from "motion/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useIsMobile } from "./ui/use-mobile";
 
 interface PageHeaderProps {
@@ -11,14 +11,30 @@ interface PageHeaderProps {
 export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
   const monoFont = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace";
   const isCeramicsPage = title === "Ceramics";
-  const isJournalPage = title === "Journal";
+  const isJournalPage = title === "Thoughts";
   const isPhotographyPage = title === "Photography";
-  const [journalHeaderIndex, setJournalHeaderIndex] = useState(0);
   const isMobile = useIsMobile();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-  const handleJournalHeaderClick = () => {
-    if (isJournalPage && journalHeaderIndex < 7) {
-      setJournalHeaderIndex(prev => Math.min(prev + 1, 7));
+  const handleVideoClick = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0; // Reset to first frame
+        setIsVideoPlaying(false);
+      } else {
+        videoRef.current.play();
+        setIsVideoPlaying(true);
+      }
+    }
+  };
+
+  const handleVideoEnded = () => {
+    // Loop the video when it ends
+    if (videoRef.current && isVideoPlaying) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play();
     }
   };
 
@@ -27,8 +43,17 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
       ? "/media/ceramics_unglazed.png"
       : "/media/ceramics_glazed.png"
     : null;
-  const journalImageSrc = isJournalPage ? `/media/journal_header_${journalHeaderIndex}.png` : null;
+  const journalImageSrc = isJournalPage ? "/media/inspiration_upscaled.png" : null;
   const photographyImageSrc = isPhotographyPage ? "/media/photography_header.png" : null;
+
+  // Check if journalImageSrc is a video file
+  const isVideoFile = (src: string | null): boolean => {
+    if (!src) return false;
+    const videoExtensions = ['.mov', '.mp4', '.webm', '.ogg', '.avi', '.m4v'];
+    return videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
+  };
+
+  const isJournalVideo = isJournalPage && journalImageSrc && isVideoFile(journalImageSrc);
 
   return (
     <motion.header
@@ -66,21 +91,40 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
               transition={{ duration: 0.6, ease: "easeOut" }}
             />
           ) : isJournalPage && journalImageSrc ? (
-            <motion.img
-              key={journalImageSrc}
-              src={journalImageSrc}
-              alt="Journal title"
-              className="h-auto max-w-full"
-              style={{
-                width: "min(680px, 82vw)",
-                cursor: journalHeaderIndex >= 7 ? "default" : "pointer",
-                pointerEvents: journalHeaderIndex >= 7 ? "none" : "auto"
-              }}
-              onClick={handleJournalHeaderClick}
-              initial={false}
-              animate={{}}
-              transition={{ duration: 0 }}
-            />
+            isJournalVideo ? (
+              <motion.video
+                ref={videoRef}
+                key={journalImageSrc}
+                src={journalImageSrc}
+                className="h-auto max-w-full cursor-pointer"
+                style={{ width: "min(680px, 82vw)" }}
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                preload="metadata"
+                muted
+                playsInline
+                onClick={handleVideoClick}
+                onLoadedMetadata={() => {
+                  // Ensure first frame is shown initially
+                  if (videoRef.current) {
+                    videoRef.current.currentTime = 0;
+                  }
+                }}
+                onEnded={handleVideoEnded}
+              />
+            ) : (
+              <motion.img
+                key={journalImageSrc}
+                src={journalImageSrc}
+                alt="Thoughts title"
+                className="h-auto max-w-full"
+                style={{ width: "min(680px, 82vw)" }}
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            )
           ) : isPhotographyPage && photographyImageSrc ? (
             <motion.img
               key={photographyImageSrc}
@@ -96,7 +140,7 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
             title
           )}
         </h1>
-               {title === "Journal" && !isMobile && (
+               {title === "Thoughts" && !isMobile && (
                  <>
 
                    

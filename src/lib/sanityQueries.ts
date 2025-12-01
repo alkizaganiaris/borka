@@ -15,7 +15,7 @@ export async function getJournalEntries() {
 
 // Fetch all published photography galleries
 export async function getPhotographyGalleries() {
-  const query = `*[_type == "photographyGallery" && published == true] | order(order asc) {
+  const query = `*[_type == "photographyGallery" && published == true] {
     _id,
     title,
     subtitle,
@@ -23,6 +23,7 @@ export async function getPhotographyGalleries() {
     year,
     description,
     order,
+    _updatedAt,
     images[] {
       asset->{
         _id,
@@ -30,7 +31,19 @@ export async function getPhotographyGalleries() {
       }
     }
   }`
-  return await sanityClient.fetch(query)
+  const galleries = await sanityClient.fetch(query)
+  
+  // Sort by order first, then by _updatedAt desc (newest first) as tiebreaker
+  return galleries.sort((a, b) => {
+    // First sort by order
+    if (a.order !== b.order) {
+      return (a.order || 0) - (b.order || 0)
+    }
+    // If order is the same, sort by _updatedAt desc (newest first)
+    const dateA = new Date(a._updatedAt || 0).getTime()
+    const dateB = new Date(b._updatedAt || 0).getTime()
+    return dateB - dateA
+  })
 }
 
 // Fetch all ceramic projects

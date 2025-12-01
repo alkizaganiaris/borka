@@ -567,6 +567,7 @@ export function FilmRollGallery({
         <div ref={previewRef}>
           <PhotoStackPreview 
             stack={stack} 
+            allImages={images}
             rolledOut={rolledOut} 
             title={title}
             subtitle={subtitle}
