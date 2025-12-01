@@ -42,7 +42,7 @@ export function Journal({ isDarkMode }: JournalProps) {
   const containerTranslateY = -11;
   const textTranslateY = 0;
   const fontSize = 1.4;
-  const lineHeight = 2.2;
+  const lineHeight = 1.1; // Reduced by half from 2.2
 
   // Fetch journal entries from Sanity
   useEffect(() => {
@@ -119,6 +119,14 @@ export function Journal({ isDarkMode }: JournalProps) {
       videoRef.current.play();
     }
   };
+
+  // Keep notebook video as still (first frame, paused) - desktop only
+  useEffect(() => {
+    if (!isMobile && !isTabletLandscape && videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.pause();
+    }
+  }, [isMobile, isTabletLandscape]);
 
   const handleEntryClick = (entry: JournalEntry) => {
     if (isMobile) {
@@ -293,32 +301,61 @@ export function Journal({ isDarkMode }: JournalProps) {
       )}
       
       <div className="relative w-full h-full">
-        {/* Notebook Background - Fixed in Center, Above Background Layer - Hidden on mobile and tablet landscape */}
+        {/* Notebook Background - Still image at bottom - Hidden on mobile and tablet landscape */}
         {!isMobile && !isTabletLandscape && (
           <div 
             className="fixed inset-0 flex items-center justify-center pointer-events-none" 
             style={{ zIndex: 1 }}
           >
-            <motion.video
+            <video
               ref={videoRef}
               className="opacity-100"
-              animate={{
-                width: selectedEntry 
-                  ? '64vw'
-                  : (!selectedEntry && isEntryListHovered ? '48vw' : '40vw'),
-                transform: selectedEntry
-                  ? 'translateY(20vh)'
-                  : (!selectedEntry && isEntryListHovered 
-                    ? 'translateY(70vh)' 
-                    : 'translateY(80vh)')
-              }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
               style={{ 
-                height: 'auto'
+                width: '40vw',
+                height: 'auto',
+                transform: 'translateY(80vh)',
+                pointerEvents: 'none'
               }}
               src="/media/notebook_transparent.webm"
               muted
               playsInline
+              onLoadedMetadata={(e) => {
+                // Set to first frame and pause
+                const video = e.currentTarget;
+                video.currentTime = 0;
+                video.pause();
+              }}
+            />
+          </div>
+        )}
+
+        {/* Coffee/Tea image - middle right, above shavings - Hidden on mobile */}
+        {!isMobile && (
+          <div
+            className="fixed pointer-events-auto"
+            style={{ 
+              right: '1rem', // Same right position as shavings (right-4 = 1rem)
+              bottom: 'calc(300px + 20px)', // Position above shavings (shavings is 300px wide + 20px offset)
+              zIndex: 1
+            }}
+          >
+            <motion.img 
+              src={isDarkMode ? "/media/tea.png" : "/media/coffee.png"} 
+              alt={isDarkMode ? "Tea" : "Coffee"} 
+              className="h-auto cursor-pointer"
+              style={{ 
+                width: '320px', // 80% of 400px
+                opacity: 1,
+                pointerEvents: 'auto'
+              }}
+              initial={{ opacity: 0, scale: 0.85, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: "easeOut", delay: 0.15 }}
+              whileHover={{ 
+                rotate: 58,
+                transition: { duration: 0.3, ease: "easeOut" }
+              }}
+              whileTap={{ scale: 0.95 }}
             />
           </div>
         )}
@@ -569,18 +606,17 @@ export function Journal({ isDarkMode }: JournalProps) {
           </motion.div>
         )}
 
-        {/* Content Overlay - Centered over Notebook - Hidden on mobile and tablet landscape */}
+        {/* Content Overlay - Centered below title image - Hidden on mobile and tablet landscape */}
         {!isMobile && !isTabletLandscape && (
-          <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 2 }}>
+          <div className="fixed inset-0 flex items-start justify-center pointer-events-none" style={{ zIndex: 2 }}>
             <motion.div 
               className="relative pointer-events-auto"
               animate={{
                 width: selectedEntry ? '64vw' : '40vw',
-                transform: selectedEntry
-                  ? `translateY(calc(19vh + ${containerTranslateY}vh))`
-                  : (!selectedEntry && isEntryListHovered 
-                    ? `translateY(calc(70vh + ${containerTranslateY}vh))` 
-                    : `translateY(calc(80vh + ${containerTranslateY}vh))`)
+                maxWidth: '800px'
+              }}
+              style={{
+                marginTop: '30vh', // Same top as journal entry container
               }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             >
@@ -588,15 +624,14 @@ export function Journal({ isDarkMode }: JournalProps) {
                 className="overflow-auto cursor-pointer" 
                 onClick={handleNotebookClick}
                 style={{ 
-                  height: `calc(73vh + ${lineHeight * 2}rem)`,
-                  paddingTop: '3rem',
-                  paddingBottom: '3rem',
-                  paddingLeft: '13%', 
-                  paddingRight: '7%',
-                  transform: `translateY(-2vh)`,
+                  paddingTop: '2rem',
+                  paddingBottom: '2rem',
+                  paddingLeft: '2rem', 
+                  paddingRight: '2rem',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'flex-start'
+                  alignItems: 'center',
+                  textAlign: 'center'
                 }}
               >
                 <AnimatePresence mode="wait">
@@ -612,15 +647,18 @@ export function Journal({ isDarkMode }: JournalProps) {
                       {/* Title and Date Header */}
                       {isTyping && (
                         <div 
-                          className="mb-2"
+                          className="mb-4"
                           style={{
                             fontSize: `${fontSize * 1.2}rem`,
                             fontWeight: 'bold',
                             lineHeight: `${lineHeight}`,
-                            fontFamily: '"Patrick Hand SC", cursive'
+                            fontFamily: '"Patrick Hand SC", cursive',
+                            textAlign: 'center'
                           }}
                         >
                           {selectedEntry.title} — {selectedEntry.date}
+                          <br />
+                          <br />
                         </div>
                       )}
                       
@@ -632,7 +670,8 @@ export function Journal({ isDarkMode }: JournalProps) {
                             style={{
                               fontSize: `${fontSize}rem`,
                               lineHeight: `${lineHeight}`,
-                              fontFamily: '"Patrick Hand SC", cursive'
+                              fontFamily: '"Patrick Hand SC", cursive',
+                              textAlign: 'center'
                             }}
                           >
                             {selectedEntry.content}
@@ -646,7 +685,8 @@ export function Journal({ isDarkMode }: JournalProps) {
                             style={{
                               fontSize: `${fontSize}rem`,
                               lineHeight: `${lineHeight}`,
-                              fontFamily: '"Patrick Hand SC", cursive'
+                              fontFamily: '"Patrick Hand SC", cursive',
+                              textAlign: 'center'
                             }}
                             showCursor={false}
                             cursorCharacter="|"

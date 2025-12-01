@@ -142,8 +142,6 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
         </h1>
                {title === "Thoughts" && !isMobile && (
                  <>
-
-                   
                    {/* Shavings image - bottom right - Hidden on mobile */}
                    <div className="fixed bottom-[-20px] right-4 z-1">
                      <motion.img 
@@ -157,31 +155,6 @@ export function PageHeader({ title, isDarkMode = false }: PageHeaderProps) {
                        initial={{ opacity: 0, y: 25, rotate: -4 }}
                        animate={{ opacity: 1, y: 0, rotate: 0 }}
                        transition={{ duration: 0.6, ease: "easeOut", delay: 0.25 }}
-                     />
-                   </div>
-
-                   {/* Coffee/Tea image - center viewport - Hidden on mobile */}
-                   <div
-                    className="fixed top-1/2 left-1/2 pointer-events-auto"
-                    style={{ transform: 'translate(-50%, -35%)', zIndex: 1  }}
-                  >
-                     <motion.img 
-                       src={isDarkMode ? "/media/tea.png" : "/media/coffee.png"} 
-                       alt={isDarkMode ? "Tea" : "Coffee"} 
-                       className="h-auto cursor-pointer"
-                       style={{ 
-                         width: '400px',
-                         opacity: 1,
-                         pointerEvents: 'auto'
-                       }}
-                       initial={{ opacity: 0, scale: 0.85, y: -20 }}
-                       animate={{ opacity: 1, scale: 1, y: 0 }}
-                       transition={{ duration: 0.55, ease: "easeOut", delay: 0.15 }}
-                       whileHover={{ 
-                         rotate: 58,
-                         transition: { duration: 0.3, ease: "easeOut" }
-                       }}
-                       whileTap={{ scale: 0.95 }}
                      />
                    </div>
                  </>

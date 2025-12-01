@@ -26,6 +26,8 @@ interface FilmRollGalleryProps {
   onNavigateGallery?: (direction: 'next' | 'prev') => void; // Navigation callback for tablet landscape and mobile
   isMenuOpen?: boolean; // Whether the menu is open (to disable hover effects)
   isMobile?: boolean; // Whether the device is a mobile phone
+  previewBackgroundColor?: 'white' | 'dark-teal' | 'ochre-yellow'; // Background color for preview
+  onPreviewBackgroundColorChange?: (color: 'white' | 'dark-teal' | 'ochre-yellow') => void; // Callback when background color changes
 }
 
 
@@ -168,6 +170,8 @@ export function FilmRollGallery({
   onNavigateGallery,
   isMenuOpen = false,
   isMobile: isMobileProp = false,
+  previewBackgroundColor = 'white',
+  onPreviewBackgroundColorChange,
 }: FilmRollGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
   const [stack, setStack] = useState<StackItem[]>([]);
@@ -568,6 +572,10 @@ export function FilmRollGallery({
           <PhotoStackPreview 
             stack={stack} 
             allImages={images}
+            selectedImageIndex={selectedImage}
+            onPreviewIndexChange={(index) => setSelectedImage(index)}
+            previewBackgroundColor={previewBackgroundColor}
+            onPreviewBackgroundColorChange={onPreviewBackgroundColorChange}
             rolledOut={rolledOut} 
             title={title}
             subtitle={subtitle}

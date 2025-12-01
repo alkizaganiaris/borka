@@ -13,6 +13,10 @@ export type StackItem = {
 interface PhotoStackPreviewProps {
   stack: StackItem[];
   allImages?: string[]; // All images to preload
+  selectedImageIndex?: number; // Index of the currently selected image from the reel
+  onPreviewIndexChange?: (index: number) => void; // Callback when preview index changes
+  previewBackgroundColor?: 'white' | 'dark-teal' | 'ochre-yellow'; // Background color for preview
+  onPreviewBackgroundColorChange?: (color: 'white' | 'dark-teal' | 'ochre-yellow') => void; // Callback when background color changes
   rolledOut: boolean;
   className?: string;
   title?: string;
@@ -25,6 +29,10 @@ interface PhotoStackPreviewProps {
 export function PhotoStackPreview({
   stack,
   allImages = [],
+  selectedImageIndex,
+  onPreviewIndexChange,
+  previewBackgroundColor = 'white',
+  onPreviewBackgroundColorChange,
   rolledOut,
   className = "",
   title,
@@ -60,12 +68,20 @@ export function PhotoStackPreview({
     }
   }, [rolledOut, imagesToShow]);
 
-  // Reset to first image when images change
+  // Update current index when a new image is selected from the reel
   useEffect(() => {
-    if (imagesToShow.length > 0) {
+    if (selectedImageIndex !== undefined && selectedImageIndex >= 0 && selectedImageIndex < imagesToShow.length) {
+      setCurrentIndex(selectedImageIndex);
+      onPreviewIndexChange?.(selectedImageIndex);
+    }
+  }, [selectedImageIndex, imagesToShow.length, onPreviewIndexChange]);
+
+  // Reset to first image when images change (only if no specific selection)
+  useEffect(() => {
+    if (imagesToShow.length > 0 && selectedImageIndex === undefined) {
       setCurrentIndex(0);
     }
-  }, [imagesToShow.length]);
+  }, [imagesToShow.length, selectedImageIndex]);
 
   // Handle keyboard navigation and close zoom on Escape
   useEffect(() => {
@@ -76,29 +92,53 @@ export function PhotoStackPreview({
         setIsZoomed(false);
       } else if (!isZoomed) {
         if (e.key === 'ArrowLeft') {
-          setCurrentIndex((prev) => (prev > 0 ? prev - 1 : imagesToShow.length - 1));
+          setCurrentIndex((prev) => {
+            const newIndex = prev > 0 ? prev - 1 : imagesToShow.length - 1;
+            onPreviewIndexChange?.(newIndex);
+            return newIndex;
+          });
         } else if (e.key === 'ArrowRight') {
-          setCurrentIndex((prev) => (prev < imagesToShow.length - 1 ? prev + 1 : 0));
+          setCurrentIndex((prev) => {
+            const newIndex = prev < imagesToShow.length - 1 ? prev + 1 : 0;
+            onPreviewIndexChange?.(newIndex);
+            return newIndex;
+          });
         }
       } else if (isZoomed) {
         if (e.key === 'ArrowLeft') {
-          setCurrentIndex((prev) => (prev > 0 ? prev - 1 : imagesToShow.length - 1));
+          setCurrentIndex((prev) => {
+            const newIndex = prev > 0 ? prev - 1 : imagesToShow.length - 1;
+            onPreviewIndexChange?.(newIndex);
+            return newIndex;
+          });
         } else if (e.key === 'ArrowRight') {
-          setCurrentIndex((prev) => (prev < imagesToShow.length - 1 ? prev + 1 : 0));
+          setCurrentIndex((prev) => {
+            const newIndex = prev < imagesToShow.length - 1 ? prev + 1 : 0;
+            onPreviewIndexChange?.(newIndex);
+            return newIndex;
+          });
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [rolledOut, isZoomed, imagesToShow.length]);
+  }, [rolledOut, isZoomed, imagesToShow.length, onPreviewIndexChange]);
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : imagesToShow.length - 1));
+    setCurrentIndex((prev) => {
+      const newIndex = prev > 0 ? prev - 1 : imagesToShow.length - 1;
+      onPreviewIndexChange?.(newIndex);
+      return newIndex;
+    });
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev < imagesToShow.length - 1 ? prev + 1 : 0));
+    setCurrentIndex((prev) => {
+      const newIndex = prev < imagesToShow.length - 1 ? prev + 1 : 0;
+      onPreviewIndexChange?.(newIndex);
+      return newIndex;
+    });
   };
 
   const handleImageClick = () => {
@@ -110,6 +150,13 @@ export function PhotoStackPreview({
   };
 
   const currentImageSrc = imagesToShow.length > 0 ? imagesToShow[currentIndex] : null;
+
+  // Background color mapping
+  const backgroundColorMap = {
+    'white': '#FFFFFF',
+    'dark-teal': '#1e5a55',
+    'ochre-yellow': '#F4DE7C'
+  };
 
   return (
     <>
@@ -139,11 +186,12 @@ export function PhotoStackPreview({
           }}
         >
           <motion.div 
-            className="photo-stack-preview-inner relative overflow-hidden flex items-center justify-center p-8 tablet-landscape:p-10 tablet-landscape:h-[70vh] bg-white border border-black"
+            className="photo-stack-preview-inner relative overflow-hidden flex items-center justify-center p-8 tablet-landscape:p-10 tablet-landscape:h-[70vh] border border-black"
             style={{ 
               borderWidth: '1px',
               height: '63vh',
-              borderRadius: '16px'
+              borderRadius: '16px',
+              backgroundColor: backgroundColorMap[previewBackgroundColor]
             }}
           >
             {/* Logo in bottom left */}
@@ -177,9 +225,10 @@ export function PhotoStackPreview({
                     <img
                       src={currentImageSrc}
                       alt={`Photo ${currentIndex + 1}`}
-                      className="max-w-full max-h-full object-contain"
+                      className="max-w-full max-h-full object-contain border border-black"
                       style={{
                         borderRadius: '4px',
+                        borderWidth: '1px',
                       }}
                     />
                   </motion.div>
@@ -250,10 +299,10 @@ export function PhotoStackPreview({
               </div>
             )}
 
-            {/* Title info overlay */}
+            {/* Title info overlay with color picker */}
             {(title || subtitle || filmUsed) && (
               <motion.div 
-                className="absolute top-4 right-4 bg-white/80 border border-black rounded-lg px-3 py-2 text-black text-sm z-10"
+                className="absolute top-4 right-4 bg-white/80 border border-black rounded-lg px-3 py-2 text-black text-sm z-10 flex items-center gap-2"
                 style={{
                   fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace"
                 }}
@@ -261,15 +310,51 @@ export function PhotoStackPreview({
                 animate={{ opacity: rolledOut ? 1 : 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
               >
-                {title && (
-                  <span className="font-bold mr-3">{title}</span>
-                )}
-                {subtitle && (
-                  <span className="opacity-90 mr-3">{subtitle}</span>
-                )}
-                {filmUsed && (
-                  <span className="opacity-75">Film: {filmUsed}</span>
-                )}
+                <div className="flex items-center gap-1">
+                  {title && (
+                    <span className="font-bold mr-3">{title}</span>
+                  )}
+                  {subtitle && (
+                    <span className="opacity-90 mr-3">{subtitle}</span>
+                  )}
+                  {filmUsed && (
+                    <span className="opacity-75">Film: {filmUsed}</span>
+                  )}
+                </div>
+                
+                {/* Color picker circles */}
+                <div className="flex items-center gap-2 ml-2 pl-2 border-l border-black/20">
+                  <button
+                    onClick={() => onPreviewBackgroundColorChange?.('white')}
+                    className={`w-4 h-4 rounded-full border-2 transition-all ${
+                      previewBackgroundColor === 'white' 
+                        ? 'border-black scale-125' 
+                        : 'border-black/30 hover:border-black/60'
+                    }`}
+                    style={{ backgroundColor: '#FFFFFF' }}
+                    aria-label="White background"
+                  />
+                  <button
+                    onClick={() => onPreviewBackgroundColorChange?.('dark-teal')}
+                    className={`w-4 h-4 rounded-full border-2 transition-all ${
+                      previewBackgroundColor === 'dark-teal' 
+                        ? 'border-black scale-125' 
+                        : 'border-black/30 hover:border-black/60'
+                    }`}
+                    style={{ backgroundColor: '#1e5a55' }}
+                    aria-label="Dark teal background"
+                  />
+                  <button
+                    onClick={() => onPreviewBackgroundColorChange?.('ochre-yellow')}
+                    className={`w-4 h-4 rounded-full border-2 transition-all ${
+                      previewBackgroundColor === 'ochre-yellow' 
+                        ? 'border-black scale-125' 
+                        : 'border-black/30 hover:border-black/60'
+                    }`}
+                    style={{ backgroundColor: '#F4DE7C' }}
+                    aria-label="Ochre yellow background"
+                  />
+                </div>
               </motion.div>
             )}
           </motion.div>
@@ -332,13 +417,14 @@ export function PhotoStackPreview({
                 <img
                   src={currentImageSrc}
                   alt={`Photo ${currentIndex + 1}`}
-                  className="object-contain"
+                  className="object-contain border border-black"
                   style={{
                     maxWidth: '90vw',
                     maxHeight: '90vh',
                     width: 'auto',
                     height: 'auto',
                     borderRadius: '8px',
+                    borderWidth: '1px',
                     boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
                   }}
                   onClick={(e) => e.stopPropagation()}

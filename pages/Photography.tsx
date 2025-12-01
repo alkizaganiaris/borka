@@ -16,6 +16,7 @@ export function Photography({ isDarkMode }: PhotographyProps) {
   const [galleries, setGalleries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0); // For tablet landscape and mobile single gallery view
+  const [previewBackgroundColor, setPreviewBackgroundColor] = useState<'white' | 'dark-teal' | 'ochre-yellow'>('white');
   const isTabletLandscape = useTabletLandscape();
   const isMobile = useIsMobile();
 
@@ -141,6 +142,8 @@ export function Photography({ isDarkMode }: PhotographyProps) {
             }}
             isMenuOpen={isMenuOpen}
             isMobile={isMobile}
+            previewBackgroundColor={previewBackgroundColor}
+            onPreviewBackgroundColorChange={setPreviewBackgroundColor}
           />
         )
       ) : (
@@ -158,6 +161,8 @@ export function Photography({ isDarkMode }: PhotographyProps) {
             onToggle={handleGalleryToggle(gallery._id)}
             isDarkMode={isDarkMode}
             isMenuOpen={isMenuOpen}
+            previewBackgroundColor={previewBackgroundColor}
+            onPreviewBackgroundColorChange={setPreviewBackgroundColor}
           />
         ))
       )}
